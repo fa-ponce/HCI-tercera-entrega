@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.kotlin/
+captures/
+
+# Archivos locales del sistema (nunca subir)
+local.properties
+
+# API keys y secrets (cuando los agreguemos)
+*.env
+keystore.properties
+*.keystore
+*.jks
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
