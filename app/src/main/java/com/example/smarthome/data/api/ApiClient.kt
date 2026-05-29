@@ -1,5 +1,6 @@
 package com.example.smarthome.data.api
 
+import com.example.smarthome.BuildConfig
 import com.example.smarthome.data.datastore.UserPreferences
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -11,15 +12,14 @@ import java.util.concurrent.TimeUnit
 
 private const val BASE_URL = "https://hci.it.itba.edu.ar/api/"
 
-// Placeholder: reemplazar con la API key real en local.properties cuando esté disponible
-private const val API_KEY_PLACEHOLDER = ""
+private val API_KEY get() = BuildConfig.API_KEY
 
 class ApiClient(private val userPreferences: UserPreferences) {
 
     private val apiKeyInterceptor = Interceptor { chain ->
         chain.proceed(
             chain.request().newBuilder()
-                .addHeader("X-API-KEY", API_KEY_PLACEHOLDER)
+                .addHeader("X-API-KEY", API_KEY)
                 .addHeader("Content-Type", "application/json")
                 .build()
         )
