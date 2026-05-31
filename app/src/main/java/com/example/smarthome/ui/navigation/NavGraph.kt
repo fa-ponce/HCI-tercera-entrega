@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.BarChart
@@ -93,10 +94,11 @@ fun NavGraph(
             }
         }
     ) { innerPadding ->
+        // Only apply bottom padding from outer scaffold; each screen's TopAppBar handles top insets
         NavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             composable(Routes.LOGIN) {
                 LoginScreen(
@@ -111,19 +113,11 @@ fun NavGraph(
             }
 
             composable(Routes.HOME) {
-                HomeScreen(
-                    appViewModel = appViewModel,
-                    navController = navController,
-                    innerPadding = innerPadding
-                )
+                HomeScreen(appViewModel = appViewModel, navController = navController)
             }
 
             composable(Routes.HOMES) {
-                HomesScreen(
-                    appViewModel = appViewModel,
-                    navController = navController,
-                    innerPadding = innerPadding
-                )
+                HomesScreen(appViewModel = appViewModel, navController = navController)
             }
 
             composable(
@@ -149,34 +143,19 @@ fun NavGraph(
             }
 
             composable(Routes.DEVICES) {
-                DevicesScreen(
-                    appViewModel = appViewModel,
-                    navController = navController,
-                    innerPadding = innerPadding
-                )
+                DevicesScreen(appViewModel = appViewModel, navController = navController)
             }
 
             composable(Routes.ROUTINES) {
-                RoutinesScreen(
-                    appViewModel = appViewModel,
-                    navController = navController,
-                    innerPadding = innerPadding
-                )
+                RoutinesScreen(appViewModel = appViewModel, navController = navController)
             }
 
             composable(Routes.CONSUMPTION) {
-                ConsumptionScreen(
-                    appViewModel = appViewModel,
-                    navController = navController,
-                    innerPadding = innerPadding
-                )
+                ConsumptionScreen(appViewModel = appViewModel, navController = navController)
             }
 
             composable(Routes.HISTORY) {
-                HistoryScreen(
-                    appViewModel = appViewModel,
-                    navController = navController
-                )
+                HistoryScreen(appViewModel = appViewModel, navController = navController)
             }
         }
     }

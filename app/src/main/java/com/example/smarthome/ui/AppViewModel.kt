@@ -14,12 +14,17 @@ import com.example.smarthome.data.datastore.UserPreferences
 import com.example.smarthome.data.repository.DeviceRepository
 import com.example.smarthome.data.repository.HomeRepository
 import com.example.smarthome.data.repository.RoutineRepository
+import com.example.smarthome.domain.DeviceTypes
+import com.example.smarthome.domain.isDeviceOn
+import com.example.smarthome.domain.toggleAction
 import com.example.smarthome.socket.SocketManager
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -33,11 +38,9 @@ class AppViewModel(
     private val _homes = MutableStateFlow<List<HomeDto>>(emptyList())
     val homes: StateFlow<List<HomeDto>> = _homes.asStateFlow()
 
-    // rooms keyed by homeId
     private val _rooms = MutableStateFlow<Map<String, List<RoomDto>>>(emptyMap())
     val rooms: StateFlow<Map<String, List<RoomDto>>> = _rooms.asStateFlow()
 
-    // devices keyed by roomId
     private val _devices = MutableStateFlow<Map<String, List<DeviceDto>>>(emptyMap())
     val devices: StateFlow<Map<String, List<DeviceDto>>> = _devices.asStateFlow()
 
@@ -49,6 +52,12 @@ class AppViewModel(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    val userName: StateFlow<String?> = userPreferences.userName
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val costoKwh: StateFlow<Float?> = userPreferences.costoKwh
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun loadAll() = viewModelScope.launch {
         _isLoading.value = true
@@ -102,7 +111,37 @@ class AppViewModel(
         }
     }
 
-    // --- Mutaciones locales para mantener estado sincronizado tras operaciones CRUD ---
+    fun toggleDevice(device: DeviceDto) = viewModelScope.launch {
+        val currentlyOn = isDeviceOn(device.type.id, device.state)
+        val action = toggleAction(device.type.id, currentlyOn)
+        val optimisticState = buildOptimisticState(device.type.id, !currentlyOn, device.state)
+        updateDevice(device.copy(state = optimisticState))
+        deviceRepository.executeAction(device.id, action).onFailure {
+            updateDevice(device)
+        }
+    }
+
+    fun executeRoutine(routineId: String) = viewModelScope.launch {
+        routineRepository.executeRoutine(routineId)
+    }
+
+    private fun buildOptimisticState(
+        typeId: String,
+        isOn: Boolean,
+        current: Map<String, Any?>
+    ): Map<String, Any?> = current.toMutableMap().apply {
+        when (typeId) {
+            DeviceTypes.PERSIANA   -> put("level", if (isOn) 100.0 else 0.0)
+            DeviceTypes.ALARMA     -> put("status", if (isOn) "armed_away" else "disarmed")
+            DeviceTypes.PUERTA,
+            DeviceTypes.GRIFO      -> put("status", if (isOn) "opened" else "closed")
+            DeviceTypes.PARLANTE   -> put("status", if (isOn) "playing" else "stopped")
+            DeviceTypes.ASPIRADORA -> put("status", if (isOn) "active" else "docked")
+            else                   -> put("status", if (isOn) "on" else "off")
+        }
+    }
+
+    // --- Mutaciones locales ---
 
     fun addHome(home: HomeDto) = _homes.update { it + home }
 
