@@ -14,14 +14,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.example.smarthome.data.api.models.RoutineDto
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -55,11 +60,19 @@ fun RoutinesScreen(
     val routines by appViewModel.routines.collectAsState()
     val scope = rememberCoroutineScope()
 
-    // IDs de rutinas en ejecución (para feedback visual)
     var running by remember { mutableStateOf(setOf<String>()) }
+    var builderRoutine by remember { mutableStateOf<RoutineDto?>(null) }
+    var showBuilder by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Rutinas") }) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { builderRoutine = null; showBuilder = true },
+                icon = { Icon(Icons.Rounded.Add, null) },
+                text = { Text("Nueva rutina") }
+            )
+        },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         LazyColumn(
@@ -150,6 +163,13 @@ fun RoutinesScreen(
                             )
                         }
 
+                        IconButton(
+                            onClick = { builderRoutine = routine; showBuilder = true },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(Icons.Rounded.Edit, "Editar", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.outline)
+                        }
+
                         FilledIconButton(
                             onClick = {
                                 if (!isRunning) {
@@ -178,5 +198,13 @@ fun RoutinesScreen(
                 }
             }
         }
+    }
+
+    if (showBuilder) {
+        RoutineBuilderSheet(
+            routine = builderRoutine,
+            appViewModel = appViewModel,
+            onDismiss = { showBuilder = false; builderRoutine = null }
+        )
     }
 }
