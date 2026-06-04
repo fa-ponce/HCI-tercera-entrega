@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,8 +70,9 @@ fun RoutinesScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { builderRoutine = null; showBuilder = true },
-                icon = { Icon(Icons.Rounded.Add, null) },
-                text = { Text("Nueva rutina") }
+                icon = { Icon(Icons.Rounded.Add, null, tint = Color.White) },
+                text = { Text("Nueva rutina", color = Color.White, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold) },
+                containerColor = Color(0xFF3A5A90)
             )
         },
         contentWindowInsets = WindowInsets(0)
