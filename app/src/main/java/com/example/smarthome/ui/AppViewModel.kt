@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.data.api.models.DeviceTypeDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.data.api.models.RoutineDto
@@ -46,6 +47,9 @@ class AppViewModel(
 
     private val _routines = MutableStateFlow<List<RoutineDto>>(emptyList())
     val routines: StateFlow<List<RoutineDto>> = _routines.asStateFlow()
+
+    private val _deviceTypes = MutableStateFlow<List<DeviceTypeDto>>(emptyList())
+    val deviceTypes: StateFlow<List<DeviceTypeDto>> = _deviceTypes.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -123,6 +127,26 @@ class AppViewModel(
 
     fun executeRoutine(routineId: String) = viewModelScope.launch {
         routineRepository.executeRoutine(routineId)
+    }
+
+    fun loadDeviceTypes() = viewModelScope.launch {
+        if (_deviceTypes.value.isEmpty()) {
+            deviceRepository.getDeviceTypes().onSuccess { _deviceTypes.value = it }
+        }
+    }
+
+    fun createDevice(
+        name: String,
+        typeId: String,
+        roomId: String?,
+        marca: String
+    ) = viewModelScope.launch {
+        val fullName = if (marca.isNotBlank()) "$name - $marca" else name
+        deviceRepository.createDevice(fullName, typeId, roomId)
+            .onSuccess { device ->
+                if (roomId != null) addDevice(roomId, device)
+            }
+            .onFailure { _error.value = it.message }
     }
 
     private fun buildOptimisticState(

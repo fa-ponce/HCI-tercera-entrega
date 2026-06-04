@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
@@ -23,9 +24,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,9 +39,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -63,6 +69,7 @@ fun DevicesScreen(
     var roomFilter by remember { mutableStateOf<String?>(null) }
     var showFilter by remember { mutableStateOf(false) }
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
 
     // Construir lista plana con contexto
     data class DeviceItem(
@@ -105,40 +112,33 @@ fun DevicesScreen(
         }
     }
 
+    if (showAddDialog) {
+        AddDeviceDialog(
+            appViewModel = appViewModel,
+            onDismiss = { showAddDialog = false },
+            onCreate = { name, typeId, roomId, marca ->
+                showAddDialog = false
+                appViewModel.createDevice(name, typeId, roomId, marca)
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Dispositivos") },
-                actions = {
-                    Box {
-                        IconButton(onClick = { showFilter = !showFilter }) {
-                            Icon(Icons.Rounded.FilterList, "Filtrar")
-                        }
-                        DropdownMenu(
-                            expanded = showFilter,
-                            onDismissRequest = { showFilter = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Todas las casas") },
-                                onClick = { homeFilter = null; roomFilter = null; showFilter = false }
-                            )
-                            homes.forEach { home ->
-                                DropdownMenuItem(
-                                    text = { Text(home.name) },
-                                    onClick = { homeFilter = home.name; roomFilter = null; showFilter = false }
-                                )
-                            }
-                            if (homeFilter != null) {
-                                availableRooms.forEach { room ->
-                                    DropdownMenuItem(
-                                        text = { Text("  ${room.name}") },
-                                        onClick = { roomFilter = room.name; showFilter = false }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+            TopAppBar(title = { Text("Dispositivos") })
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showAddDialog = true },
+                icon = { Icon(Icons.Rounded.Add, null, tint = Color.White) },
+                text = {
+                    Text(
+                        "Nuevo Dispositivo",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                containerColor = Color(0xFF3A5A90)
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -167,17 +167,60 @@ fun DevicesScreen(
             // Búsqueda + filtro activo
             item {
                 Column {
-                    OutlinedTextField(
-                        value = search,
-                        onValueChange = { search = it },
-                        placeholder = { Text("Buscar dispositivo…") },
-                        leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                        trailingIcon = if (search.isNotEmpty()) {
-                            { IconButton(onClick = { search = "" }) { Icon(Icons.Rounded.Clear, "Limpiar") } }
-                        } else null,
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = search,
+                            onValueChange = { search = it },
+                            placeholder = { Text("Buscar dispositivo…") },
+                            leadingIcon = { Icon(Icons.Rounded.Search, null) },
+                            trailingIcon = if (search.isNotEmpty()) {
+                                { IconButton(onClick = { search = "" }) { Icon(Icons.Rounded.Clear, "Limpiar") } }
+                            } else null,
+                            singleLine = true,
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box {
+                            val filterActive = homeFilter != null || roomFilter != null
+                            IconButton(
+                                onClick = { showFilter = !showFilter },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    contentColor = if (filterActive)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(Icons.Rounded.FilterList, "Filtrar")
+                            }
+                            DropdownMenu(
+                                expanded = showFilter,
+                                onDismissRequest = { showFilter = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Todas las casas") },
+                                    onClick = { homeFilter = null; roomFilter = null; showFilter = false }
+                                )
+                                homes.forEach { home ->
+                                    DropdownMenuItem(
+                                        text = { Text(home.name) },
+                                        onClick = { homeFilter = home.name; roomFilter = null; showFilter = false }
+                                    )
+                                }
+                                if (homeFilter != null) {
+                                    availableRooms.forEach { room ->
+                                        DropdownMenuItem(
+                                            text = { Text("  ${room.name}") },
+                                            onClick = { roomFilter = room.name; showFilter = false }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                     val activeFilter = listOfNotNull(homeFilter, roomFilter).joinToString(" › ")
                     if (activeFilter.isNotEmpty()) {
                         Row(
