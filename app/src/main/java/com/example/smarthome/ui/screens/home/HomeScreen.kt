@@ -192,7 +192,8 @@ fun HomeScreen(
                                 val tipo = routine.metadata?.tipoTrigger ?: "manual"
                                 Card(
                                     onClick = { appViewModel.executeRoutine(routine.id) },
-                                    modifier = Modifier.width(130.dp)
+                                    modifier = Modifier.width(130.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(12.dp),
@@ -250,7 +251,8 @@ fun HomeScreen(
                             modifier = Modifier.weight(1f),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer
-                            )
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                         ) {
                             Column(Modifier.padding(16.dp)) {
                                 Text(
@@ -287,7 +289,8 @@ fun HomeScreen(
                             modifier = Modifier.weight(1f),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                         ) {
                             Column(Modifier.padding(16.dp)) {
                                 Text(
@@ -342,7 +345,7 @@ fun HomeScreen(
                             ) { Text("Ver historial") }
                         }
                         Spacer(Modifier.height(8.dp))
-                        Card {
+                        Card(elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                             Column(Modifier.padding(vertical = 4.dp)) {
                                 recentLogs.take(5).forEach { log ->
                                     val (fecha2, hora) = formatTimestamp(log.timestamp)
@@ -394,7 +397,11 @@ private fun StatChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
-    Card(onClick = onClick, modifier = Modifier.width(110.dp)) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(110.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
         Column(
             modifier = Modifier.padding(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
