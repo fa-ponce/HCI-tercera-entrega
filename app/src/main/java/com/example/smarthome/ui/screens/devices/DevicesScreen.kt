@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -125,7 +126,21 @@ fun DevicesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Dispositivos") })
+            TopAppBar(
+                title = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Dispositivos",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF3A5A90)
+                )
+            )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
