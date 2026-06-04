@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,13 +27,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -75,6 +76,7 @@ fun HomeScreen(
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
     val offDevices = remember(allDevices) { allDevices.filter { !isDeviceOn(it.type.id, it.state) } }
     val totalW = remember(onDevices) { onDevices.sumOf { deviceConsumptionW(it.type.id) } }
+    val deviceById = remember(allDevices) { allDevices.associateBy { it.id } }
 
     var recentLogs by remember { mutableStateOf<List<LogEntryDto>>(emptyList()) }
     LaunchedEffect(Unit) {
@@ -95,7 +97,23 @@ fun HomeScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("SmartHome") }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "SmartHome",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF3A5A90)
+                )
+            )
+        },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         if (isLoading && homes.isEmpty()) {
@@ -155,7 +173,7 @@ fun HomeScreen(
                     item {
                         StatChip(
                             value = "${onDevices.size}",
-                            label = "Activos",
+                            label = "Dispositivos",
                             icon = Icons.Rounded.Devices,
                             onClick = { navController.navigate(Routes.DEVICES) }
                         )
@@ -187,17 +205,25 @@ fun HomeScreen(
                             )
                         }
                         Spacer(Modifier.height(8.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.height(100.dp)
+                        ) {
                             items(routines.take(6)) { routine ->
                                 val tipo = routine.metadata?.tipoTrigger ?: "manual"
                                 Card(
                                     onClick = { appViewModel.executeRoutine(routine.id) },
-                                    modifier = Modifier.width(130.dp),
+                                    modifier = Modifier
+                                        .width(110.dp)
+                                        .fillMaxHeight(),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(12.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
                                     ) {
                                         Icon(
                                             imageVector = when (tipo) {
@@ -213,7 +239,8 @@ fun HomeScreen(
                                             routine.name,
                                             style = MaterialTheme.typography.labelMedium,
                                             maxLines = 2,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -348,7 +375,10 @@ fun HomeScreen(
                         Card(elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                             Column(Modifier.padding(vertical = 4.dp)) {
                                 recentLogs.take(5).forEach { log ->
-                                    val (fecha2, hora) = formatTimestamp(log.timestamp)
+                                    val (_, hora) = formatTimestamp(log.timestamp)
+                                    val device = deviceById[log.deviceId]
+                                    val deviceName = device?.name ?: "Dispositivo"
+                                    val typeId = device?.type?.id ?: ""
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -356,7 +386,7 @@ fun HomeScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            imageVector = deviceIcon(""),
+                                            imageVector = deviceIcon(typeId),
                                             contentDescription = null,
                                             modifier = Modifier.size(18.dp),
                                             tint = MaterialTheme.colorScheme.primary
@@ -364,7 +394,7 @@ fun HomeScreen(
                                         Spacer(Modifier.width(12.dp))
                                         Column(Modifier.weight(1f)) {
                                             Text(
-                                                log.deviceName ?: "Dispositivo",
+                                                deviceName,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -403,7 +433,9 @@ private fun StatChip(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(

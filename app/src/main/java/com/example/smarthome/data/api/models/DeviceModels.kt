@@ -33,9 +33,10 @@ data class UpdateDeviceRequest(
 )
 
 data class LogEntryDto(
+    val id: String? = null,
     val deviceId: String? = null,
     val deviceName: String? = null,
-    val event: String? = null,
+    @com.google.gson.annotations.SerializedName("actionName") val event: String? = null,
     val timestamp: String? = null,
     val roomName: String? = null,
     val homeName: String? = null
