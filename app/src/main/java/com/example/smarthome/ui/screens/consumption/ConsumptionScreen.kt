@@ -28,12 +28,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -78,7 +80,23 @@ fun ConsumptionScreen(
     val maxW = remember(perHome) { perHome.maxOfOrNull { it.watts } ?: 1 }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Consumo") }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Consumo",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF3A5A90)
+                )
+            )
+        },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         LazyColumn(
