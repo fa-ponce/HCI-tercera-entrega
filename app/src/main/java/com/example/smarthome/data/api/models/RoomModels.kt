@@ -9,7 +9,7 @@ data class RoomDto(
 
 data class HomeRef(val id: String)
 
-data class RoomMetadata(val type: String? = null)
+data class RoomMetadata(val type: String? = null, val floor: Int? = null)
 
 data class RoomRequest(
     val name: String,

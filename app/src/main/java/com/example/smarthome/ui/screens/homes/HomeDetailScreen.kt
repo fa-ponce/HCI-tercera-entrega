@@ -20,25 +20,42 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.MeetingRoom
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.ServiceLocator
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
@@ -64,6 +81,10 @@ fun HomeDetailScreen(
     val totalW = allHomeDevices.filter { isDeviceOn(it.type.id, it.state) }
         .sumOf { deviceConsumptionW(it.type.id) }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showAddRoomDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -83,6 +104,14 @@ fun HomeDetailScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF3A5A90)
                 )
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showAddRoomDialog = true },
+                icon = { Icon(Icons.Rounded.Add, null, tint = Color.White) },
+                text = { Text("Nueva habitación", color = Color.White, fontWeight = FontWeight.SemiBold) },
+                containerColor = Color(0xFF3A5A90)
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -205,8 +234,182 @@ fun HomeDetailScreen(
                     }
                 }
             }
+
+            item {
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar casa", color = Color.White, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar casa", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro que querés eliminar \"${home?.name}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        scope.launch {
+                            ServiceLocator.homeRepository.deleteHome(homeId).onSuccess {
+                                appViewModel.removeHome(homeId)
+                                navController.popBackStack()
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    if (showAddRoomDialog) {
+        AddRoomDialog(
+            homeId = homeId,
+            appViewModel = appViewModel,
+            onDismiss = { showAddRoomDialog = false }
+        )
+    }
+}
+
+private val roomTypes = listOf(
+    "Living", "Dormitorio", "Cocina", "Baño", "Garaje", "Estudio", "Comedor", "Lavadero"
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddRoomDialog(
+    homeId: String,
+    appViewModel: AppViewModel,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var nameError by remember { mutableStateOf(false) }
+    var selectedType by remember { mutableStateOf(roomTypes[0]) }
+    var typeExpanded by remember { mutableStateOf(false) }
+    var floor by remember { mutableStateOf(1) }
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nueva habitación", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                // Nombre
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it; nameError = false },
+                    label = { Text("Nombre") },
+                    placeholder = { Text("Ej: Dormitorio Principal") },
+                    singleLine = true,
+                    isError = nameError,
+                    colors = if (nameError)
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.error,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = MaterialTheme.colorScheme.error,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.error
+                        )
+                    else OutlinedTextFieldDefaults.colors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (nameError) {
+                    Text(
+                        "Debe asignar un nombre a la habitación",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                // Tipo
+                ExposedDropdownMenuBox(
+                    expanded = typeExpanded,
+                    onExpandedChange = { typeExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Tipo") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = typeExpanded,
+                        onDismissRequest = { typeExpanded = false }
+                    ) {
+                        roomTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = { selectedType = type; typeExpanded = false }
+                            )
+                        }
+                    }
+                }
+
+                // Piso
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Piso", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    IconButton(
+                        onClick = { if (floor > 1) floor-- },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Text("−", style = MaterialTheme.typography.titleLarge)
+                    }
+                    Text(
+                        "$floor",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(
+                        onClick = { floor++ },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Text("+", style = MaterialTheme.typography.titleLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (name.isBlank()) {
+                        nameError = true
+                        return@Button
+                    }
+                    scope.launch {
+                        ServiceLocator.homeRepository.createRoom(name.trim(), selectedType, floor, homeId)
+                            .onSuccess { room ->
+                                appViewModel.addRoom(homeId, room)
+                                onDismiss()
+                            }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
+            ) {
+                Text("Crear", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
 }
 
 @Composable

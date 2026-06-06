@@ -24,8 +24,8 @@ class HomeRepository(private val api: SmarthomeApi) {
         api.getHomeRooms(homeId)
     }
 
-    suspend fun createRoom(name: String, type: String, homeId: String?): Result<RoomDto> = runCatching {
-        api.createRoom(RoomRequest(name, homeId?.let { HomeRef(it) }, RoomMetadata(type)))
+    suspend fun createRoom(name: String, type: String, floor: Int, homeId: String?): Result<RoomDto> = runCatching {
+        api.createRoom(RoomRequest(name, homeId?.let { HomeRef(it) }, RoomMetadata(type, floor)))
     }
 
     suspend fun updateRoom(id: String, name: String, type: String, homeId: String?): Result<RoomDto> = runCatching {
