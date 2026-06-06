@@ -169,7 +169,13 @@ fun HomeScreen(
                             value = "${homes.size}",
                             label = "Casas",
                             icon = Icons.Rounded.Apartment,
-                            onClick = { navController.navigate(Routes.HOMES) }
+                            onClick = {
+                                navController.navigate(Routes.HOMES) {
+                                    popUpTo(Routes.HOME) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
                         )
                     }
                     item {
@@ -177,7 +183,13 @@ fun HomeScreen(
                             value = "${rooms.values.sumOf { it.size }}",
                             label = "Habitaciones",
                             icon = Icons.Rounded.MeetingRoom,
-                            onClick = { navController.navigate(Routes.HOMES) }
+                            onClick = {
+                                navController.navigate(Routes.HOMES) {
+                                    popUpTo(Routes.HOME) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
                         )
                     }
                     item {
@@ -185,7 +197,13 @@ fun HomeScreen(
                             value = "${onDevices.size}",
                             label = "Dispositivos",
                             icon = Icons.Rounded.Devices,
-                            onClick = { navController.navigate(Routes.DEVICES) }
+                            onClick = {
+                                navController.navigate(Routes.DEVICES) {
+                                    popUpTo(Routes.HOME) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
                         )
                     }
                     item {
@@ -193,7 +211,13 @@ fun HomeScreen(
                             value = if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)} kW" else "$totalW W",
                             label = "Consumo",
                             icon = Icons.Rounded.BarChart,
-                            onClick = { navController.navigate(Routes.CONSUMPTION) }
+                            onClick = {
+                                navController.navigate(Routes.CONSUMPTION) {
+                                    popUpTo(Routes.HOME) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
                         )
                     }
                 }

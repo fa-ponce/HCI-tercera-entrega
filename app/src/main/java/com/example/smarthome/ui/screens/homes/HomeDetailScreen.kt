@@ -154,7 +154,10 @@ fun HomeDetailScreen(
                                         onClick = { navController.navigate(Routes.room(room.id)) },
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Column(Modifier.padding(14.dp)) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
                                             Surface(
                                                 shape = MaterialTheme.shapes.small,
                                                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -215,7 +218,7 @@ private fun StatBox(
 ) {
     Card(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
