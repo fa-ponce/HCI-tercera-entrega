@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
@@ -32,7 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
@@ -70,16 +69,14 @@ fun RoutinesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Rutinas",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
+                    Text(
+                        "Rutinas",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
@@ -124,7 +121,10 @@ fun RoutinesScreen(
                 val tipo = routine.metadata?.tipoTrigger ?: "manual"
                 val isRunning = routine.id in running
 
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    onClick = { builderRoutine = routine; showBuilder = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Row(
                         modifier = Modifier.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -187,13 +187,6 @@ fun RoutinesScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
-                        }
-
-                        IconButton(
-                            onClick = { builderRoutine = routine; showBuilder = true },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(Icons.Rounded.Edit, "Editar", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.outline)
                         }
 
                         FilledIconButton(
