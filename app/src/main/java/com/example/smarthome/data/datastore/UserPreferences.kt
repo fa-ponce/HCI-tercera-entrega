@@ -21,12 +21,14 @@ class UserPreferences(context: Context) {
         private val USER_NAME_KEY = stringPreferencesKey("user_name")
         private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
         private val COSTO_KWH_KEY = floatPreferencesKey("costo_kwh")
+        private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
     }
 
     val token: Flow<String?> = dataStore.data.map { it[TOKEN_KEY] }
     val userName: Flow<String?> = dataStore.data.map { it[USER_NAME_KEY] }
     val userEmail: Flow<String?> = dataStore.data.map { it[USER_EMAIL_KEY] }
     val costoKwh: Flow<Float?> = dataStore.data.map { it[COSTO_KWH_KEY] }
+    val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE_KEY] ?: false }
 
     suspend fun getTokenOnce(): String? = dataStore.data.first()[TOKEN_KEY]
 
@@ -44,6 +46,10 @@ class UserPreferences(context: Context) {
 
     suspend fun saveCostoKwh(costo: Float) {
         dataStore.edit { it[COSTO_KWH_KEY] = costo }
+    }
+
+    suspend fun saveDarkMode(enabled: Boolean) {
+        dataStore.edit { it[DARK_MODE_KEY] = enabled }
     }
 
     suspend fun clear() {

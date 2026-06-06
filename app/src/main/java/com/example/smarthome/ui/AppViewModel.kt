@@ -66,6 +66,28 @@ class AppViewModel(
     val costoKwh: StateFlow<Float?> = userPreferences.costoKwh
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val darkMode: StateFlow<Boolean> = userPreferences.darkMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setDarkMode(enabled: Boolean) = viewModelScope.launch {
+        userPreferences.saveDarkMode(enabled)
+    }
+
+    fun updateCostoKwh(costo: Float) = viewModelScope.launch {
+        userPreferences.saveCostoKwh(costo)
+    }
+
+    fun changePassword(
+        oldPassword: String,
+        newPassword: String,
+        onResult: (success: Boolean, error: String?) -> Unit
+    ) = viewModelScope.launch {
+        val email = userEmail.value ?: return@launch
+        ServiceLocator.authRepository.changePassword(email, oldPassword, newPassword)
+            .onSuccess { onResult(true, null) }
+            .onFailure { onResult(false, it.message) }
+    }
+
     fun logout() = viewModelScope.launch {
         userPreferences.clear()
     }
