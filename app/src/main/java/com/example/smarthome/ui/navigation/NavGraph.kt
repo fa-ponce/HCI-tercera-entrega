@@ -31,6 +31,7 @@ import com.example.smarthome.ui.screens.homes.HomeDetailScreen
 import com.example.smarthome.ui.screens.homes.HomesScreen
 import com.example.smarthome.ui.screens.login.LoginScreen
 import com.example.smarthome.ui.screens.room.RoomScreen
+import com.example.smarthome.ui.screens.profile.ProfileScreen
 import com.example.smarthome.ui.screens.routines.RoutinesScreen
 
 object Routes {
@@ -43,6 +44,7 @@ object Routes {
     const val ROUTINES = "routines"
     const val CONSUMPTION = "consumption"
     const val HISTORY = "history"
+    const val PROFILE = "profile"
 
     fun homeDetail(homeId: String) = "home_detail/$homeId"
     fun room(roomId: String) = "room/$roomId"
@@ -155,6 +157,10 @@ fun NavGraph(
 
             composable(Routes.HISTORY) {
                 HistoryScreen(appViewModel = appViewModel, navController = navController)
+            }
+
+            composable(Routes.PROFILE) {
+                ProfileScreen(appViewModel = appViewModel, navController = navController)
             }
         }
     }

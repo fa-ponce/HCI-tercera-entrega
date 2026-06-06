@@ -60,8 +60,15 @@ class AppViewModel(
     val userName: StateFlow<String?> = userPreferences.userName
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val userEmail: StateFlow<String?> = userPreferences.userEmail
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val costoKwh: StateFlow<Float?> = userPreferences.costoKwh
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun logout() = viewModelScope.launch {
+        userPreferences.clear()
+    }
 
     fun loadAll() = viewModelScope.launch {
         _isLoading.value = true
