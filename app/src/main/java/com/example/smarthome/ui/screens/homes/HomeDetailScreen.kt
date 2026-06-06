@@ -28,12 +28,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -64,13 +66,23 @@ fun HomeDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(home?.name ?: "Casa") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        home?.name ?: "Casa",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "Volver")
+                        Icon(Icons.Rounded.ArrowBack, "Volver", tint = Color.White)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF3A5A90)
+                )
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -86,7 +98,6 @@ fun HomeDetailScreen(
             // Info de la casa
             item {
                 val subtitle = listOfNotNull(
-                    home?.metadata?.type,
                     home?.metadata?.city,
                     home?.metadata?.address
                 ).joinToString(" · ")
