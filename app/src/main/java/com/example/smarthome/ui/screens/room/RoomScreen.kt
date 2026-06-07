@@ -18,14 +18,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Devices
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,9 +50,12 @@ import com.example.smarthome.ui.components.DeviceCard
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +69,9 @@ fun RoomScreen(
     val devices by appViewModel.devices.collectAsState()
 
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+    var renameText by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     val room = rooms.values.flatten().find { it.id == roomId }
     val home = room?.home?.id?.let { hid -> homes.find { it.id == hid } }
@@ -73,12 +85,17 @@ fun RoomScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        room?.name ?: "Habitación",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            room?.name ?: "Habitación",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        IconButton(onClick = { renameText = room?.name ?: ""; showRenameDialog = true }) {
+                            Icon(Icons.Rounded.Edit, contentDescription = "Editar nombre", tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -162,10 +179,49 @@ fun RoomScreen(
         }
     }
 
+    if (showRenameDialog) {
+        AlertDialog(
+            onDismissRequest = { showRenameDialog = false },
+            title = { Text("Renombrar habitación", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    label = { Text("Nombre") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val newName = renameText.trim()
+                        if (newName.isNotEmpty() && room != null) {
+                            showRenameDialog = false
+                            scope.launch {
+                                ServiceLocator.homeRepository.updateRoom(
+                                    id = roomId,
+                                    name = newName,
+                                    type = room.metadata?.type ?: "",
+                                    homeId = home?.id
+                                ).onSuccess { updated -> appViewModel.updateRoom(updated) }
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
+                ) { Text("Guardar", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRenameDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
     selectedDevice?.let { device ->
         DeviceSheetRouter(
             device = device,
-            onDismiss = { selectedDevice = null }
+            onDismiss = { selectedDevice = null },
+            onDeviceRenamed = { appViewModel.updateDevice(it) }
         )
     }
 }

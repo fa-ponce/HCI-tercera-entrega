@@ -25,7 +25,8 @@ fun LamparaSheet(
     device: DeviceDto,
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
-    onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null
+    onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
+    onDeviceRenamed: ((DeviceDto) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val repo = remember { ServiceLocator.deviceRepository }
@@ -66,7 +67,7 @@ fun LamparaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Lampara")
+            SheetHeader(title = device.name, subtitle = "Lampara", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

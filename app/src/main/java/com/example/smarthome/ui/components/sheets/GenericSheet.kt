@@ -9,7 +9,7 @@ import com.example.smarthome.data.api.models.DeviceDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit) {
+fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit, onDeviceRenamed: ((DeviceDto) -> Unit)? = null) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -18,7 +18,7 @@ fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit) {
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = device.type.name ?: "Dispositivo")
+            SheetHeader(title = device.name, subtitle = device.type.name ?: "Dispositivo", deviceId = device.id, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
             Text(
                 "Tipo de dispositivo no soportado.",
                 style = MaterialTheme.typography.bodyMedium,

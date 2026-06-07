@@ -293,7 +293,8 @@ fun DevicesScreen(
     selectedDevice?.let { device ->
         DeviceSheetRouter(
             device = device,
-            onDismiss = { selectedDevice = null }
+            onDismiss = { selectedDevice = null },
+            onDeviceRenamed = { appViewModel.updateDevice(it) }
         )
     }
 }

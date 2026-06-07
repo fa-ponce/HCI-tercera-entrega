@@ -22,7 +22,8 @@ fun PersianaSheet(
     device: DeviceDto,
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
-    onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null
+    onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
+    onDeviceRenamed: ((DeviceDto) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val repo = remember { ServiceLocator.deviceRepository }
@@ -52,7 +53,7 @@ fun PersianaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Persiana")
+            SheetHeader(title = device.name, subtitle = "Persiana", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

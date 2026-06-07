@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -84,18 +85,25 @@ fun HomeDetailScreen(
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAddRoomDialog by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+    var renameText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        home?.name ?: "Casa",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            home?.name ?: "Casa",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        IconButton(onClick = { renameText = home?.name ?: ""; showRenameDialog = true }) {
+                            Icon(Icons.Rounded.Edit, contentDescription = "Editar nombre", tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -252,6 +260,45 @@ fun HomeDetailScreen(
                 }
             }
         }
+    }
+
+    if (showRenameDialog) {
+        AlertDialog(
+            onDismissRequest = { showRenameDialog = false },
+            title = { Text("Renombrar casa", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    label = { Text("Nombre") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val newName = renameText.trim()
+                        if (newName.isNotEmpty() && home != null) {
+                            showRenameDialog = false
+                            scope.launch {
+                                ServiceLocator.homeRepository.updateHome(
+                                    id = homeId,
+                                    name = newName,
+                                    type = home.metadata?.type ?: "",
+                                    address = home.metadata?.address ?: "",
+                                    city = home.metadata?.city ?: ""
+                                ).onSuccess { updated -> appViewModel.updateHome(updated) }
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
+                ) { Text("Guardar", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRenameDialog = false }) { Text("Cancelar") }
+            }
+        )
     }
 
     if (showDeleteDialog) {
