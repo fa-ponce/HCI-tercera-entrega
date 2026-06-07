@@ -10,6 +10,7 @@ import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.DeviceTypeDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
+import com.example.smarthome.data.api.models.RoomRef
 import com.example.smarthome.data.api.models.RoutineDto
 import com.example.smarthome.data.datastore.UserPreferences
 import com.example.smarthome.data.repository.DeviceRepository
@@ -113,7 +114,7 @@ class AppViewModel(
                         roomList.map { room ->
                             async {
                                 deviceRepository.getRoomDevices(room.id).getOrNull()?.let { deviceList ->
-                                    devicesMap[room.id] = deviceList
+                                    devicesMap[room.id] = deviceList.map { it.copy(room = RoomRef(room.id)) }
                                 }
                             }
                         }.awaitAll()
@@ -173,7 +174,7 @@ class AppViewModel(
         val fullName = if (marca.isNotBlank()) "$name - $marca" else name
         deviceRepository.createDevice(fullName, typeId, roomId)
             .onSuccess { device ->
-                if (roomId != null) addDevice(roomId, device)
+                if (roomId != null) addDevice(roomId, device.copy(room = RoomRef(roomId)))
             }
             .onFailure { _error.value = it.message }
     }
@@ -224,6 +225,12 @@ class AppViewModel(
 
     fun updateDevice(device: DeviceDto) = _devices.update { map ->
         map.mapValues { (_, list) -> list.map { if (it.id == device.id) device else it } }
+    }
+
+    fun relocateDevice(device: DeviceDto) = _devices.update { map ->
+        val cleaned = map.mapValues { (_, list) -> list.filter { it.id != device.id } }
+        val targetKey = device.room?.id ?: "free"
+        cleaned + (targetKey to (cleaned[targetKey].orEmpty() + device))
     }
 
     fun removeDevice(deviceId: String) = _devices.update { map ->

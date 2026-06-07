@@ -12,6 +12,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.data.api.models.HomeDto
+import com.example.smarthome.data.api.models.RoomDto
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,7 +24,10 @@ fun AcSheet(
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
     onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null
+    onDeviceDeleted: ((String) -> Unit)? = null,
+    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    homes: List<HomeDto> = emptyList(),
+    rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
     val scope = rememberCoroutineScope()
     val repo = remember { ServiceLocator.deviceRepository }
@@ -202,7 +207,10 @@ fun AcSheet(
                         }
                     )
                 } else {
-                    SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, onDeleted = onDeviceDeleted)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
+                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                    }
                 }
             }
         }

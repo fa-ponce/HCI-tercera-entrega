@@ -85,13 +85,17 @@ fun DevicesScreen(
     )
 
     val allItems = remember(homes, rooms, devices) {
-        homes.flatMap { home ->
+        val roomItems = homes.flatMap { home ->
             (rooms[home.id] ?: emptyList()).flatMap { room ->
                 (devices[room.id] ?: emptyList()).map { device ->
                     DeviceItem(device, home.name, room.name, room.id)
                 }
             }
         }
+        val freeItems = (devices["free"] ?: emptyList()).map { device ->
+            DeviceItem(device, "", "Libre", "free")
+        }
+        roomItems + freeItems
     }
 
     val filtered = remember(allItems, search, homeFilter, roomFilter) {
@@ -285,7 +289,9 @@ fun DevicesScreen(
             }
 
             items(filtered) { item ->
-                val subtitle = "${item.homeName} · ${item.roomName}"
+                val subtitle = if (item.roomId == "free") "Libre"
+                               else if (item.homeName.isNotEmpty()) "${item.homeName} · ${item.roomName}"
+                               else item.roomName
                 DeviceCard(
                     device = item.device,
                     subtitle = subtitle,
@@ -301,7 +307,10 @@ fun DevicesScreen(
             device = device,
             onDismiss = { selectedDevice = null },
             onDeviceRenamed = { appViewModel.updateDevice(it) },
-            onDeviceDeleted = { appViewModel.removeDevice(it) }
+            onDeviceDeleted = { appViewModel.removeDevice(it) },
+            onDeviceRoomChanged = { appViewModel.relocateDevice(it) },
+            homes = homes,
+            rooms = rooms
         )
     }
 }

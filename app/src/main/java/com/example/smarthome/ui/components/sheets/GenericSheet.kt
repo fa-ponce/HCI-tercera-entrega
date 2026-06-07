@@ -6,10 +6,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.data.api.models.HomeDto
+import com.example.smarthome.data.api.models.RoomDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit, onDeviceRenamed: ((DeviceDto) -> Unit)? = null, onDeviceDeleted: ((String) -> Unit)? = null) {
+fun GenericSheet(
+    device: DeviceDto,
+    onDismiss: () -> Unit,
+    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
+    onDeviceDeleted: ((String) -> Unit)? = null,
+    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    homes: List<HomeDto> = emptyList(),
+    rooms: Map<String, List<RoomDto>> = emptyMap()
+) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -27,7 +37,10 @@ fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit, onDeviceRenamed: ((De
             OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                 Text("Cerrar")
             }
-            SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, onDeleted = onDeviceDeleted)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
+                SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+            }
         }
     }
 }

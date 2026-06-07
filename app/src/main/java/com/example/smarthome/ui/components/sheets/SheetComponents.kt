@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.ServiceLocator
+import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.data.api.models.HomeDto
+import com.example.smarthome.data.api.models.RoomDto
+import com.example.smarthome.data.api.models.RoomRef
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,6 +120,7 @@ fun SheetSectionLabel(text: String) {
 fun SheetDeleteButton(
     deviceId: String,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
     onDeleted: ((String) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
@@ -122,10 +128,10 @@ fun SheetDeleteButton(
 
     Button(
         onClick = { showConfirm = true },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
     ) {
-        Text("Eliminar dispositivo", color = Color.White, fontWeight = FontWeight.SemiBold)
+        Text("Eliminar", color = Color.White, fontWeight = FontWeight.SemiBold)
     }
 
     if (showConfirm) {
@@ -149,6 +155,153 @@ fun SheetDeleteButton(
             },
             dismissButton = {
                 TextButton(onClick = { showConfirm = false }) { Text("Cancelar") }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SheetRoomLinkButton(
+    device: DeviceDto,
+    homes: List<HomeDto>,
+    rooms: Map<String, List<RoomDto>>,
+    modifier: Modifier = Modifier,
+    onDeviceUpdated: ((DeviceDto) -> Unit)? = null
+) {
+    val scope = rememberCoroutineScope()
+    val isLinked = device.room != null
+    var showUnlinkConfirm by remember { mutableStateOf(false) }
+    var showLinkDialog by remember { mutableStateOf(false) }
+    var selectedHome by remember { mutableStateOf<HomeDto?>(null) }
+    var homeExpanded by remember { mutableStateOf(false) }
+    var selectedRoom by remember { mutableStateOf<RoomDto?>(null) }
+    var roomExpanded by remember { mutableStateOf(false) }
+
+    OutlinedButton(
+        onClick = { if (isLinked) showUnlinkConfirm = true else showLinkDialog = true },
+        modifier = modifier.fillMaxWidth(),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = if (isLinked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isLinked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(if (isLinked) "Desvincular" else "Vincular", fontWeight = FontWeight.SemiBold)
+    }
+
+    if (showUnlinkConfirm) {
+        AlertDialog(
+            onDismissRequest = { showUnlinkConfirm = false },
+            title = { Text("Desvincular dispositivo", fontWeight = FontWeight.Bold) },
+            text = { Text("El dispositivo se desvinculará de su habitación actual y quedará libre.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showUnlinkConfirm = false
+                        scope.launch {
+                            ServiceLocator.deviceRepository.removeDeviceFromRoom(device.id)
+                                .onSuccess { onDeviceUpdated?.invoke(device.copy(room = null)) }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Desvincular", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnlinkConfirm = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    if (showLinkDialog) {
+        AlertDialog(
+            onDismissRequest = { showLinkDialog = false; selectedHome = null; selectedRoom = null },
+            title = { Text("Vincular a habitación", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ExposedDropdownMenuBox(
+                        expanded = homeExpanded,
+                        onExpandedChange = { homeExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedHome?.name ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Casa") },
+                            placeholder = { Text("Seleccionar casa") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(homeExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = homeExpanded,
+                            onDismissRequest = { homeExpanded = false }
+                        ) {
+                            homes.forEach { home ->
+                                DropdownMenuItem(
+                                    text = { Text(home.name) },
+                                    onClick = {
+                                        selectedHome = home
+                                        selectedRoom = null
+                                        homeExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    if (selectedHome != null) {
+                        val availableRooms = rooms[selectedHome!!.id] ?: emptyList()
+                        ExposedDropdownMenuBox(
+                            expanded = roomExpanded,
+                            onExpandedChange = { roomExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedRoom?.name ?: "",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Habitación") },
+                                placeholder = { Text("Seleccionar habitación") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(roomExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = roomExpanded,
+                                onDismissRequest = { roomExpanded = false }
+                            ) {
+                                availableRooms.forEach { room ->
+                                    DropdownMenuItem(
+                                        text = { Text(room.name) },
+                                        onClick = { selectedRoom = room; roomExpanded = false }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val room = selectedRoom ?: return@Button
+                        showLinkDialog = false
+                        scope.launch {
+                            ServiceLocator.deviceRepository.addDeviceToRoom(room.id, device.id)
+                                .onSuccess { onDeviceUpdated?.invoke(device.copy(room = RoomRef(room.id))) }
+                        }
+                        selectedHome = null
+                        selectedRoom = null
+                    },
+                    enabled = selectedRoom != null
+                ) { Text("Vincular") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showLinkDialog = false
+                    selectedHome = null
+                    selectedRoom = null
+                }) { Text("Cancelar") }
             }
         )
     }

@@ -259,7 +259,10 @@ fun RoomScreen(
             device = device,
             onDismiss = { selectedDevice = null },
             onDeviceRenamed = { appViewModel.updateDevice(it) },
-            onDeviceDeleted = { appViewModel.removeDevice(it) }
+            onDeviceDeleted = { appViewModel.removeDevice(it) },
+            onDeviceRoomChanged = { appViewModel.relocateDevice(it) },
+            homes = homes,
+            rooms = rooms
         )
     }
 }
