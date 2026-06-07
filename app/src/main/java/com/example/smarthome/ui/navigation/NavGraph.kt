@@ -82,10 +82,10 @@ fun NavGraph(
                             onClick = {
                                 navController.navigate(item.route) {
                                     popUpTo(Routes.HOME) {
-                                        saveState = true
+                                        saveState = false
                                     }
                                     launchSingleTop = true
-                                    restoreState = true
+                                    restoreState = false
                                 }
                             },
                             icon = { Icon(item.icon, contentDescription = item.label) },
