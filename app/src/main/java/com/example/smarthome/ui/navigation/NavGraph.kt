@@ -73,11 +73,12 @@ fun NavGraph(
 
     Scaffold(
         bottomBar = {
-            if (currentRoute in bottomNavRoutes) {
+            if (currentRoute in bottomNavRoutes || currentRoute == Routes.HOME_DETAIL) {
                 NavigationBar {
                     bottomNavItems.forEach { item ->
                         NavigationBarItem(
-                            selected = currentRoute == item.route,
+                            selected = currentRoute == item.route ||
+                                (currentRoute == Routes.HOME_DETAIL && item.route == Routes.HOMES),
                             onClick = {
                                 navController.navigate(item.route) {
                                     popUpTo(Routes.HOME) {
