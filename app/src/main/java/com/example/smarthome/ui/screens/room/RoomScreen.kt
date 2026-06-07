@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material3.Card
@@ -21,20 +23,23 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.navigation.Routes
 import com.example.smarthome.ui.components.DeviceCard
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.mutableStateOf
@@ -66,13 +71,28 @@ fun RoomScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(room?.name ?: "Habitación") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        room?.name ?: "Habitación",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "Volver")
+                        Icon(Icons.Rounded.ArrowBack, "Volver", tint = Color.White)
                     }
-                }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF3A5A90)
+                )
             )
         },
         contentWindowInsets = WindowInsets(0)
