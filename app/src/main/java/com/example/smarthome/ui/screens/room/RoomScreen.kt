@@ -70,6 +70,7 @@ fun RoomScreen(
 
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
     var showRenameDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
@@ -176,7 +177,43 @@ fun RoomScreen(
                     onClick = { selectedDevice = device }
                 )
             }
+
+            item {
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar habitación", color = Color.White, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar habitación", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro que querés eliminar \"${room?.name}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        scope.launch {
+                            ServiceLocator.homeRepository.deleteRoom(roomId).onSuccess {
+                                appViewModel.removeRoom(home?.id ?: "", roomId)
+                                navController.popBackStack()
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Eliminar", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+            }
+        )
     }
 
     if (showRenameDialog) {
