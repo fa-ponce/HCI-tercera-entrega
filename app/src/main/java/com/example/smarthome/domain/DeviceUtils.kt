@@ -29,6 +29,7 @@ private val TYPE_TOGGLE = mapOf(
     DeviceTypes.HORNO      to ToggleConfig("turnOn",  "turnOff", { it["status"] == "on" }),
     DeviceTypes.PARLANTE   to ToggleConfig("play",    "stop",    { it["status"] == "playing" }),
     DeviceTypes.ASPIRADORA to ToggleConfig("start",   "dock",    { it["status"] != "docked" }),
+    DeviceTypes.HELADERA   to ToggleConfig("",        "",        { true }),
 )
 
 private val NO_TOGGLE = setOf(DeviceTypes.HELADERA)
