@@ -9,7 +9,7 @@ import com.example.smarthome.data.api.models.DeviceDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit, onDeviceRenamed: ((DeviceDto) -> Unit)? = null) {
+fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit, onDeviceRenamed: ((DeviceDto) -> Unit)? = null, onDeviceDeleted: ((String) -> Unit)? = null) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -27,6 +27,7 @@ fun GenericSheet(device: DeviceDto, onDismiss: () -> Unit, onDeviceRenamed: ((De
             OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                 Text("Cerrar")
             }
+            SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, onDeleted = onDeviceDeleted)
         }
     }
 }

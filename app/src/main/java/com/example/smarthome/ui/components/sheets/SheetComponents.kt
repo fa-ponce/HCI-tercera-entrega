@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.ServiceLocator
@@ -108,6 +109,49 @@ fun SheetSectionLabel(text: String) {
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
+}
+
+@Composable
+fun SheetDeleteButton(
+    deviceId: String,
+    onDismiss: () -> Unit,
+    onDeleted: ((String) -> Unit)? = null
+) {
+    val scope = rememberCoroutineScope()
+    var showConfirm by remember { mutableStateOf(false) }
+
+    Button(
+        onClick = { showConfirm = true },
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+    ) {
+        Text("Eliminar dispositivo", color = Color.White, fontWeight = FontWeight.SemiBold)
+    }
+
+    if (showConfirm) {
+        AlertDialog(
+            onDismissRequest = { showConfirm = false },
+            title = { Text("Eliminar dispositivo", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showConfirm = false
+                        scope.launch {
+                            ServiceLocator.deviceRepository.deleteDevice(deviceId).onSuccess {
+                                onDeleted?.invoke(deviceId)
+                                onDismiss()
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Eliminar", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirm = false }) { Text("Cancelar") }
+            }
+        )
+    }
 }
 
 @Composable

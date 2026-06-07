@@ -21,7 +21,8 @@ fun AcSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null
+    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
+    onDeviceDeleted: ((String) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val repo = remember { ServiceLocator.deviceRepository }
@@ -200,6 +201,8 @@ fun AcSheet(
                             onDismiss()
                         }
                     )
+                } else {
+                    SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, onDeleted = onDeviceDeleted)
                 }
             }
         }

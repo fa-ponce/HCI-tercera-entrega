@@ -10,20 +10,21 @@ fun DeviceSheetRouter(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null
+    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
+    onDeviceDeleted: ((String) -> Unit)? = null
 ) {
     when (device.type.id) {
-        DeviceTypes.LAMPARA    -> LamparaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.AC         -> AcSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.PUERTA     -> PuertaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.ALARMA     -> AlarmaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.PERSIANA   -> PersianaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.HORNO      -> HornoSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.GRIFO      -> GrifoSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.PARLANTE   -> ParlanteSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.ASPIRADORA -> AspiradoraSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        DeviceTypes.HELADERA   -> HeladeraSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed)
-        else                   -> GenericSheet(device, onDismiss, onDeviceRenamed)
+        DeviceTypes.LAMPARA    -> LamparaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.AC         -> AcSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.PUERTA     -> PuertaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.ALARMA     -> AlarmaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.PERSIANA   -> PersianaSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.HORNO      -> HornoSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.GRIFO      -> GrifoSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.PARLANTE   -> ParlanteSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.ASPIRADORA -> AspiradoraSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        DeviceTypes.HELADERA   -> HeladeraSheet(device, routineMode, onDismiss, onAddToRoutine, onDeviceRenamed, onDeviceDeleted)
+        else                   -> GenericSheet(device, onDismiss, onDeviceRenamed, onDeviceDeleted)
     }
 }
 

@@ -30,6 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -207,9 +209,13 @@ fun DevicesScreen(
                             val filterActive = homeFilter != null || roomFilter != null
                             IconButton(
                                 onClick = { showFilter = !showFilter },
+                                modifier = if (filterActive)
+                                    Modifier.background(Color(0xFF3A5A90), CircleShape)
+                                else
+                                    Modifier,
                                 colors = IconButtonDefaults.iconButtonColors(
                                     contentColor = if (filterActive)
-                                        MaterialTheme.colorScheme.primary
+                                        Color.White
                                     else
                                         MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -294,7 +300,8 @@ fun DevicesScreen(
         DeviceSheetRouter(
             device = device,
             onDismiss = { selectedDevice = null },
-            onDeviceRenamed = { appViewModel.updateDevice(it) }
+            onDeviceRenamed = { appViewModel.updateDevice(it) },
+            onDeviceDeleted = { appViewModel.removeDevice(it) }
         )
     }
 }
@@ -313,7 +320,7 @@ private fun StatPill(
         ) else CardDefaults.cardColors()
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(

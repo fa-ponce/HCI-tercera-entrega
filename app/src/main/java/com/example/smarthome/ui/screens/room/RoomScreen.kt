@@ -221,7 +221,8 @@ fun RoomScreen(
         DeviceSheetRouter(
             device = device,
             onDismiss = { selectedDevice = null },
-            onDeviceRenamed = { appViewModel.updateDevice(it) }
+            onDeviceRenamed = { appViewModel.updateDevice(it) },
+            onDeviceDeleted = { appViewModel.removeDevice(it) }
         )
     }
 }
