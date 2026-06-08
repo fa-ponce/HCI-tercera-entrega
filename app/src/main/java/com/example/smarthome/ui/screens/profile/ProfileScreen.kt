@@ -118,6 +118,7 @@ fun ProfileScreen(
     val darkMode by appViewModel.darkMode.collectAsState()
 
     var showPasswordDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var showTutorial by remember { mutableStateOf(false) }
     var tutorialStep by remember { mutableStateOf(0) }
 
@@ -274,12 +275,7 @@ fun ProfileScreen(
 
             // Cerrar sesión
             Button(
-                onClick = {
-                    appViewModel.logout()
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
+                onClick = { showLogoutDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
@@ -288,6 +284,34 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    // Modal cerrar sesión
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro que querés cerrar sesión?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        appViewModel.logout()
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Cerrar sesión", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     // Modal cambiar contraseña
