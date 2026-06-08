@@ -174,7 +174,8 @@ class AppViewModel(
         val fullName = if (marca.isNotBlank()) "$name - $marca" else name
         deviceRepository.createDevice(fullName, typeId, roomId)
             .onSuccess { device ->
-                if (roomId != null) addDevice(roomId, device.copy(room = RoomRef(roomId)))
+                val key = roomId ?: "free"
+                addDevice(key, device.copy(room = roomId?.let { RoomRef(it) }))
             }
             .onFailure { _error.value = it.message }
     }

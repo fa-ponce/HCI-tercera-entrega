@@ -100,13 +100,17 @@ fun RoutineBuilderSheet(
     data class DeviceItem(val device: DeviceDto, val homeName: String, val roomName: String)
 
     val allDevices = remember(homes, rooms, devices) {
-        homes.flatMap { home ->
+        val inRooms = homes.flatMap { home ->
             (rooms[home.id] ?: emptyList()).flatMap { room ->
                 (devices[room.id] ?: emptyList()).map { device ->
                     DeviceItem(device, home.name, room.name)
                 }
             }
         }
+        val free = (devices["free"] ?: emptyList()).map { device ->
+            DeviceItem(device, "", "Sin habitación")
+        }
+        inRooms + free
     }
 
     // ── Form state ────────────────────────────────────────────────────────────
