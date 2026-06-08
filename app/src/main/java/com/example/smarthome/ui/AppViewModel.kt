@@ -23,12 +23,18 @@ import com.example.smarthome.socket.SocketManager
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+fun Throwable.isNetworkError(): Boolean =
+    this is UnknownHostException || this is ConnectException || this is SocketTimeoutException
 
 class AppViewModel(
     private val homeRepository: HomeRepository,
@@ -93,6 +99,10 @@ class AppViewModel(
         userPreferences.clear()
     }
 
+    fun clearError() { _error.value = null }
+
+    fun retryLoad() = loadAll()
+
     fun loadAll() = viewModelScope.launch {
         _isLoading.value = true
         _error.value = null
@@ -125,7 +135,10 @@ class AppViewModel(
             _rooms.value = roomsMap
             _devices.value = devicesMap
         } catch (e: Exception) {
-            _error.value = e.message ?: "Error al cargar datos"
+            _error.value = if (e.isNetworkError())
+                "Sin conexión a internet. Verificá tu red."
+            else
+                e.message ?: "Error al cargar los datos"
         } finally {
             _isLoading.value = false
         }

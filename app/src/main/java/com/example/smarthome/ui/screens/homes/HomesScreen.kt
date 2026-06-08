@@ -57,6 +57,8 @@ import com.example.smarthome.ServiceLocator
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material.icons.rounded.WifiOff
+import androidx.compose.material3.Button
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +70,8 @@ fun HomesScreen(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val isLoading by appViewModel.isLoading.collectAsState()
+    val error by appViewModel.error.collectAsState()
     val scope = rememberCoroutineScope()
 
     var search by remember { mutableStateOf("") }
@@ -126,6 +130,49 @@ fun HomesScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
+        if (!isLoading && homes.isEmpty() && error != null) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.WifiOff, null,
+                        modifier = Modifier.size(56.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        error!!,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Button(onClick = { appViewModel.retryLoad() }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+            return@Scaffold
+        }
+
+        if (isLoading && homes.isEmpty()) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
         LazyColumn(
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 8.dp,
