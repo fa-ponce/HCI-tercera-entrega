@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.smarthome.ServiceLocator
+import com.example.smarthome.data.repository.AccountNotVerifiedException
 import com.example.smarthome.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,8 @@ sealed class LoginMode {
     object Login : LoginMode()
     object Register : LoginMode()
     object Verify : LoginMode()
+    object ForgotPassword : LoginMode()
+    object ResetPassword : LoginMode()
 }
 
 data class LoginUiState(
@@ -27,6 +30,7 @@ data class LoginUiState(
     val name: String = "",
     val email: String = "",
     val password: String = "",
+    val newPassword: String = "",
     val code: String = "",
     val isLoading: Boolean = false,
     val error: String? = null
@@ -44,6 +48,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun setName(v: String) = _uiState.update { it.copy(name = v) }
     fun setEmail(v: String) = _uiState.update { it.copy(email = v) }
     fun setPassword(v: String) = _uiState.update { it.copy(password = v) }
+    fun setNewPassword(v: String) = _uiState.update { it.copy(newPassword = v) }
     fun setCode(v: String) = _uiState.update { it.copy(code = v) }
 
     fun login() = viewModelScope.launch {
@@ -51,7 +56,15 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         val s = uiState.value
         authRepository.login(s.email, s.password)
             .onSuccess { _navigateToHome.emit(Unit) }
-            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al iniciar sesión") } }
+            .onFailure { e ->
+                if (e is AccountNotVerifiedException) {
+                    setMode(LoginMode.Verify)
+                    authRepository.sendVerification(s.email)
+                    _uiState.update { st -> st.copy(error = "Tu cuenta no está verificada. Te enviamos un código a ${s.email}.") }
+                } else {
+                    _uiState.update { st -> st.copy(error = e.message ?: "Error al iniciar sesión") }
+                }
+            }
         _uiState.update { it.copy(isLoading = false) }
     }
 
@@ -74,6 +87,23 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun sendVerification() = viewModelScope.launch {
         authRepository.sendVerification(uiState.value.email)
+    }
+
+    fun forgotPassword() = viewModelScope.launch {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        authRepository.forgotPassword(uiState.value.email)
+            .onSuccess { setMode(LoginMode.ResetPassword) }
+            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al enviar el código") } }
+        _uiState.update { it.copy(isLoading = false) }
+    }
+
+    fun resetPassword() = viewModelScope.launch {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        val s = uiState.value
+        authRepository.resetPassword(s.code, s.newPassword)
+            .onSuccess { setMode(LoginMode.Login) }
+            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al cambiar la contraseña") } }
+        _uiState.update { it.copy(isLoading = false) }
     }
 
     companion object {
