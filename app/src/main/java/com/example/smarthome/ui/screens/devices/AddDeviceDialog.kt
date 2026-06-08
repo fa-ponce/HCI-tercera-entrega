@@ -18,10 +18,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +51,8 @@ fun AddDeviceDialog(
     var name by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
     var marca by remember { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     var typeExpanded by remember { mutableStateOf(false) }
     var selectedType by remember { mutableStateOf<DeviceTypeDto?>(null) }
@@ -218,19 +224,30 @@ fun AddDeviceDialog(
                 onClick = {
                     val trimmed = name.trim()
                     when {
-                        trimmed.length < 3 -> nameError = "El nombre debe tener al menos 3 caracteres"
-                        trimmed.length > 100 -> nameError = "El nombre no puede superar 100 caracteres"
-                        selectedType == null -> {}
-                        else -> onCreate(trimmed, selectedType!!.id, selectedRoom?.id, marca.trim())
+                        trimmed.length < 3 -> { nameError = "El nombre debe tener al menos 3 caracteres"; return@TextButton }
+                        trimmed.length > 100 -> { nameError = "El nombre no puede superar 100 caracteres"; return@TextButton }
+                        selectedType == null -> return@TextButton
+                    }
+                    if (!isSaving) {
+                        isSaving = true
+                        onCreate(trimmed, selectedType!!.id, selectedRoom?.id, marca.trim())
                     }
                 },
-                enabled = selectedType != null
+                enabled = selectedType != null && !isSaving
             ) {
-                Text("Crear", color = Color(0xFF3A5A90), fontWeight = FontWeight.Bold)
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFF3A5A90)
+                    )
+                } else {
+                    Text("Crear", color = Color(0xFF3A5A90), fontWeight = FontWeight.Bold)
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Cancelar") }
         }
     )
 }

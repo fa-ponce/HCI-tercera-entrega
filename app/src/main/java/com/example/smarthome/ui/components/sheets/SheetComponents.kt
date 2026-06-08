@@ -58,8 +58,9 @@ fun SheetHeader(
     }
 
     if (showDialog) {
+        var isSaving by remember { mutableStateOf(false) }
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { if (!isSaving) showDialog = false },
             title = { Text("Renombrar dispositivo", fontWeight = FontWeight.Bold) },
             text = {
                 OutlinedTextField(
@@ -67,6 +68,7 @@ fun SheetHeader(
                     onValueChange = { editText = it },
                     label = { Text("Nombre") },
                     singleLine = true,
+                    enabled = !isSaving,
                     modifier = Modifier.fillMaxWidth()
                 )
             },
@@ -74,21 +76,30 @@ fun SheetHeader(
                 Button(
                     onClick = {
                         val newName = editText.trim()
-                        if (newName.isNotEmpty()) {
+                        if (newName.isNotEmpty() && !isSaving) {
+                            isSaving = true
                             scope.launch {
                                 ServiceLocator.deviceRepository.updateDevice(deviceId!!, newName)
                                     .onSuccess {
                                         displayTitle = newName
                                         onRenamed?.invoke(newName)
+                                        showDialog = false
                                     }
+                                isSaving = false
                             }
-                            showDialog = false
                         }
+                    },
+                    enabled = !isSaving
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(Modifier.width(8.dp))
                     }
-                ) { Text("Guardar") }
+                    Text("Guardar")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDialog = false }, enabled = !isSaving) { Text("Cancelar") }
             }
         )
     }
@@ -125,6 +136,7 @@ fun SheetDeleteButton(
 ) {
     val scope = rememberCoroutineScope()
     var showConfirm by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
 
     Button(
         onClick = { showConfirm = true },
@@ -136,25 +148,35 @@ fun SheetDeleteButton(
 
     if (showConfirm) {
         AlertDialog(
-            onDismissRequest = { showConfirm = false },
+            onDismissRequest = { if (!isDeleting) showConfirm = false },
             title = { Text("Eliminar dispositivo", fontWeight = FontWeight.Bold) },
             text = { Text("¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.") },
             confirmButton = {
                 Button(
                     onClick = {
-                        showConfirm = false
-                        scope.launch {
-                            ServiceLocator.deviceRepository.deleteDevice(deviceId).onSuccess {
-                                onDeleted?.invoke(deviceId)
-                                onDismiss()
+                        if (!isDeleting) {
+                            isDeleting = true
+                            scope.launch {
+                                ServiceLocator.deviceRepository.deleteDevice(deviceId).onSuccess {
+                                    onDeleted?.invoke(deviceId)
+                                    onDismiss()
+                                }
+                                isDeleting = false
                             }
                         }
                     },
+                    enabled = !isDeleting,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Eliminar", color = Color.White) }
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Eliminar", color = Color.White)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirm = false }) { Text("Cancelar") }
+                TextButton(onClick = { showConfirm = false }, enabled = !isDeleting) { Text("Cancelar") }
             }
         )
     }
@@ -177,6 +199,8 @@ fun SheetRoomLinkButton(
     var homeExpanded by remember { mutableStateOf(false) }
     var selectedRoom by remember { mutableStateOf<RoomDto?>(null) }
     var roomExpanded by remember { mutableStateOf(false) }
+    var isUnlinking by remember { mutableStateOf(false) }
+    var isLinking by remember { mutableStateOf(false) }
 
     OutlinedButton(
         onClick = { if (isLinked) showUnlinkConfirm = true else showLinkDialog = true },
@@ -194,23 +218,36 @@ fun SheetRoomLinkButton(
 
     if (showUnlinkConfirm) {
         AlertDialog(
-            onDismissRequest = { showUnlinkConfirm = false },
+            onDismissRequest = { if (!isUnlinking) showUnlinkConfirm = false },
             title = { Text("Desvincular dispositivo", fontWeight = FontWeight.Bold) },
             text = { Text("El dispositivo se desvinculará de su habitación actual y quedará libre.") },
             confirmButton = {
                 Button(
                     onClick = {
-                        showUnlinkConfirm = false
-                        scope.launch {
-                            ServiceLocator.deviceRepository.removeDeviceFromRoom(device.id)
-                                .onSuccess { onDeviceUpdated?.invoke(device.copy(room = null)) }
+                        if (!isUnlinking) {
+                            isUnlinking = true
+                            scope.launch {
+                                ServiceLocator.deviceRepository.removeDeviceFromRoom(device.id)
+                                    .onSuccess {
+                                        onDeviceUpdated?.invoke(device.copy(room = null))
+                                        showUnlinkConfirm = false
+                                    }
+                                isUnlinking = false
+                            }
                         }
                     },
+                    enabled = !isUnlinking,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Desvincular", color = Color.White) }
+                ) {
+                    if (isUnlinking) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Desvincular", color = Color.White)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showUnlinkConfirm = false }) { Text("Cancelar") }
+                TextButton(onClick = { showUnlinkConfirm = false }, enabled = !isUnlinking) { Text("Cancelar") }
             }
         )
     }
@@ -285,23 +322,34 @@ fun SheetRoomLinkButton(
                 Button(
                     onClick = {
                         val room = selectedRoom ?: return@Button
-                        showLinkDialog = false
-                        scope.launch {
-                            ServiceLocator.deviceRepository.addDeviceToRoom(room.id, device.id)
-                                .onSuccess { onDeviceUpdated?.invoke(device.copy(room = RoomRef(room.id))) }
+                        if (!isLinking) {
+                            isLinking = true
+                            scope.launch {
+                                ServiceLocator.deviceRepository.addDeviceToRoom(room.id, device.id)
+                                    .onSuccess {
+                                        onDeviceUpdated?.invoke(device.copy(room = RoomRef(room.id)))
+                                        selectedHome = null
+                                        selectedRoom = null
+                                        showLinkDialog = false
+                                    }
+                                isLinking = false
+                            }
                         }
-                        selectedHome = null
-                        selectedRoom = null
                     },
-                    enabled = selectedRoom != null
-                ) { Text("Vincular") }
+                    enabled = selectedRoom != null && !isLinking
+                ) {
+                    if (isLinking) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Vincular")
+                }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showLinkDialog = false
-                    selectedHome = null
-                    selectedRoom = null
-                }) { Text("Cancelar") }
+                TextButton(
+                    onClick = { showLinkDialog = false; selectedHome = null; selectedRoom = null },
+                    enabled = !isLinking
+                ) { Text("Cancelar") }
             }
         )
     }

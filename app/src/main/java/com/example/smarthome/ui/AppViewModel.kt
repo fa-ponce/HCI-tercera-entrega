@@ -182,15 +182,20 @@ class AppViewModel(
         name: String,
         typeId: String,
         roomId: String?,
-        marca: String
+        marca: String,
+        onResult: ((success: Boolean) -> Unit)? = null
     ) = viewModelScope.launch {
         val fullName = if (marca.isNotBlank()) "$name - $marca" else name
         deviceRepository.createDevice(fullName, typeId, roomId)
             .onSuccess { device ->
                 val key = roomId ?: "free"
                 addDevice(key, device.copy(room = roomId?.let { RoomRef(it) }))
+                onResult?.invoke(true)
             }
-            .onFailure { _error.value = it.message }
+            .onFailure {
+                _error.value = it.message
+                onResult?.invoke(false)
+            }
     }
 
     private fun buildOptimisticState(

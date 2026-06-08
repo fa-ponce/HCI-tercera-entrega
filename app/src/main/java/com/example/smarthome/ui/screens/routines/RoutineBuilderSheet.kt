@@ -182,6 +182,7 @@ fun RoutineBuilderSheet(
 
     // ── Saving ────────────────────────────────────────────────────────────────
     var isSaving by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
 
     fun buildRequest(): RoutineRequest {
         val trigger = if (tipoTrigger == "hora") hora else "Manual"
@@ -420,22 +421,31 @@ fun RoutineBuilderSheet(
                     if (isEditing) {
                         OutlinedButton(
                             onClick = {
-                                scope.launch {
-                                    routineRepo.deleteRoutine(routine!!.id).onSuccess {
-                                        appViewModel.removeRoutine(routine.id)
-                                        onDismiss()
+                                if (!isDeleting) {
+                                    isDeleting = true
+                                    scope.launch {
+                                        routineRepo.deleteRoutine(routine!!.id).onSuccess {
+                                            appViewModel.removeRoutine(routine.id)
+                                            onDismiss()
+                                        }
+                                        isDeleting = false
                                     }
                                 }
                             },
                             modifier = Modifier.weight(1f),
+                            enabled = !isDeleting,
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                             border = ButtonDefaults.outlinedButtonBorder(true).copy(
                                 brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
                             )
                         ) {
-                            Icon(Icons.Rounded.Delete, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Eliminar")
+                            if (isDeleting) {
+                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.error)
+                            } else {
+                                Icon(Icons.Rounded.Delete, null, Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Eliminar")
+                            }
                         }
                     } else {
                         OutlinedButton(
@@ -446,7 +456,7 @@ fun RoutineBuilderSheet(
                     Button(
                         onClick = { submit() },
                         modifier = Modifier.weight(1f),
-                        enabled = !isSaving
+                        enabled = !isSaving && !isDeleting
                     ) {
                         if (isSaving) {
                             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)

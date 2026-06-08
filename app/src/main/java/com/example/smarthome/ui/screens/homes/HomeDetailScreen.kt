@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -86,6 +87,8 @@ fun HomeDetailScreen(
     var showAddRoomDialog by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
+    var isRenameSaving by remember { mutableStateOf(false) }
+    var isDeleteSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -278,8 +281,8 @@ fun HomeDetailScreen(
                 Button(
                     onClick = {
                         val newName = renameText.trim()
-                        if (newName.isNotEmpty() && home != null) {
-                            showRenameDialog = false
+                        if (newName.isNotEmpty() && home != null && !isRenameSaving) {
+                            isRenameSaving = true
                             scope.launch {
                                 ServiceLocator.homeRepository.updateHome(
                                     id = homeId,
@@ -287,15 +290,26 @@ fun HomeDetailScreen(
                                     type = home.metadata?.type ?: "",
                                     address = home.metadata?.address ?: "",
                                     city = home.metadata?.city ?: ""
-                                ).onSuccess { updated -> appViewModel.updateHome(updated) }
+                                ).onSuccess { updated ->
+                                    appViewModel.updateHome(updated)
+                                    showRenameDialog = false
+                                }
+                                isRenameSaving = false
                             }
                         }
                     },
+                    enabled = !isRenameSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
-                ) { Text("Guardar", color = Color.White) }
+                ) {
+                    if (isRenameSaving) {
+                        CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Guardar", color = Color.White)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text("Cancelar") }
             }
         )
     }
@@ -308,21 +322,29 @@ fun HomeDetailScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        showDeleteDialog = false
-                        scope.launch {
-                            ServiceLocator.homeRepository.deleteHome(homeId).onSuccess {
-                                appViewModel.removeHome(homeId)
-                                navController.popBackStack()
+                        if (!isDeleteSaving) {
+                            isDeleteSaving = true
+                            scope.launch {
+                                ServiceLocator.homeRepository.deleteHome(homeId).onSuccess {
+                                    appViewModel.removeHome(homeId)
+                                    navController.popBackStack()
+                                }
+                                isDeleteSaving = false
                             }
                         }
                     },
+                    enabled = !isDeleteSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
+                    if (isDeleteSaving) {
+                        CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    }
                     Text("Eliminar", color = Color.White)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text("Cancelar") }
             }
         )
     }
@@ -352,6 +374,7 @@ private fun AddRoomDialog(
     var selectedType by remember { mutableStateOf(roomTypes[0]) }
     var typeExpanded by remember { mutableStateOf(false) }
     var floor by remember { mutableStateOf(1) }
+    var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     AlertDialog(
@@ -432,21 +455,30 @@ private fun AddRoomDialog(
                         trimmed.length < 3 -> { nameError = "El nombre debe tener al menos 3 caracteres"; return@Button }
                         trimmed.length > 100 -> { nameError = "El nombre no puede superar 100 caracteres"; return@Button }
                     }
-                    scope.launch {
-                        ServiceLocator.homeRepository.createRoom(trimmed, selectedType, floor, homeId)
-                            .onSuccess { room ->
-                                appViewModel.addRoom(homeId, room)
-                                onDismiss()
-                            }
+                    if (!isSaving) {
+                        isSaving = true
+                        scope.launch {
+                            ServiceLocator.homeRepository.createRoom(trimmed, selectedType, floor, homeId)
+                                .onSuccess { room ->
+                                    appViewModel.addRoom(homeId, room)
+                                    onDismiss()
+                                }
+                            isSaving = false
+                        }
                     }
                 },
+                enabled = !isSaving,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
             ) {
+                if (isSaving) {
+                    CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    Spacer(Modifier.width(8.dp))
+                }
                 Text("Crear", color = Color.White)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Cancelar") }
         }
     )
 }

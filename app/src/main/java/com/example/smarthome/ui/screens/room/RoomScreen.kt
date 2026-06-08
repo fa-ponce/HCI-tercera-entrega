@@ -23,6 +23,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,6 +73,8 @@ fun RoomScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
+    var isRenameSaving by remember { mutableStateOf(false) }
+    var isDeleteSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val room = rooms.values.flatten().find { it.id == roomId }
@@ -199,19 +202,29 @@ fun RoomScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        showDeleteDialog = false
-                        scope.launch {
-                            ServiceLocator.homeRepository.deleteRoom(roomId).onSuccess {
-                                appViewModel.removeRoom(home?.id ?: "", roomId)
-                                navController.popBackStack()
+                        if (!isDeleteSaving) {
+                            isDeleteSaving = true
+                            scope.launch {
+                                ServiceLocator.homeRepository.deleteRoom(roomId).onSuccess {
+                                    appViewModel.removeRoom(home?.id ?: "", roomId)
+                                    navController.popBackStack()
+                                }
+                                isDeleteSaving = false
                             }
                         }
                     },
+                    enabled = !isDeleteSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text("Eliminar", color = Color.White) }
+                ) {
+                    if (isDeleteSaving) {
+                        CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Eliminar", color = Color.White)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text("Cancelar") }
             }
         )
     }
@@ -233,23 +246,34 @@ fun RoomScreen(
                 Button(
                     onClick = {
                         val newName = renameText.trim()
-                        if (newName.isNotEmpty() && room != null) {
-                            showRenameDialog = false
+                        if (newName.isNotEmpty() && room != null && !isRenameSaving) {
+                            isRenameSaving = true
                             scope.launch {
                                 ServiceLocator.homeRepository.updateRoom(
                                     id = roomId,
                                     name = newName,
                                     type = room.metadata?.type ?: "",
                                     homeId = home?.id
-                                ).onSuccess { updated -> appViewModel.updateRoom(updated) }
+                                ).onSuccess { updated ->
+                                    appViewModel.updateRoom(updated)
+                                    showRenameDialog = false
+                                }
+                                isRenameSaving = false
                             }
                         }
                     },
+                    enabled = !isRenameSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
-                ) { Text("Guardar", color = Color.White) }
+                ) {
+                    if (isRenameSaving) {
+                        CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Guardar", color = Color.White)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text("Cancelar") }
             }
         )
     }
