@@ -32,7 +32,7 @@ private val TYPE_TOGGLE = mapOf(
     DeviceTypes.HELADERA   to ToggleConfig("",        "",        { true }),
 )
 
-private val NO_TOGGLE = setOf(DeviceTypes.HELADERA)
+private val NO_TOGGLE = setOf(DeviceTypes.HELADERA, DeviceTypes.ALARMA)
 
 fun canToggle(typeId: String): Boolean = typeId !in NO_TOGGLE
 
