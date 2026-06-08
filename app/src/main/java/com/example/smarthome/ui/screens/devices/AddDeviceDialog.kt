@@ -63,7 +63,7 @@ fun AddDeviceDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuevo Dispositivo", fontWeight = FontWeight.Bold) },
+        title = { Text("Nuevo dispositivo", fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier
@@ -74,7 +74,7 @@ fun AddDeviceDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre del Dispositivo") },
+                    label = { Text("Nombre del dispositivo *") },
                     placeholder = { Text("Ej: Lampara LED") },
                     singleLine = true,
                     isError = nameError != null,
@@ -93,7 +93,7 @@ fun AddDeviceDialog(
                         value = selectedType?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Tipo de Dispositivo") },
+                        label = { Text("Tipo de dispositivo *") },
                         placeholder = { Text("Seleccionar tipo") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
                         shape = RoundedCornerShape(16.dp),

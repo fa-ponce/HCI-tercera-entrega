@@ -226,7 +226,7 @@ fun HomeDetailScreen(
                                             ) {
                                                 Icon(Icons.Rounded.Devices, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
                                                 Text(
-                                                    "${roomDevices.size} disp. · $roomOn enc.",
+                                                    "${roomDevices.size} dispositivos · $roomOn encendidos",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.outline
                                                 )
@@ -364,7 +364,7 @@ private fun AddRoomDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre") },
+                    label = { Text("Nombre *") },
                     placeholder = { Text("Ej: Dormitorio Principal") },
                     singleLine = true,
                     isError = nameError != null,

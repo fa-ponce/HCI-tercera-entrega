@@ -94,7 +94,7 @@ fun AlarmaSheet(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Confirmar codigo")
+                                Text("Confirmar código")
                             }
                         }
                     }

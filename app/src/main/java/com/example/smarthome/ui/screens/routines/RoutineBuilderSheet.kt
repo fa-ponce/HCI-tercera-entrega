@@ -240,7 +240,7 @@ fun RoutineBuilderSheet(
             // Header
             item {
                 Text(
-                    if (isEditing) "Editar Rutina" else "Nueva Rutina",
+                    if (isEditing) "Editar rutina" else "Nueva rutina",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -251,7 +251,7 @@ fun RoutineBuilderSheet(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = false },
-                    label = { Text("Nombre") },
+                    label = { Text("Nombre *") },
                     placeholder = { Text("Ej: Llegada a casa") },
                     isError = nameError,
                     supportingText = if (nameError) { { Text("El nombre es obligatorio") } } else null,
@@ -451,7 +451,7 @@ fun RoutineBuilderSheet(
                         if (isSaving) {
                             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                         } else {
-                            Text(if (isEditing) "Guardar cambios" else "Crear Rutina")
+                            Text(if (isEditing) "Guardar cambios" else "Crear rutina")
                         }
                     }
                 }

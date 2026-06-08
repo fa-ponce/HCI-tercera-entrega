@@ -121,7 +121,7 @@ fun ConsumptionScreen(
                         title = "Consumo actual",
                         value = if (totalW >= 1000) "${"%.2f".format(totalW / 1000f)} kW"
                                 else "$totalW W",
-                        subtitle = "${onDevices.size} disp. encendidos",
+                        subtitle = "${onDevices.size} dispositivos encendidos",
                         modifier = Modifier.weight(1f)
                     )
                     ConsumptionStatCard(

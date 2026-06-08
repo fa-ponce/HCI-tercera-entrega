@@ -131,7 +131,7 @@ fun ProfileScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Mi Perfil",
+                        "Perfil",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -378,7 +378,7 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                     OutlinedTextField(
                         value = oldPass,
                         onValueChange = { oldPass = it; errorMsg = null },
-                        label = { Text("Contraseña actual") },
+                        label = { Text("Contraseña actual *") },
                         singleLine = true,
                         visualTransformation = if (oldVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -391,7 +391,7 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                     OutlinedTextField(
                         value = newPass,
                         onValueChange = { newPass = it; errorMsg = null },
-                        label = { Text("Nueva contraseña") },
+                        label = { Text("Nueva contraseña *") },
                         singleLine = true,
                         visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -404,7 +404,7 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                     OutlinedTextField(
                         value = confirmPass,
                         onValueChange = { confirmPass = it; errorMsg = null },
-                        label = { Text("Confirmar nueva contraseña") },
+                        label = { Text("Confirmar nueva contraseña *") },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()

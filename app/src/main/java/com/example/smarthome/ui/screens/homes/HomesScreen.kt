@@ -100,7 +100,7 @@ fun HomesScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Mis Casas",
+                        "Casas",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -120,7 +120,7 @@ fun HomesScreen(
             ExtendedFloatingActionButton(
                 onClick = { showDialog = true },
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null, tint = Color.White) },
-                text = { Text("Nueva Casa", color = Color.White, fontWeight = FontWeight.SemiBold) },
+                text = { Text("Nueva casa", color = Color.White, fontWeight = FontWeight.SemiBold) },
                 containerColor = Color(0xFF3A5A90)
             )
         },
@@ -209,14 +209,14 @@ fun HomesScreen(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Icon(Icons.Rounded.MeetingRoom, null, Modifier.size(13.dp), tint = MaterialTheme.colorScheme.outline)
-                                    Text("${homeRooms.size} hab.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                    Text("${homeRooms.size} habitaciones", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                                 }
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Icon(Icons.Rounded.Devices, null, Modifier.size(13.dp), tint = MaterialTheme.colorScheme.outline)
-                                    Text("$deviceCount disp.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                    Text("$deviceCount dispositivos", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                                 }
                             }
                         }
@@ -249,13 +249,13 @@ private fun NewHomeDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Casa", fontWeight = FontWeight.Bold) },
+        title = { Text("Nueva casa", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre de la casa") },
+                    label = { Text("Nombre de la casa *") },
                     placeholder = { Text("Ej: Casa de playa") },
                     singleLine = true,
                     isError = nameError != null,
