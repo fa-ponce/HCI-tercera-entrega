@@ -241,6 +241,7 @@ private fun NewHomeDialog(
     onCreate: (name: String, type: String, address: String, city: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var nameError by remember { mutableStateOf<String?>(null) }
     var address by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(PROPERTY_TYPES[0]) }
@@ -253,10 +254,12 @@ private fun NewHomeDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; nameError = null },
                     label = { Text("Nombre de la casa") },
                     placeholder = { Text("Ej: Casa de playa") },
                     singleLine = true,
+                    isError = nameError != null,
+                    supportingText = nameError?.let { msg -> { Text(msg) } },
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -310,8 +313,14 @@ private fun NewHomeDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { if (name.isNotBlank()) onCreate(name.trim(), selectedType, address.trim(), city.trim()) },
-                enabled = name.isNotBlank()
+                onClick = {
+                    val trimmed = name.trim()
+                    when {
+                        trimmed.length < 3 -> nameError = "El nombre debe tener al menos 3 caracteres"
+                        trimmed.length > 100 -> nameError = "El nombre no puede superar 100 caracteres"
+                        else -> onCreate(trimmed, selectedType, address.trim(), city.trim())
+                    }
+                }
             ) {
                 Text("Crear", color = Color(0xFF3A5A90), fontWeight = FontWeight.Bold)
             }

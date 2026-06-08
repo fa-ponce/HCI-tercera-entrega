@@ -36,7 +36,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -349,7 +348,7 @@ private fun AddRoomDialog(
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var nameError by remember { mutableStateOf(false) }
+    var nameError by remember { mutableStateOf<String?>(null) }
     var selectedType by remember { mutableStateOf(roomTypes[0]) }
     var typeExpanded by remember { mutableStateOf(false) }
     var floor by remember { mutableStateOf(1) }
@@ -364,28 +363,14 @@ private fun AddRoomDialog(
                 // Nombre
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it; nameError = false },
+                    onValueChange = { name = it; nameError = null },
                     label = { Text("Nombre") },
                     placeholder = { Text("Ej: Dormitorio Principal") },
                     singleLine = true,
-                    isError = nameError,
-                    colors = if (nameError)
-                        OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.error,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.error,
-                            focusedLabelColor = MaterialTheme.colorScheme.error,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.error
-                        )
-                    else OutlinedTextFieldDefaults.colors(),
+                    isError = nameError != null,
+                    supportingText = nameError?.let { msg -> { Text(msg) } },
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (nameError) {
-                    Text(
-                        "Debe asignar un nombre a la habitación",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
 
                 // Tipo
                 ExposedDropdownMenuBox(
@@ -442,12 +427,13 @@ private fun AddRoomDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (name.isBlank()) {
-                        nameError = true
-                        return@Button
+                    val trimmed = name.trim()
+                    when {
+                        trimmed.length < 3 -> { nameError = "El nombre debe tener al menos 3 caracteres"; return@Button }
+                        trimmed.length > 100 -> { nameError = "El nombre no puede superar 100 caracteres"; return@Button }
                     }
                     scope.launch {
-                        ServiceLocator.homeRepository.createRoom(name.trim(), selectedType, floor, homeId)
+                        ServiceLocator.homeRepository.createRoom(trimmed, selectedType, floor, homeId)
                             .onSuccess { room ->
                                 appViewModel.addRoom(homeId, room)
                                 onDismiss()

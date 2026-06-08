@@ -45,6 +45,7 @@ fun AddDeviceDialog(
     LaunchedEffect(Unit) { appViewModel.loadDeviceTypes() }
 
     var name by remember { mutableStateOf("") }
+    var nameError by remember { mutableStateOf<String?>(null) }
     var marca by remember { mutableStateOf("") }
 
     var typeExpanded by remember { mutableStateOf(false) }
@@ -72,10 +73,12 @@ fun AddDeviceDialog(
                 // Nombre
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; nameError = null },
                     label = { Text("Nombre del Dispositivo") },
                     placeholder = { Text("Ej: Lampara LED") },
                     singleLine = true,
+                    isError = nameError != null,
+                    supportingText = nameError?.let { msg -> { Text(msg) } },
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -213,11 +216,15 @@ fun AddDeviceDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (name.isNotBlank() && selectedType != null) {
-                        onCreate(name.trim(), selectedType!!.id, selectedRoom?.id, marca.trim())
+                    val trimmed = name.trim()
+                    when {
+                        trimmed.length < 3 -> nameError = "El nombre debe tener al menos 3 caracteres"
+                        trimmed.length > 100 -> nameError = "El nombre no puede superar 100 caracteres"
+                        selectedType == null -> {}
+                        else -> onCreate(trimmed, selectedType!!.id, selectedRoom?.id, marca.trim())
                     }
                 },
-                enabled = name.isNotBlank() && selectedType != null
+                enabled = selectedType != null
             ) {
                 Text("Crear", color = Color(0xFF3A5A90), fontWeight = FontWeight.Bold)
             }
