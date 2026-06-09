@@ -70,7 +70,6 @@ import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
 
-private val AppBlue = Color(0xFF3A5A90)
 
 private data class TutorialStep(
     val icon: ImageVector,
@@ -132,17 +131,17 @@ fun ProfileScreen(
                 title = {
                     Text(
                         "Perfil",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Volver", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBlue)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -160,7 +159,7 @@ fun ProfileScreen(
                 imageVector = Icons.Rounded.AccountCircle,
                 contentDescription = null,
                 modifier = Modifier.size(88.dp),
-                tint = AppBlue
+                tint = MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.height(12.dp))
             Text(
@@ -184,7 +183,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Lock, null, tint = AppBlue, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Contraseña", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -192,9 +191,9 @@ fun ProfileScreen(
                     }
                     OutlinedButton(
                         onClick = { showPasswordDialog = true },
-                        border = androidx.compose.foundation.BorderStroke(1.dp, AppBlue)
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Cambiar", color = AppBlue, style = MaterialTheme.typography.labelMedium)
+                        Text("Cambiar", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -207,7 +206,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.BarChart, null, tint = AppBlue, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.BarChart, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Costo de energía", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -222,7 +221,7 @@ fun ProfileScreen(
                                 TextButton(onClick = {
                                     costoInput.toFloatOrNull()?.let { appViewModel.updateCostoKwh(it) }
                                 }) {
-                                    Text("Guardar", color = AppBlue, style = MaterialTheme.typography.labelMedium)
+                                    Text("Guardar", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
@@ -239,7 +238,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.DarkMode, null, tint = AppBlue, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.DarkMode, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Modo oscuro", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -248,7 +247,7 @@ fun ProfileScreen(
                     Switch(
                         checked = darkMode,
                         onCheckedChange = { appViewModel.setDarkMode(it) },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppBlue)
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = MaterialTheme.colorScheme.primary)
                     )
                 }
             }
@@ -261,7 +260,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Help, null, tint = AppBlue, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.Help, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Ayuda", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -419,8 +418,8 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
             if (success) {
                 Button(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppBlue)
-                ) { Text("Cerrar", color = Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) { Text("Cerrar", color = MaterialTheme.colorScheme.onPrimary) }
             } else {
                 Button(
                     onClick = {
@@ -442,8 +441,8 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                         }
                     },
                     enabled = !loading,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppBlue)
-                ) { Text(if (loading) "Guardando…" else "Guardar", color = Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) { Text(if (loading) "Guardando…" else "Guardar", color = MaterialTheme.colorScheme.onPrimary) }
             }
         },
         dismissButton = {
@@ -490,7 +489,7 @@ private fun TutorialOverlay(
                     Icon(
                         imageVector = current.icon,
                         contentDescription = null,
-                        tint = AppBlue,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(32.dp)
                     )
                     Spacer(Modifier.width(12.dp))
@@ -518,9 +517,9 @@ private fun TutorialOverlay(
                         }
                         Button(
                             onClick = onNext,
-                            colors = ButtonDefaults.buttonColors(containerColor = AppBlue)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Text(if (isLast) "Finalizar" else "Siguiente", color = Color.White)
+                            Text(if (isLast) "Finalizar" else "Siguiente", color = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                 }

@@ -105,27 +105,27 @@ fun HomesScreen(
                 title = {
                     Text(
                         "Casas",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF3A5A90)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showDialog = true },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null, tint = Color.White) },
-                text = { Text("Nueva casa", color = Color.White, fontWeight = FontWeight.SemiBold) },
-                containerColor = Color(0xFF3A5A90)
+                icon = { Icon(Icons.Rounded.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary) },
+                text = { Text("Nueva casa", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold) },
+                containerColor = MaterialTheme.colorScheme.primary
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -369,7 +369,7 @@ private fun NewHomeDialog(
                     }
                 }
             ) {
-                Text("Crear", color = Color(0xFF3A5A90), fontWeight = FontWeight.Bold)
+                Text("Crear", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

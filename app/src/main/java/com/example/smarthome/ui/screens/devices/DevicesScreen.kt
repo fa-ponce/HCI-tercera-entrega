@@ -139,33 +139,33 @@ fun DevicesScreen(
                 title = {
                     Text(
                         "Dispositivos",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF3A5A90)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddDialog = true },
-                icon = { Icon(Icons.Rounded.Add, null, tint = Color.White) },
+                icon = { Icon(Icons.Rounded.Add, null, tint = MaterialTheme.colorScheme.onPrimary) },
                 text = {
                     Text(
                         "Nuevo Dispositivo",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
                 },
-                containerColor = Color(0xFF3A5A90)
+                containerColor = MaterialTheme.colorScheme.primary
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -215,12 +215,12 @@ fun DevicesScreen(
                             IconButton(
                                 onClick = { showFilter = !showFilter },
                                 modifier = if (filterActive)
-                                    Modifier.background(Color(0xFF3A5A90), CircleShape)
+                                    Modifier.background(MaterialTheme.colorScheme.primary, CircleShape)
                                 else
                                     Modifier,
                                 colors = IconButtonDefaults.iconButtonColors(
                                     contentColor = if (filterActive)
-                                        Color.White
+                                        MaterialTheme.colorScheme.onPrimary
                                     else
                                         MaterialTheme.colorScheme.onSurfaceVariant
                                 )

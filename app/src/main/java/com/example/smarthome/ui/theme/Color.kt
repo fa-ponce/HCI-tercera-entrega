@@ -2,10 +2,12 @@ package com.example.smarthome.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Light scheme
+val Blue40 = Color(0xFF3A5A90)
+val BlueGrey40 = Color(0xFF546E8A)
+val BlueAccent40 = Color(0xFF1A73B0)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Dark scheme
+val Blue80 = Color(0xFFADC6FF)
+val BlueGrey80 = Color(0xFFBCC8D8)
+val BlueAccent80 = Color(0xFF82B1E8)

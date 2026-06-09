@@ -104,7 +104,7 @@ fun HomeScreen(
                 title = {
                     Text(
                         "SmartHome",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -114,13 +114,13 @@ fun HomeScreen(
                         Icon(
                             Icons.Rounded.AccountCircle,
                             contentDescription = "Perfil",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(28.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF3A5A90)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },

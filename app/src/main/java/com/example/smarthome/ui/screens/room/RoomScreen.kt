@@ -94,27 +94,27 @@ fun RoomScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             room?.name ?: "Habitación",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
                         IconButton(onClick = { renameText = room?.name ?: ""; showRenameDialog = true }) {
-                            Icon(Icons.Rounded.Edit, contentDescription = "Editar nombre", tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.Edit, contentDescription = "Editar nombre", tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
                         }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "Volver", tint = Color.White)
+                        Icon(Icons.Rounded.ArrowBack, "Volver", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF3A5A90)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
@@ -281,13 +281,13 @@ fun RoomScreen(
                         }
                     },
                     enabled = !isRenameSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5A90))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     if (isRenameSaving) {
-                        CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Guardar", color = Color.White)
+                    Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
