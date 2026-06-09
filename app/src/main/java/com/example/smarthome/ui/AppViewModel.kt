@@ -20,21 +20,19 @@ import com.example.smarthome.domain.DeviceTypes
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.toggleAction
 import com.example.smarthome.socket.SocketManager
+import com.example.smarthome.data.repository.isNetworkError
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-fun Throwable.isNetworkError(): Boolean =
-    this is UnknownHostException || this is ConnectException || this is SocketTimeoutException
 
 class AppViewModel(
     private val homeRepository: HomeRepository,
@@ -63,6 +61,9 @@ class AppViewModel(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _errorEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
 
     val userName: StateFlow<String?> = userPreferences.userName
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -135,10 +136,12 @@ class AppViewModel(
             _rooms.value = roomsMap
             _devices.value = devicesMap
         } catch (e: Exception) {
-            _error.value = if (e.isNetworkError())
+            val msg = if (e.isNetworkError())
                 "Sin conexión a internet. Verificá tu red."
             else
                 e.message ?: "Error al cargar los datos"
+            _error.value = msg
+            if (_homes.value.isNotEmpty()) _errorEvent.tryEmit(msg)
         } finally {
             _isLoading.value = false
         }
@@ -193,7 +196,7 @@ class AppViewModel(
                 onResult?.invoke(true)
             }
             .onFailure {
-                _error.value = it.message
+                _errorEvent.tryEmit(it.message ?: "Error al crear el dispositivo")
                 onResult?.invoke(false)
             }
     }

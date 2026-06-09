@@ -75,6 +75,8 @@ fun RoomScreen(
     var renameText by remember { mutableStateOf("") }
     var isRenameSaving by remember { mutableStateOf(false) }
     var isDeleteSaving by remember { mutableStateOf(false) }
+    var renameError by remember { mutableStateOf<String?>(null) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     val room = rooms.values.flatten().find { it.id == roomId }
@@ -198,17 +200,27 @@ fun RoomScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Eliminar habitación", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Estás seguro que querés eliminar \"${room?.name}\"? Esta acción no se puede deshacer.") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("¿Estás seguro que querés eliminar \"${room?.name}\"? Esta acción no se puede deshacer.")
+                    if (deleteError != null) {
+                        Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
                         if (!isDeleteSaving) {
                             isDeleteSaving = true
+                            deleteError = null
                             scope.launch {
-                                ServiceLocator.homeRepository.deleteRoom(roomId).onSuccess {
-                                    appViewModel.removeRoom(home?.id ?: "", roomId)
-                                    navController.popBackStack()
-                                }
+                                ServiceLocator.homeRepository.deleteRoom(roomId)
+                                    .onSuccess {
+                                        appViewModel.removeRoom(home?.id ?: "", roomId)
+                                        navController.popBackStack()
+                                    }
+                                    .onFailure { deleteError = it.message }
                                 isDeleteSaving = false
                             }
                         }
@@ -234,13 +246,18 @@ fun RoomScreen(
             onDismissRequest = { showRenameDialog = false },
             title = { Text("Renombrar habitación", fontWeight = FontWeight.Bold) },
             text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    label = { Text("Nombre") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = renameText,
+                        onValueChange = { renameText = it; renameError = null },
+                        label = { Text("Nombre") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (renameError != null) {
+                        Text(renameError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             },
             confirmButton = {
                 Button(
@@ -248,6 +265,7 @@ fun RoomScreen(
                         val newName = renameText.trim()
                         if (newName.isNotEmpty() && room != null && !isRenameSaving) {
                             isRenameSaving = true
+                            renameError = null
                             scope.launch {
                                 ServiceLocator.homeRepository.updateRoom(
                                     id = roomId,
@@ -257,7 +275,7 @@ fun RoomScreen(
                                 ).onSuccess { updated ->
                                     appViewModel.updateRoom(updated)
                                     showRenameDialog = false
-                                }
+                                }.onFailure { renameError = it.message }
                                 isRenameSaving = false
                             }
                         }

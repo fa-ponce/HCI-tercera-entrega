@@ -4,29 +4,28 @@ import com.example.smarthome.data.api.SmarthomeApi
 import com.example.smarthome.data.api.models.*
 import com.example.smarthome.data.datastore.UserPreferences
 import com.google.gson.Gson
-import retrofit2.HttpException
 
 class AccountNotVerifiedException : Exception("Cuenta no verificada")
-
-private data class ApiErrorWrapper(val error: ApiErrorDetail?)
-private data class ApiErrorDetail(val code: Int?, val description: String?)
 
 private fun retrofit2.Response<*>.parseError(): Exception {
     return try {
         val body = errorBody()?.string() ?: return Exception("Error ${code()}")
         Gson().fromJson(body, ApiErrorWrapper::class.java)?.error?.description
-            ?.let { Exception(it) } ?: Exception("Error ${code()}")
+            ?.let { Exception(mapApiDescription(it)) } ?: Exception("Error ${code()}")
     } catch (_: Exception) {
         Exception("Error ${code()}")
     }
 }
 
-private fun Throwable.apiDescription(): String? {
-    if (this !is HttpException) return null
-    return try {
-        val body = response()?.errorBody()?.string() ?: return null
-        Gson().fromJson(body, ApiErrorWrapper::class.java)?.error?.description
-    } catch (_: Exception) { null }
+private fun mapApiDescription(description: String): String {
+    val d = description.lowercase()
+    return when {
+        ("name" in d || "nombre" in d) && ("short" in d || "min" in d || "least" in d) ->
+            "El nombre debe tener al menos 3 caracteres."
+        ("name" in d || "nombre" in d) && ("long" in d || "max" in d || "exceed" in d) ->
+            "El nombre no puede superar los 100 caracteres."
+        else -> description
+    }
 }
 
 class AuthRepository(
@@ -44,7 +43,7 @@ class AuthRepository(
             if (description != null && description.contains("verif", ignoreCase = true)) {
                 Result.failure(AccountNotVerifiedException())
             } else {
-                Result.failure(Exception(description ?: e.message ?: "Error al iniciar sesión"))
+                Result.failure(Exception(e.toFriendlyMessage("Error al iniciar sesión")))
             }
         }
     }
@@ -58,8 +57,7 @@ class AuthRepository(
         return try {
             Result.success(api.register(RegisterRequest(name, email, password)))
         } catch (e: Exception) {
-            val description = e.apiDescription()
-            Result.failure(Exception(description ?: e.message ?: "Error al registrarse"))
+            Result.failure(Exception(e.toFriendlyMessage("Error al registrarse")))
         }
     }
 

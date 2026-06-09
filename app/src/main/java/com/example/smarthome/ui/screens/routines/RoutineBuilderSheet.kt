@@ -183,6 +183,8 @@ fun RoutineBuilderSheet(
     // ── Saving ────────────────────────────────────────────────────────────────
     var isSaving by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
 
     fun buildRequest(): RoutineRequest {
         val trigger = if (tipoTrigger == "hora") hora else "Manual"
@@ -214,17 +216,16 @@ fun RoutineBuilderSheet(
         if (name.isBlank()) { nameError = true; return }
         scope.launch {
             isSaving = true
+            saveError = null
             val request = buildRequest()
             if (isEditing) {
-                routineRepo.updateRoutine(routine!!.id, request).onSuccess { updated ->
-                    appViewModel.updateRoutine(updated)
-                    onDismiss()
-                }
+                routineRepo.updateRoutine(routine!!.id, request)
+                    .onSuccess { updated -> appViewModel.updateRoutine(updated); onDismiss() }
+                    .onFailure { saveError = it.message }
             } else {
-                routineRepo.createRoutine(request).onSuccess { created ->
-                    appViewModel.addRoutine(created)
-                    onDismiss()
-                }
+                routineRepo.createRoutine(request)
+                    .onSuccess { created -> appViewModel.addRoutine(created); onDismiss() }
+                    .onFailure { saveError = it.message }
             }
             isSaving = false
         }
@@ -412,6 +413,15 @@ fun RoutineBuilderSheet(
 
             // Footer
             item {
+                val footerError = saveError ?: deleteError
+                if (footerError != null) {
+                    Text(
+                        footerError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -423,11 +433,11 @@ fun RoutineBuilderSheet(
                             onClick = {
                                 if (!isDeleting) {
                                     isDeleting = true
+                                    deleteError = null
                                     scope.launch {
-                                        routineRepo.deleteRoutine(routine!!.id).onSuccess {
-                                            appViewModel.removeRoutine(routine.id)
-                                            onDismiss()
-                                        }
+                                        routineRepo.deleteRoutine(routine!!.id)
+                                            .onSuccess { appViewModel.removeRoutine(routine.id); onDismiss() }
+                                            .onFailure { deleteError = it.message }
                                         isDeleting = false
                                     }
                                 }

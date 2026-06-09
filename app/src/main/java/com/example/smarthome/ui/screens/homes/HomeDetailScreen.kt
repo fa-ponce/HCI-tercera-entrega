@@ -89,6 +89,8 @@ fun HomeDetailScreen(
     var renameText by remember { mutableStateOf("") }
     var isRenameSaving by remember { mutableStateOf(false) }
     var isDeleteSaving by remember { mutableStateOf(false) }
+    var renameError by remember { mutableStateOf<String?>(null) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -269,13 +271,18 @@ fun HomeDetailScreen(
             onDismissRequest = { showRenameDialog = false },
             title = { Text("Renombrar casa", fontWeight = FontWeight.Bold) },
             text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    label = { Text("Nombre") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = renameText,
+                        onValueChange = { renameText = it; renameError = null },
+                        label = { Text("Nombre") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (renameError != null) {
+                        Text(renameError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             },
             confirmButton = {
                 Button(
@@ -283,6 +290,7 @@ fun HomeDetailScreen(
                         val newName = renameText.trim()
                         if (newName.isNotEmpty() && home != null && !isRenameSaving) {
                             isRenameSaving = true
+                            renameError = null
                             scope.launch {
                                 ServiceLocator.homeRepository.updateHome(
                                     id = homeId,
@@ -293,7 +301,7 @@ fun HomeDetailScreen(
                                 ).onSuccess { updated ->
                                     appViewModel.updateHome(updated)
                                     showRenameDialog = false
-                                }
+                                }.onFailure { renameError = it.message }
                                 isRenameSaving = false
                             }
                         }
@@ -318,17 +326,27 @@ fun HomeDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Eliminar casa", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Estás seguro que querés eliminar \"${home?.name}\"? Esta acción no se puede deshacer.") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("¿Estás seguro que querés eliminar \"${home?.name}\"? Esta acción no se puede deshacer.")
+                    if (deleteError != null) {
+                        Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
                         if (!isDeleteSaving) {
                             isDeleteSaving = true
+                            deleteError = null
                             scope.launch {
-                                ServiceLocator.homeRepository.deleteHome(homeId).onSuccess {
-                                    appViewModel.removeHome(homeId)
-                                    navController.popBackStack()
-                                }
+                                ServiceLocator.homeRepository.deleteHome(homeId)
+                                    .onSuccess {
+                                        appViewModel.removeHome(homeId)
+                                        navController.popBackStack()
+                                    }
+                                    .onFailure { deleteError = it.message }
                                 isDeleteSaving = false
                             }
                         }

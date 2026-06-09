@@ -2,6 +2,7 @@ package com.example.smarthome.ui.components.sheets
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
@@ -59,18 +60,24 @@ fun SheetHeader(
 
     if (showDialog) {
         var isSaving by remember { mutableStateOf(false) }
+        var saveError by remember { mutableStateOf<String?>(null) }
         AlertDialog(
             onDismissRequest = { if (!isSaving) showDialog = false },
             title = { Text("Renombrar dispositivo", fontWeight = FontWeight.Bold) },
             text = {
-                OutlinedTextField(
-                    value = editText,
-                    onValueChange = { editText = it },
-                    label = { Text("Nombre") },
-                    singleLine = true,
-                    enabled = !isSaving,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = editText,
+                        onValueChange = { editText = it; saveError = null },
+                        label = { Text("Nombre") },
+                        singleLine = true,
+                        enabled = !isSaving,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (saveError != null) {
+                        Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             },
             confirmButton = {
                 Button(
@@ -78,6 +85,7 @@ fun SheetHeader(
                         val newName = editText.trim()
                         if (newName.isNotEmpty() && !isSaving) {
                             isSaving = true
+                            saveError = null
                             scope.launch {
                                 ServiceLocator.deviceRepository.updateDevice(deviceId!!, newName)
                                     .onSuccess {
@@ -85,6 +93,7 @@ fun SheetHeader(
                                         onRenamed?.invoke(newName)
                                         showDialog = false
                                     }
+                                    .onFailure { saveError = it.message }
                                 isSaving = false
                             }
                         }
@@ -137,6 +146,7 @@ fun SheetDeleteButton(
     val scope = rememberCoroutineScope()
     var showConfirm by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
 
     Button(
         onClick = { showConfirm = true },
@@ -150,17 +160,27 @@ fun SheetDeleteButton(
         AlertDialog(
             onDismissRequest = { if (!isDeleting) showConfirm = false },
             title = { Text("Eliminar dispositivo", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.")
+                    if (deleteError != null) {
+                        Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
                         if (!isDeleting) {
                             isDeleting = true
+                            deleteError = null
                             scope.launch {
-                                ServiceLocator.deviceRepository.deleteDevice(deviceId).onSuccess {
-                                    onDeleted?.invoke(deviceId)
-                                    onDismiss()
-                                }
+                                ServiceLocator.deviceRepository.deleteDevice(deviceId)
+                                    .onSuccess {
+                                        onDeleted?.invoke(deviceId)
+                                        onDismiss()
+                                    }
+                                    .onFailure { deleteError = it.message }
                                 isDeleting = false
                             }
                         }
@@ -201,6 +221,8 @@ fun SheetRoomLinkButton(
     var roomExpanded by remember { mutableStateOf(false) }
     var isUnlinking by remember { mutableStateOf(false) }
     var isLinking by remember { mutableStateOf(false) }
+    var unlinkError by remember { mutableStateOf<String?>(null) }
+    var linkError by remember { mutableStateOf<String?>(null) }
 
     OutlinedButton(
         onClick = { if (isLinked) showUnlinkConfirm = true else showLinkDialog = true },
@@ -220,18 +242,27 @@ fun SheetRoomLinkButton(
         AlertDialog(
             onDismissRequest = { if (!isUnlinking) showUnlinkConfirm = false },
             title = { Text("Desvincular dispositivo", fontWeight = FontWeight.Bold) },
-            text = { Text("El dispositivo se desvinculará de su habitación actual y quedará libre.") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("El dispositivo se desvinculará de su habitación actual y quedará libre.")
+                    if (unlinkError != null) {
+                        Text(unlinkError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
                         if (!isUnlinking) {
                             isUnlinking = true
+                            unlinkError = null
                             scope.launch {
                                 ServiceLocator.deviceRepository.removeDeviceFromRoom(device.id)
                                     .onSuccess {
                                         onDeviceUpdated?.invoke(device.copy(room = null))
                                         showUnlinkConfirm = false
                                     }
+                                    .onFailure { unlinkError = it.message }
                                 isUnlinking = false
                             }
                         }
@@ -258,6 +289,9 @@ fun SheetRoomLinkButton(
             title = { Text("Vincular a habitación", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (linkError != null) {
+                        Text(linkError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
                     ExposedDropdownMenuBox(
                         expanded = homeExpanded,
                         onExpandedChange = { homeExpanded = it }
@@ -324,6 +358,7 @@ fun SheetRoomLinkButton(
                         val room = selectedRoom ?: return@Button
                         if (!isLinking) {
                             isLinking = true
+                            linkError = null
                             scope.launch {
                                 ServiceLocator.deviceRepository.addDeviceToRoom(room.id, device.id)
                                     .onSuccess {
@@ -332,6 +367,7 @@ fun SheetRoomLinkButton(
                                         selectedRoom = null
                                         showLinkDialog = false
                                     }
+                                    .onFailure { linkError = it.message }
                                 isLinking = false
                             }
                         }
