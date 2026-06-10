@@ -41,13 +41,19 @@ import com.example.smarthome.ui.AppViewModel
 fun AddDeviceDialog(
     appViewModel: AppViewModel,
     onDismiss: () -> Unit,
-    onCreate: (name: String, typeId: String, roomId: String?, marca: String) -> Unit
+    onCreate: (name: String, typeId: String, roomId: String?, marca: String) -> Unit,
+    // Si se pasan, el diálogo queda FIJADO a esa casa/habitación (no se pueden cambiar).
+    lockedHome: HomeDto? = null,
+    lockedRoom: RoomDto? = null
 ) {
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val deviceTypes by appViewModel.deviceTypes.collectAsState()
 
     LaunchedEffect(Unit) { appViewModel.loadDeviceTypes() }
+
+    // Cuando hay habitación fija, los selectores de casa y habitación quedan bloqueados.
+    val locked = lockedRoom != null
 
     var name by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -59,10 +65,10 @@ fun AddDeviceDialog(
     var selectedType by remember { mutableStateOf<DeviceTypeDto?>(null) }
 
     var homeExpanded by remember { mutableStateOf(false) }
-    var selectedHome by remember { mutableStateOf<HomeDto?>(null) }
+    var selectedHome by remember { mutableStateOf(lockedHome) }
 
     var roomExpanded by remember { mutableStateOf(false) }
-    var selectedRoom by remember { mutableStateOf<RoomDto?>(null) }
+    var selectedRoom by remember { mutableStateOf(lockedRoom) }
 
     val availableRooms = remember(selectedHome, rooms) {
         selectedHome?.let { rooms[it.id] } ?: emptyList()
@@ -127,15 +133,16 @@ fun AddDeviceDialog(
 
                 // Casa
                 ExposedDropdownMenuBox(
-                    expanded = homeExpanded,
-                    onExpandedChange = { homeExpanded = it }
+                    expanded = homeExpanded && !locked,
+                    onExpandedChange = { if (!locked) homeExpanded = it }
                 ) {
                     OutlinedTextField(
                         value = selectedHome?.name ?: "Sin casa",
                         onValueChange = {},
                         readOnly = true,
+                        enabled = !locked,
                         label = { Text("Casa") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = homeExpanded) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = homeExpanded && !locked) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -169,16 +176,16 @@ fun AddDeviceDialog(
 
                 // Habitación (solo si hay casa seleccionada)
                 ExposedDropdownMenuBox(
-                    expanded = roomExpanded && selectedHome != null,
-                    onExpandedChange = { if (selectedHome != null) roomExpanded = it }
+                    expanded = roomExpanded && selectedHome != null && !locked,
+                    onExpandedChange = { if (selectedHome != null && !locked) roomExpanded = it }
                 ) {
                     OutlinedTextField(
                         value = selectedRoom?.name ?: "Sin habitación",
                         onValueChange = {},
                         readOnly = true,
-                        enabled = selectedHome != null,
+                        enabled = selectedHome != null && !locked,
                         label = { Text("Habitación") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roomExpanded && selectedHome != null) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roomExpanded && selectedHome != null && !locked) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()

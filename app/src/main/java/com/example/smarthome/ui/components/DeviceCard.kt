@@ -26,6 +26,14 @@ import com.example.smarthome.domain.canToggle
 import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 
+/**
+ * Recorta el nombre a un máximo de caracteres para que las tarjetas se vean
+ * uniformes. Si el nombre supera el límite, muestra los primeros [max]
+ * caracteres seguidos de "...".
+ */
+fun truncateName(name: String, max: Int = 12): String =
+    if (name.length > max) name.take(max).trimEnd() + "..." else name
+
 @Composable
 fun DeviceCard(
     device: DeviceDto,
@@ -69,7 +77,7 @@ fun DeviceCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = device.name,
+                    text = truncateName(device.name),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,

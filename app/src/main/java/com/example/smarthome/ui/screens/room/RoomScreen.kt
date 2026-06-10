@@ -16,12 +16,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +58,7 @@ import androidx.compose.runtime.setValue
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
+import com.example.smarthome.ui.screens.devices.AddDeviceDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +73,7 @@ fun RoomScreen(
     val devices by appViewModel.devices.collectAsState()
 
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
@@ -185,6 +189,17 @@ fun RoomScreen(
 
             item {
                 Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = { showAddDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Agregar dispositivo", fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            item {
                 Button(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -194,6 +209,20 @@ fun RoomScreen(
                 }
             }
         }
+    }
+
+    if (showAddDialog && room != null) {
+        AddDeviceDialog(
+            appViewModel = appViewModel,
+            onDismiss = { showAddDialog = false },
+            onCreate = { name, typeId, roomId, marca ->
+                appViewModel.createDevice(name, typeId, roomId, marca) { success ->
+                    if (success) showAddDialog = false
+                }
+            },
+            lockedHome = home,
+            lockedRoom = room
+        )
     }
 
     if (showDeleteDialog) {

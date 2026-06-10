@@ -54,6 +54,7 @@ import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.truncateName
 import com.example.smarthome.ui.navigation.Routes
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -331,7 +332,7 @@ fun HomeScreen(
                                     Spacer(Modifier.height(6.dp))
                                     onDevices.take(3).forEach { dev ->
                                         Text(
-                                            "• ${dev.name}",
+                                            "• ${truncateName(dev.name)}",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -368,7 +369,7 @@ fun HomeScreen(
                                     Spacer(Modifier.height(6.dp))
                                     offDevices.take(3).forEach { dev ->
                                         Text(
-                                            "• ${dev.name}",
+                                            "• ${truncateName(dev.name)}",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -411,7 +412,7 @@ fun HomeScreen(
                                 recentLogs.take(5).forEach { log ->
                                     val (_, hora) = formatTimestamp(log.timestamp)
                                     val device = deviceById[log.deviceId]
-                                    val deviceName = device?.name ?: "Dispositivo"
+                                    val deviceName = truncateName(device?.name ?: "Dispositivo")
                                     val typeId = device?.type?.id ?: ""
                                     Row(
                                         modifier = Modifier
