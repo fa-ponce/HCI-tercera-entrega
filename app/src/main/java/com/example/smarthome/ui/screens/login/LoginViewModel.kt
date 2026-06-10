@@ -58,9 +58,9 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
             .onSuccess { _navigateToHome.emit(Unit) }
             .onFailure { e ->
                 if (e is AccountNotVerifiedException) {
+                    // No reenviamos el código automáticamente: ya cuenta con el que recibió por correo y, si lo necesita, puede pedir otro con "Reenviar código".
                     setMode(LoginMode.Verify)
-                    authRepository.sendVerification(s.email)
-                    _uiState.update { st -> st.copy(error = "Tu cuenta no está verificada. Te enviamos un código a ${s.email}.") }
+                    _uiState.update { st -> st.copy(error = "Tu cuenta no está verificada. Ingresá el código que te enviamos por correo (o tocá \"Reenviar código\").") }
                 } else {
                     _uiState.update { st -> st.copy(error = e.message ?: "Error al iniciar sesión") }
                 }
@@ -72,6 +72,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         val s = uiState.value
         authRepository.register(s.name, s.email, s.password)
+           // verif
             .onSuccess { setMode(LoginMode.Verify) }
             .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al registrarse") } }
         _uiState.update { it.copy(isLoading = false) }

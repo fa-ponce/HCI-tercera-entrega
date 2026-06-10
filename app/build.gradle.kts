@@ -5,8 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val localProps = Properties().apply {
-    val f = rootProject.file("local.properties")
+// Lee de el .env
+val envProps = Properties().apply {
+    val f = rootProject.file(".env")
     if (f.exists()) load(f.inputStream())
 }
 
@@ -27,7 +28,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "API_KEY", "\"${localProps.getProperty("API_KEY", "")}\"")
+        buildConfigField("String", "API_KEY", "\"${envProps.getProperty("API_KEY", "")}\"")
     }
 
     buildTypes {
