@@ -71,6 +71,7 @@ fun RoomScreen(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val standaloneRooms by appViewModel.standaloneRooms.collectAsState()
 
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -83,7 +84,7 @@ fun RoomScreen(
     var deleteError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    val room = rooms.values.flatten().find { it.id == roomId }
+    val room = (rooms.values.flatten() + standaloneRooms).find { it.id == roomId }
     val home = room?.home?.id?.let { hid -> homes.find { it.id == hid } }
     val roomDevices = devices[roomId] ?: emptyList()
 

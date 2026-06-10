@@ -47,6 +47,11 @@ class AppViewModel(
     private val _rooms = MutableStateFlow<Map<String, List<RoomDto>>>(emptyMap())
     val rooms: StateFlow<Map<String, List<RoomDto>>> = _rooms.asStateFlow()
 
+    // Habitaciones "sin casa" (standalone): viven en la casa oculta pero con un
+    // tipo normal. Se muestran en su propio apartado "Sin casa".
+    private val _standaloneRooms = MutableStateFlow<List<RoomDto>>(emptyList())
+    val standaloneRooms: StateFlow<List<RoomDto>> = _standaloneRooms.asStateFlow()
+
     private val _devices = MutableStateFlow<Map<String, List<DeviceDto>>>(emptyMap())
     val devices: StateFlow<Map<String, List<DeviceDto>>> = _devices.asStateFlow()
 
@@ -110,10 +115,11 @@ class AppViewModel(
     // ocultas marcadas con este tipo especial.
     private val freeType = "__libre__"
     private var freeRoomId: String? = null
+    private var freeHomeId: String? = null
 
     /**
      * Busca (o crea) la casa y habitación ocultas para dispositivos libres y
-     * devuelve el id de esa habitación. El resultado se cachea.
+     * devuelve el id de esa habitación. También cachea el id de la casa oculta.
      */
     private suspend fun ensureFreeRoomId(knownHomes: List<HomeDto>? = null): String? {
         freeRoomId?.let { return it }
@@ -121,6 +127,7 @@ class AppViewModel(
         val freeHome = homes.find { it.metadata?.type == freeType }
             ?: homeRepository.createHome(freeType, freeType, "", "").getOrNull()
             ?: return null
+        freeHomeId = freeHome.id
         val freeRooms = homeRepository.getHomeRooms(freeHome.id).getOrNull() ?: emptyList()
         val freeRoom = freeRooms.find { it.metadata?.type == freeType }
             ?: homeRepository.createRoom(freeType, freeType, 0, freeHome.id).getOrNull()
@@ -167,6 +174,21 @@ class AppViewModel(
                 deviceRepository.getRoomDevices(frId).getOrNull()?.let { freeList ->
                     devicesMap["free"] = freeList.map { it.copy(room = null) }
                 }
+            }
+
+            // Habitaciones "sin casa" = las de la casa oculta, salvo la habitación
+            // especial de dispositivos libres. Cargamos también sus dispositivos.
+            freeHomeId?.let { fhId ->
+                val hiddenRooms = homeRepository.getHomeRooms(fhId).getOrNull() ?: emptyList()
+                val standalone = hiddenRooms.filter { it.id != freeRoom && it.metadata?.type != freeType }
+                _standaloneRooms.value = standalone
+                standalone.map { room ->
+                    async {
+                        deviceRepository.getRoomDevices(room.id).getOrNull()?.let { deviceList ->
+                            devicesMap[room.id] = deviceList.map { it.copy(room = RoomRef(room.id)) }
+                        }
+                    }
+                }.awaitAll()
             }
 
             _rooms.value = roomsMap
@@ -279,13 +301,42 @@ class AppViewModel(
         map + (homeId to (map[homeId].orEmpty() + room))
     }
 
-    fun updateRoom(room: RoomDto) = _rooms.update { map ->
-        map.mapValues { (_, list) -> list.map { if (it.id == room.id) room else it } }
+    fun updateRoom(room: RoomDto) {
+        _rooms.update { map ->
+            map.mapValues { (_, list) -> list.map { if (it.id == room.id) room else it } }
+        }
+        _standaloneRooms.update { list -> list.map { if (it.id == room.id) room else it } }
     }
 
     fun removeRoom(homeId: String, roomId: String) {
         _rooms.update { map -> map + (homeId to (map[homeId].orEmpty().filter { it.id != roomId })) }
+        _standaloneRooms.update { list -> list.filter { it.id != roomId } }
         _devices.update { it - roomId }
+    }
+
+    /** Crea una habitación "sin casa" (dentro de la casa oculta) y la agrega al apartado. */
+    fun createStandaloneRoom(
+        name: String,
+        type: String,
+        floor: Int,
+        onResult: ((success: Boolean) -> Unit)? = null
+    ) = viewModelScope.launch {
+        ensureFreeRoomId() // asegura freeHomeId
+        val fhId = freeHomeId
+        if (fhId == null) {
+            _errorEvent.tryEmit("No se pudo preparar el espacio para habitaciones sin casa")
+            onResult?.invoke(false)
+            return@launch
+        }
+        homeRepository.createRoom(name, type, floor, fhId)
+            .onSuccess { room ->
+                _standaloneRooms.update { it + room }
+                onResult?.invoke(true)
+            }
+            .onFailure {
+                _errorEvent.tryEmit(it.message ?: "Error al crear la habitación")
+                onResult?.invoke(false)
+            }
     }
 
     fun addDevice(roomId: String, device: DeviceDto) = _devices.update { map ->
