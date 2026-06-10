@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
@@ -35,6 +36,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -289,9 +291,12 @@ fun DevicesScreen(
                 }
             }
 
-            items(filtered) { item ->
-                val subtitle = if (item.roomId == "free") "Libre"
-                               else if (item.homeName.isNotEmpty()) "${item.homeName} · ${item.roomName}"
+            val roomItems = filtered.filter { it.roomId != "free" }
+            val freeItemsList = filtered.filter { it.roomId == "free" }
+
+            // Dispositivos asignados a una habitación
+            items(roomItems) { item ->
+                val subtitle = if (item.homeName.isNotEmpty()) "${item.homeName} · ${item.roomName}"
                                else item.roomName
                 DeviceCard(
                     device = item.device,
@@ -299,6 +304,51 @@ fun DevicesScreen(
                     onToggle = { appViewModel.toggleDevice(item.device) },
                     onClick = { selectedDevice = item.device }
                 )
+            }
+
+            // Sección de dispositivos sin habitación (estilo diferenciado)
+            if (freeItemsList.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Devices,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "Sin habitación",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                "${freeItemsList.size} dispositivo${if (freeItemsList.size != 1) "s" else ""}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                }
+                items(freeItemsList) { item ->
+                    DeviceCard(
+                        device = item.device,
+                        subtitle = "Sin habitación asignada",
+                        free = true,
+                        onToggle = { appViewModel.toggleDevice(item.device) },
+                        onClick = { selectedDevice = item.device }
+                    )
+                }
             }
         }
     }

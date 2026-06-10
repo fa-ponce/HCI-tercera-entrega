@@ -18,8 +18,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.canToggle
@@ -34,11 +41,28 @@ import com.example.smarthome.domain.isDeviceOn
 fun truncateName(name: String, max: Int = 12): String =
     if (name.length > max) name.take(max).trimEnd() + "..." else name
 
+/** Color naranja para señalar dispositivos sin habitación (igual que la web). */
+private val FreeAccent = Color(0xFFE67E22)
+
+/** Dibuja un borde punteado (dashed) redondeado, para las tarjetas de dispositivos libres. */
+private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 1.5.dp) =
+    this.drawBehind {
+        drawRoundRect(
+            color = color,
+            cornerRadius = CornerRadius(cornerRadius.toPx()),
+            style = Stroke(
+                width = strokeWidth.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 10f), 0f)
+            )
+        )
+    }
+
 @Composable
 fun DeviceCard(
     device: DeviceDto,
     modifier: Modifier = Modifier,
     subtitle: String = "",
+    free: Boolean = false,
     onToggle: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
@@ -48,7 +72,14 @@ fun DeviceCard(
 
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (free) Modifier.dashedBorder(
+                    color = MaterialTheme.colorScheme.outline,
+                    cornerRadius = 12.dp
+                ) else Modifier
+            )
     ) {
         Row(
             modifier = Modifier
@@ -87,7 +118,8 @@ fun DeviceCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = if (free) FreeAccent else MaterialTheme.colorScheme.outline,
+                        fontStyle = if (free) FontStyle.Italic else FontStyle.Normal,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

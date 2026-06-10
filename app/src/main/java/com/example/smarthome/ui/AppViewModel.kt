@@ -104,6 +104,31 @@ class AppViewModel(
 
     fun retryLoad() = loadAll()
 
+    // La API no permite listar dispositivos "sueltos": un dispositivo sin
+    // habitación queda huérfano y no se puede volver a obtener. Por eso, igual
+    // que la web, guardamos los dispositivos "sin casa" en una casa+habitación
+    // ocultas marcadas con este tipo especial.
+    private val freeType = "__libre__"
+    private var freeRoomId: String? = null
+
+    /**
+     * Busca (o crea) la casa y habitación ocultas para dispositivos libres y
+     * devuelve el id de esa habitación. El resultado se cachea.
+     */
+    private suspend fun ensureFreeRoomId(knownHomes: List<HomeDto>? = null): String? {
+        freeRoomId?.let { return it }
+        val homes = knownHomes ?: homeRepository.getHomes().getOrNull() ?: return null
+        val freeHome = homes.find { it.metadata?.type == freeType }
+            ?: homeRepository.createHome(freeType, freeType, "", "").getOrNull()
+            ?: return null
+        val freeRooms = homeRepository.getHomeRooms(freeHome.id).getOrNull() ?: emptyList()
+        val freeRoom = freeRooms.find { it.metadata?.type == freeType }
+            ?: homeRepository.createRoom(freeType, freeType, 0, freeHome.id).getOrNull()
+            ?: return null
+        freeRoomId = freeRoom.id
+        return freeRoom.id
+    }
+
     fun loadAll() = viewModelScope.launch {
         _isLoading.value = true
         _error.value = null
@@ -112,13 +137,17 @@ class AppViewModel(
             val routinesJob = async { routineRepository.getRoutines().getOrDefault(emptyList()) }
 
             val homes = homesJob.await()
-            _homes.value = homes
+            // Aseguramos los contenedores ocultos y excluimos la casa especial
+            // de la lista visible de casas.
+            val freeRoom = ensureFreeRoomId(homes)
+            val realHomes = homes.filter { it.metadata?.type != freeType }
+            _homes.value = realHomes
             _routines.value = routinesJob.await()
 
             val roomsMap = mutableMapOf<String, List<RoomDto>>()
             val devicesMap = mutableMapOf<String, List<DeviceDto>>()
 
-            homes.map { home ->
+            realHomes.map { home ->
                 async {
                     homeRepository.getHomeRooms(home.id).getOrNull()?.let { roomList ->
                         roomsMap[home.id] = roomList
@@ -132,6 +161,13 @@ class AppViewModel(
                     }
                 }
             }.awaitAll()
+
+            // Dispositivos libres = los de la habitación oculta, mostrados como "sin casa".
+            freeRoom?.let { frId ->
+                deviceRepository.getRoomDevices(frId).getOrNull()?.let { freeList ->
+                    devicesMap["free"] = freeList.map { it.copy(room = null) }
+                }
+            }
 
             _rooms.value = roomsMap
             _devices.value = devicesMap
@@ -189,10 +225,21 @@ class AppViewModel(
         onResult: ((success: Boolean) -> Unit)? = null
     ) = viewModelScope.launch {
         val fullName = if (marca.isNotBlank()) "$name - $marca" else name
-        deviceRepository.createDevice(fullName, typeId, roomId)
+        // Si no tiene casa, lo creamos en la habitación oculta para que persista.
+        val targetRoomId = roomId ?: ensureFreeRoomId()
+        if (roomId == null && targetRoomId == null) {
+            _errorEvent.tryEmit("No se pudo preparar el espacio para dispositivos sin casa")
+            onResult?.invoke(false)
+            return@launch
+        }
+        deviceRepository.createDevice(fullName, typeId, targetRoomId)
             .onSuccess { device ->
-                val key = roomId ?: "free"
-                addDevice(key, device.copy(room = roomId?.let { RoomRef(it) }))
+                if (roomId == null) {
+                    // Dispositivo libre: lo mostramos como "sin casa".
+                    addDevice("free", device.copy(room = null))
+                } else {
+                    addDevice(roomId, device.copy(room = RoomRef(roomId)))
+                }
                 onResult?.invoke(true)
             }
             .onFailure {
