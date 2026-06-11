@@ -49,11 +49,10 @@
     <string name="login_title_verify">Verify account</string>
     <string name="login_title_forgot">Recover password</string>
     <string name="login_title_reset">New password</string>
-    <string name="login_email">Email *</string>
-    <string name="login_password">Password *</string>
-    <string name="login_new_password">New password *</string>
-    <string name="login_code">Code *</string>
-    <string name="login_name_required">Name *</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_new_password">New password</string>
+    <string name="login_code">Code</string>
     <string name="login_verify_hint">Enter the code we sent to %1$s</string>
     <string name="login_forgot_hint">Enter your email and we will send you a code to reset your password.</string>
     <string name="login_reset_hint">Enter the code we sent to %1$s and your new password.</string>
@@ -228,6 +227,11 @@
     <string name="profile_change">Change</string>
     <string name="profile_energy_cost">Energy cost</string>
     <string name="profile_kwh_label">$/kWh</string>
+    <string name="profile_language">Language</string>
+    <string name="profile_language_choose">Choose language</string>
+    <string name="profile_language_system">Automatic (phone language)</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
     <string name="profile_dark_mode">Dark mode</string>
     <string name="profile_enabled">Enabled</string>
     <string name="profile_disabled">Disabled</string>

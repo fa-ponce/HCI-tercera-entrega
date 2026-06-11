@@ -134,7 +134,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.name,
                             onValueChange = viewModel::setName,
-                            label = { Text(stringResource(R.string.login_name_required)) },
+                            label = { Text(stringResource(R.string.common_name) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             isError = showErrors && state.name.isBlank(),
@@ -144,7 +144,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = viewModel::setEmail,
-                            label = { Text(stringResource(R.string.login_email)) },
+                            label = { Text(stringResource(R.string.login_email) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -155,7 +155,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.password,
                             onValueChange = viewModel::setPassword,
-                            label = { Text(stringResource(R.string.login_password)) },
+                            label = { Text(stringResource(R.string.login_password) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             isError = showErrors && state.password.isBlank(),
@@ -177,7 +177,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = viewModel::setEmail,
-                            label = { Text(stringResource(R.string.login_email)) },
+                            label = { Text(stringResource(R.string.login_email) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -188,7 +188,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.password,
                             onValueChange = viewModel::setPassword,
-                            label = { Text(stringResource(R.string.login_password)) },
+                            label = { Text(stringResource(R.string.login_password) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             isError = showErrors && state.password.isBlank(),
@@ -217,7 +217,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.code,
                             onValueChange = viewModel::setCode,
-                            label = { Text(stringResource(R.string.login_code)) },
+                            label = { Text(stringResource(R.string.login_code) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -237,7 +237,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = viewModel::setEmail,
-                            label = { Text(stringResource(R.string.login_email)) },
+                            label = { Text(stringResource(R.string.login_email) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -257,7 +257,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.code,
                             onValueChange = viewModel::setCode,
-                            label = { Text(stringResource(R.string.login_code)) },
+                            label = { Text(stringResource(R.string.login_code) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -268,7 +268,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.newPassword,
                             onValueChange = viewModel::setNewPassword,
-                            label = { Text(stringResource(R.string.login_new_password)) },
+                            label = { Text(stringResource(R.string.login_new_password) + " *") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             isError = showErrors && state.newPassword.isBlank(),

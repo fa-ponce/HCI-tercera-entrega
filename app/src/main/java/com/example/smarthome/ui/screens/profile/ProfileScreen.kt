@@ -3,7 +3,9 @@ package com.example.smarthome.ui.screens.profile
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import android.app.Activity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Help
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Visibility
@@ -43,6 +46,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -62,6 +66,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -120,9 +125,11 @@ fun ProfileScreen(
     val userEmail by appViewModel.userEmail.collectAsState()
     val costoKwh by appViewModel.costoKwh.collectAsState()
     val darkMode by appViewModel.darkMode.collectAsState()
+    val appLanguage by appViewModel.appLanguage.collectAsState()
 
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     var showTutorial by remember { mutableStateOf(false) }
     var tutorialStep by remember { mutableStateOf(0) }
 
@@ -260,6 +267,29 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // Idioma
+            val currentLanguageLabel = when (appLanguage) {
+                "es" -> stringResource(R.string.language_es)
+                "en" -> stringResource(R.string.language_en)
+                else -> stringResource(R.string.profile_language_system)
+            }
+            ProfileCard(onClick = { showLanguageDialog = true }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Rounded.Language, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.profile_language), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(currentLanguageLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Rounded.ArrowForward, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
             // Ayuda
             ProfileCard(onClick = { tutorialStep = 0; showTutorial = true }) {
                 Row(
@@ -324,6 +354,48 @@ fun ProfileScreen(
         ChangePasswordDialog(
             appViewModel = appViewModel,
             onDismiss = { showPasswordDialog = false }
+        )
+    }
+
+    // Modal elegir idioma
+    if (showLanguageDialog) {
+        val activity = LocalContext.current as? Activity
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(stringResource(R.string.profile_language_choose), fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    listOf(
+                        null to stringResource(R.string.profile_language_system),
+                        "es" to stringResource(R.string.language_es),
+                        "en" to stringResource(R.string.language_en)
+                    ).forEach { (code, label) ->
+                        val select = {
+                            showLanguageDialog = false
+                            // El idioma se aplica en attachBaseContext, así que
+                            // recreamos la Activity una vez guardada la elección.
+                            appViewModel.setAppLanguage(code) { activity?.recreate() }
+                            Unit
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { select() }
+                                .padding(vertical = 2.dp)
+                        ) {
+                            RadioButton(selected = appLanguage == code, onClick = { select() })
+                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
         )
     }
 

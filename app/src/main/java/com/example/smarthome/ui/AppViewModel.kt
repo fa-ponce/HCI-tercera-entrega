@@ -100,6 +100,15 @@ class AppViewModel(
     val darkMode: StateFlow<Boolean> = userPreferences.darkMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    // Idioma elegido manualmente ("es"/"en") o null = idioma del teléfono.
+    val appLanguage: StateFlow<String?> = userPreferences.appLanguage
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun setAppLanguage(language: String?, onSaved: (() -> Unit)? = null) = viewModelScope.launch {
+        userPreferences.saveAppLanguage(language)
+        onSaved?.invoke()
+    }
+
     // Accesos directos del inicio (ver UserPreferences.shortcuts). null = sin personalizar.
     val shortcuts: StateFlow<List<String>?> = userPreferences.shortcuts
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

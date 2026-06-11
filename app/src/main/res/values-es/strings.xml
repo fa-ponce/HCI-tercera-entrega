@@ -49,11 +49,10 @@
     <string name="login_title_verify">Verificar cuenta</string>
     <string name="login_title_forgot">Recuperar contraseña</string>
     <string name="login_title_reset">Nueva contraseña</string>
-    <string name="login_email">Email *</string>
-    <string name="login_password">Contraseña *</string>
-    <string name="login_new_password">Nueva contraseña *</string>
-    <string name="login_code">Código *</string>
-    <string name="login_name_required">Nombre *</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_new_password">Nueva contraseña</string>
+    <string name="login_code">Código</string>
     <string name="login_verify_hint">Ingresá el código que enviamos a %1$s</string>
     <string name="login_forgot_hint">Ingresá tu email y te enviaremos un código para restablecer tu contraseña.</string>
     <string name="login_reset_hint">Ingresá el código que enviamos a %1$s y tu nueva contraseña.</string>
@@ -228,6 +227,11 @@
     <string name="profile_change">Cambiar</string>
     <string name="profile_energy_cost">Costo de energía</string>
     <string name="profile_kwh_label">$/kWh</string>
+    <string name="profile_language">Idioma</string>
+    <string name="profile_language_choose">Elegir idioma</string>
+    <string name="profile_language_system">Automático (idioma del teléfono)</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
     <string name="profile_dark_mode">Modo oscuro</string>
     <string name="profile_enabled">Activado</string>
     <string name="profile_disabled">Desactivado</string>

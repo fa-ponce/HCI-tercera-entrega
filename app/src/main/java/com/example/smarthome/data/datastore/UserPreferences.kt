@@ -23,6 +23,7 @@ class UserPreferences(context: Context) {
         private val COSTO_KWH_KEY = floatPreferencesKey("costo_kwh")
         private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
         private val SHORTCUTS_KEY = stringPreferencesKey("home_shortcuts")
+        private val APP_LANGUAGE_KEY = stringPreferencesKey("app_language")
     }
 
     val token: Flow<String?> = dataStore.data.map { it[TOKEN_KEY] }
@@ -30,6 +31,9 @@ class UserPreferences(context: Context) {
     val userEmail: Flow<String?> = dataStore.data.map { it[USER_EMAIL_KEY] }
     val costoKwh: Flow<Float?> = dataStore.data.map { it[COSTO_KWH_KEY] }
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE_KEY] ?: false }
+
+    // Idioma de la app: "es" / "en", o null = idioma del teléfono (RNF1).
+    val appLanguage: Flow<String?> = dataStore.data.map { it[APP_LANGUAGE_KEY] }
 
     // Accesos directos del inicio: lista ordenada de tokens ("r:<id>" rutina,
     // "d:<id>" dispositivo). null = el usuario nunca personalizó (se muestran
@@ -41,6 +45,8 @@ class UserPreferences(context: Context) {
     }
 
     suspend fun getTokenOnce(): String? = dataStore.data.first()[TOKEN_KEY]
+
+    suspend fun getAppLanguageOnce(): String? = dataStore.data.first()[APP_LANGUAGE_KEY]
 
     suspend fun saveToken(token: String) {
         dataStore.edit { it[TOKEN_KEY] = token }
@@ -66,7 +72,19 @@ class UserPreferences(context: Context) {
         dataStore.edit { it[SHORTCUTS_KEY] = tokens.joinToString("|") }
     }
 
+    suspend fun saveAppLanguage(language: String?) {
+        dataStore.edit { prefs ->
+            if (language == null) prefs.remove(APP_LANGUAGE_KEY)
+            else prefs[APP_LANGUAGE_KEY] = language
+        }
+    }
+
     suspend fun clear() {
-        dataStore.edit { it.clear() }
+        dataStore.edit { prefs ->
+            // El idioma elegido manualmente sobrevive al cierre de sesión.
+            val language = prefs[APP_LANGUAGE_KEY]
+            prefs.clear()
+            language?.let { prefs[APP_LANGUAGE_KEY] = it }
+        }
     }
 }

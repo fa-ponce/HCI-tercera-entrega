@@ -1,6 +1,8 @@
 package com.example.smarthome
 
 import android.Manifest
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -20,8 +22,36 @@ import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.navigation.NavGraph
 import com.example.smarthome.ui.navigation.Routes
 import com.example.smarthome.ui.theme.SmarthomeTheme
+import kotlinx.coroutines.runBlocking
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        // Idioma del teléfono, capturado antes de cualquier override manual.
+        private val systemLocale: Locale = Locale.getDefault()
+    }
+
+    /**
+     * Aplica el idioma elegido manualmente (si lo hay) al contexto base de la
+     * Activity. Hacerlo acá -y no solo en Compose- garantiza que también lo
+     * hereden los diálogos y bottom sheets, que crean su propia ventana a
+     * partir del contexto de la Activity. null = idioma del teléfono (RNF1).
+     * Al cambiar el idioma desde el perfil se recrea la Activity.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        val language = runBlocking { ServiceLocator.userPreferences.getAppLanguageOnce() }
+        if (language == null) {
+            Locale.setDefault(systemLocale)
+            super.attachBaseContext(newBase)
+        } else {
+            val locale = Locale.forLanguageTag(language)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration).apply { setLocale(locale) }
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
