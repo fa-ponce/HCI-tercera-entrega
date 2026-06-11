@@ -1,9 +1,13 @@
 package com.example.smarthome
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,6 +31,16 @@ class MainActivity : ComponentActivity() {
             SmarthomeTheme(darkTheme = darkMode) {
                 val navController = rememberNavController()
                 var startDestination by remember { mutableStateOf<String?>(null) }
+
+                val notificationPermissionLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { /* El resultado no afecta el flujo: NotificationHelper ya valida el permiso. */ }
+
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
 
                 LaunchedEffect(Unit) {
                     val token = ServiceLocator.userPreferences.getTokenOnce()
