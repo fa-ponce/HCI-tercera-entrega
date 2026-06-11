@@ -84,6 +84,7 @@ import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.components.truncateName
 import com.example.smarthome.ui.navigation.Routes
 import java.text.SimpleDateFormat
@@ -113,6 +114,7 @@ fun HomeScreen(
     val isLoading by appViewModel.isLoading.collectAsState()
     val userName by appViewModel.userName.collectAsState()
     val savedShortcuts by appViewModel.shortcuts.collectAsState()
+    var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
 
     val allDevices = remember(devices) { devices.values.flatten() }
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
@@ -272,7 +274,10 @@ fun HomeScreen(
                                         ShortcutTile(
                                             shortcut = shortcut,
                                             modifier = Modifier.weight(1f),
-                                            onDevice = { appViewModel.toggleDevice(it) },
+                                            onDevice = {
+                                                if (canToggle(it.type.id)) appViewModel.toggleDevice(it)
+                                                else selectedDevice = it
+                                            },
                                             onRoutine = { appViewModel.executeRoutine(it.id) }
                                         )
                                     }
@@ -368,6 +373,18 @@ fun HomeScreen(
             selected = effectiveTokens,
             onToggle = toggleShortcut,
             onDismiss = { showCustomize = false }
+        )
+    }
+
+    selectedDevice?.let { device ->
+        DeviceSheetRouter(
+            device = device,
+            onDismiss = { selectedDevice = null },
+            onDeviceRenamed = { appViewModel.updateDevice(it) },
+            onDeviceDeleted = { appViewModel.removeDevice(it) },
+            onDeviceRoomChanged = { appViewModel.relocateDevice(it) },
+            homes = homes,
+            rooms = rooms
         )
     }
 }

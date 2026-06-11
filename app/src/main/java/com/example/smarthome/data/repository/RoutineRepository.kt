@@ -18,12 +18,10 @@ class RoutineRepository(private val api: SmarthomeApi) {
     }.mapError("Error al guardar la rutina")
 
     suspend fun deleteRoutine(id: String): Result<Unit> = runCatching {
-        api.deleteRoutine(id)
-        Unit
+        api.deleteRoutine(id).requireSuccessful("Error al eliminar la rutina")
     }.mapError("Error al eliminar la rutina")
 
     suspend fun executeRoutine(id: String): Result<Unit> = runCatching {
-        api.executeRoutine(id, emptyMap())
-        Unit
+        api.executeRoutine(id, emptyMap()).requireSuccessful("Error al ejecutar la rutina")
     }.mapError("Error al ejecutar la rutina")
 }

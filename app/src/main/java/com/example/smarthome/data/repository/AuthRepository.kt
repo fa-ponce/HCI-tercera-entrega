@@ -3,30 +3,8 @@ package com.example.smarthome.data.repository
 import com.example.smarthome.data.api.SmarthomeApi
 import com.example.smarthome.data.api.models.*
 import com.example.smarthome.data.datastore.UserPreferences
-import com.google.gson.Gson
 
 class AccountNotVerifiedException : Exception("Cuenta no verificada")
-
-private fun retrofit2.Response<*>.parseError(): Exception {
-    return try {
-        val body = errorBody()?.string() ?: return Exception("Error ${code()}")
-        Gson().fromJson(body, ApiErrorWrapper::class.java)?.error?.description
-            ?.let { Exception(mapApiDescription(it)) } ?: Exception("Error ${code()}")
-    } catch (_: Exception) {
-        Exception("Error ${code()}")
-    }
-}
-
-private fun mapApiDescription(description: String): String {
-    val d = description.lowercase()
-    return when {
-        ("name" in d || "nombre" in d) && ("short" in d || "min" in d || "least" in d) ->
-            "El nombre debe tener al menos 3 caracteres."
-        ("name" in d || "nombre" in d) && ("long" in d || "max" in d || "exceed" in d) ->
-            "El nombre no puede superar los 100 caracteres."
-        else -> description
-    }
-}
 
 class AuthRepository(
     private val api: SmarthomeApi,
@@ -49,7 +27,7 @@ class AuthRepository(
     }
 
     suspend fun logout() = runCatching {
-        api.logout()
+        api.logout().requireSuccessful("Error al cerrar sesión")
         userPreferences.clear()
     }
 
@@ -62,27 +40,22 @@ class AuthRepository(
     }
 
     suspend fun sendVerification(email: String): Result<Unit> = runCatching {
-        api.sendVerification(EmailRequest(email))
-        Unit
+        api.sendVerification(EmailRequest(email)).requireSuccessful("Error al enviar el código")
     }
 
     suspend fun verifyAccount(code: String): Result<Unit> = runCatching {
-        api.verifyAccount(VerifyCodeRequest(code))
-        Unit
+        api.verifyAccount(VerifyCodeRequest(code)).requireSuccessful("Código inválido")
     }
 
     suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
-        val r = api.forgotPassword(EmailRequest(email))
-        if (!r.isSuccessful) throw r.parseError()
+        api.forgotPassword(EmailRequest(email)).requireSuccessful("Error al enviar el código")
     }
 
     suspend fun resetPassword(code: String, password: String): Result<Unit> = runCatching {
-        val r = api.resetPassword(ResetPasswordRequest(code, password))
-        if (!r.isSuccessful) throw r.parseError()
+        api.resetPassword(ResetPasswordRequest(code, password)).requireSuccessful("Error al cambiar la contraseña")
     }
 
     suspend fun changePassword(email: String, old: String, new: String): Result<Unit> = runCatching {
-        api.changePassword(ChangePasswordRequest(email, old, new))
-        Unit
+        api.changePassword(ChangePasswordRequest(email, old, new)).requireSuccessful("Error al cambiar la contraseña")
     }
 }

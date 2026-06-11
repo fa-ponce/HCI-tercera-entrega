@@ -18,8 +18,7 @@ class HomeRepository(private val api: SmarthomeApi) {
     }.mapError("Error al renombrar la casa")
 
     suspend fun deleteHome(id: String): Result<Unit> = runCatching {
-        api.deleteHome(id)
-        Unit
+        api.deleteHome(id).requireSuccessful("Error al eliminar la casa")
     }.mapError("Error al eliminar la casa")
 
     suspend fun getHomeRooms(homeId: String): Result<List<RoomDto>> = runCatching {
@@ -30,12 +29,17 @@ class HomeRepository(private val api: SmarthomeApi) {
         api.createRoom(RoomRequest(name, homeId?.let { HomeRef(it) }, RoomMetadata(type, floor)))
     }.mapError("Error al crear la habitación")
 
-    suspend fun updateRoom(id: String, name: String, type: String, homeId: String?): Result<RoomDto> = runCatching {
-        api.updateRoom(id, RoomRequest(name, homeId?.let { HomeRef(it) }, RoomMetadata(type)))
+    suspend fun updateRoom(
+        id: String,
+        name: String,
+        type: String,
+        homeId: String?,
+        floor: Int? = null
+    ): Result<RoomDto> = runCatching {
+        api.updateRoom(id, RoomRequest(name, homeId?.let { HomeRef(it) }, RoomMetadata(type, floor)))
     }.mapError("Error al renombrar la habitación")
 
     suspend fun deleteRoom(id: String): Result<Unit> = runCatching {
-        api.deleteRoom(id)
-        Unit
+        api.deleteRoom(id).requireSuccessful("Error al eliminar la habitación")
     }.mapError("Error al eliminar la habitación")
 }

@@ -135,9 +135,10 @@ fun DevicesScreen(
         AddDeviceDialog(
             appViewModel = appViewModel,
             onDismiss = { showAddDialog = false },
-            onCreate = { name, typeId, roomId, marca ->
+            onCreate = { name, typeId, roomId, marca, onResult ->
                 appViewModel.createDevice(name, typeId, roomId, marca) { success ->
                     if (success) showAddDialog = false
+                    onResult(success)
                 }
             }
         )

@@ -2,6 +2,7 @@ package com.example.smarthome.data.repository
 
 import com.google.gson.Gson
 import retrofit2.HttpException
+import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -35,6 +36,21 @@ fun Throwable.toFriendlyMessage(fallback: String = "Ocurrió un error inesperado
         }
     }
     return message?.takeIf { it.isNotBlank() } ?: fallback
+}
+
+fun Response<*>.toApiException(fallback: String = "Ocurrió un error inesperado"): Exception {
+    return try {
+        val body = errorBody()?.string()
+        val description = body
+            ?.let { Gson().fromJson(it, ApiErrorWrapper::class.java)?.error?.description }
+        Exception(description?.let(::mapApiDescription) ?: "Error ${code()}")
+    } catch (_: Exception) {
+        Exception(if (code() > 0) "Error ${code()}" else fallback)
+    }
+}
+
+fun Response<*>.requireSuccessful(fallback: String = "Ocurrió un error inesperado") {
+    if (!isSuccessful) throw toApiException(fallback)
 }
 
 private fun mapApiDescription(description: String): String {

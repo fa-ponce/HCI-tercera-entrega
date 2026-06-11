@@ -20,6 +20,21 @@ import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.data.api.models.RoomRef
 import kotlinx.coroutines.launch
 
+private const val FREE_TYPE = "__libre__"
+
+private suspend fun ensureFreeRoomId(): String? {
+    val homeRepository = ServiceLocator.homeRepository
+    val homes = homeRepository.getHomes().getOrNull() ?: return null
+    val freeHome = homes.find { it.metadata?.type == FREE_TYPE }
+        ?: homeRepository.createHome(FREE_TYPE, FREE_TYPE, "", "").getOrNull()
+        ?: return null
+    val rooms = homeRepository.getHomeRooms(freeHome.id).getOrNull().orEmpty()
+    val freeRoom = rooms.find { it.metadata?.type == FREE_TYPE }
+        ?: homeRepository.createRoom(FREE_TYPE, FREE_TYPE, 0, freeHome.id).getOrNull()
+        ?: return null
+    return freeRoom.id
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SheetHeader(
@@ -257,12 +272,17 @@ fun SheetRoomLinkButton(
                             isUnlinking = true
                             unlinkError = null
                             scope.launch {
-                                ServiceLocator.deviceRepository.removeDeviceFromRoom(device.id)
-                                    .onSuccess {
-                                        onDeviceUpdated?.invoke(device.copy(room = null))
-                                        showUnlinkConfirm = false
-                                    }
-                                    .onFailure { unlinkError = it.message }
+                                val freeRoomId = ensureFreeRoomId()
+                                if (freeRoomId == null) {
+                                    unlinkError = "No se pudo preparar el espacio para dispositivos libres"
+                                } else {
+                                    ServiceLocator.deviceRepository.addDeviceToRoom(freeRoomId, device.id)
+                                        .onSuccess {
+                                            onDeviceUpdated?.invoke(device.copy(room = null))
+                                            showUnlinkConfirm = false
+                                        }
+                                        .onFailure { unlinkError = it.message }
+                                }
                                 isUnlinking = false
                             }
                         }

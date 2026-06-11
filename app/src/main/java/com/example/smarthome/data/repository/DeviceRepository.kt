@@ -26,18 +26,15 @@ class DeviceRepository(private val api: SmarthomeApi) {
     }.mapError("Error al renombrar el dispositivo")
 
     suspend fun deleteDevice(id: String): Result<Unit> = runCatching {
-        api.deleteDevice(id)
-        Unit
+        api.deleteDevice(id).requireSuccessful("Error al eliminar el dispositivo")
     }.mapError("Error al eliminar el dispositivo")
 
     suspend fun addDeviceToRoom(roomId: String, deviceId: String): Result<Unit> = runCatching {
-        api.addDeviceToRoom(roomId, deviceId)
-        Unit
+        api.addDeviceToRoom(roomId, deviceId).requireSuccessful("Error al vincular el dispositivo")
     }.mapError("Error al vincular el dispositivo")
 
     suspend fun removeDeviceFromRoom(deviceId: String): Result<Unit> = runCatching {
-        api.removeDeviceFromRoom(deviceId)
-        Unit
+        api.removeDeviceFromRoom(deviceId).requireSuccessful("Error al desvincular el dispositivo")
     }.mapError("Error al desvincular el dispositivo")
 
     suspend fun executeAction(

@@ -226,9 +226,10 @@ fun RoomScreen(
         AddDeviceDialog(
             appViewModel = appViewModel,
             onDismiss = { showAddDialog = false },
-            onCreate = { name, typeId, roomId, marca ->
+            onCreate = { name, typeId, roomId, marca, onResult ->
                 appViewModel.createDevice(name, typeId, roomId, marca) { success ->
                     if (success) showAddDialog = false
+                    onResult(success)
                 }
             },
             lockedHome = home,
@@ -311,7 +312,8 @@ fun RoomScreen(
                                     id = roomId,
                                     name = newName,
                                     type = room.metadata?.type ?: "",
-                                    homeId = home?.id
+                                    homeId = home?.id ?: room.home?.id,
+                                    floor = room.metadata?.floor
                                 ).onSuccess { updated ->
                                     appViewModel.updateRoom(updated)
                                     showRenameDialog = false

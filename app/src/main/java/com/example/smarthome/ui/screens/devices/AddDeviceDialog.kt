@@ -41,7 +41,7 @@ import com.example.smarthome.ui.AppViewModel
 fun AddDeviceDialog(
     appViewModel: AppViewModel,
     onDismiss: () -> Unit,
-    onCreate: (name: String, typeId: String, roomId: String?, marca: String) -> Unit,
+    onCreate: (name: String, typeId: String, roomId: String?, marca: String, onResult: (Boolean) -> Unit) -> Unit,
     // Si se pasan, el diálogo queda FIJADO a esa casa/habitación (no se pueden cambiar).
     lockedHome: HomeDto? = null,
     lockedRoom: RoomDto? = null
@@ -238,7 +238,9 @@ fun AddDeviceDialog(
                     }
                     if (!isSaving) {
                         isSaving = true
-                        onCreate(trimmed, selectedType!!.id, selectedRoom?.id, marca.trim())
+                        onCreate(trimmed, selectedType!!.id, selectedRoom?.id, marca.trim()) { success ->
+                            if (!success) isSaving = false
+                        }
                     }
                 },
                 enabled = selectedType != null && !isSaving

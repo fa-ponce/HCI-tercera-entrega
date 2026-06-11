@@ -17,9 +17,12 @@ object SocketManager {
     val deviceEvents: SharedFlow<DeviceEvent> = _deviceEvents.asSharedFlow()
 
     private var socket: Socket? = null
+    private var currentToken: String? = null
 
     fun connect(token: String) {
-        if (socket?.connected() == true) return
+        if (socket?.connected() == true && currentToken == token) return
+        disconnect()
+        currentToken = token
         val opts = IO.Options().apply {
             extraHeaders = mapOf("Authorization" to listOf("Bearer $token"))
         }
@@ -41,5 +44,6 @@ object SocketManager {
         socket?.disconnect()
         socket?.off("device")
         socket = null
+        currentToken = null
     }
 }

@@ -23,6 +23,7 @@ import com.example.smarthome.socket.SocketManager
 import com.example.smarthome.data.repository.isNetworkError
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -70,6 +71,8 @@ class AppViewModel(
     private val _errorEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
 
+    private var realtimeJob: Job? = null
+
     val userName: StateFlow<String?> = userPreferences.userName
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -103,14 +106,23 @@ class AppViewModel(
         newPassword: String,
         onResult: (success: Boolean, error: String?) -> Unit
     ) = viewModelScope.launch {
-        val email = userEmail.value ?: return@launch
+        val email = userEmail.value
+        if (email == null) {
+            onResult(false, "No se pudo obtener el email del usuario")
+            return@launch
+        }
         ServiceLocator.authRepository.changePassword(email, oldPassword, newPassword)
             .onSuccess { onResult(true, null) }
             .onFailure { onResult(false, it.message) }
     }
 
     fun logout() = viewModelScope.launch {
-        userPreferences.clear()
+        realtimeJob?.cancel()
+        realtimeJob = null
+        SocketManager.disconnect()
+        ServiceLocator.authRepository.logout()
+            .onFailure { userPreferences.clear() }
+        clearLocalState()
     }
 
     fun clearError() { _error.value = null }
@@ -213,14 +225,17 @@ class AppViewModel(
         }
     }
 
-    fun subscribeRealtime() = viewModelScope.launch {
-        val token = userPreferences.getTokenOnce() ?: return@launch
-        SocketManager.connect(token)
-        SocketManager.deviceEvents.collect { event ->
-            _devices.update { currentMap ->
-                currentMap.mapValues { (_, deviceList) ->
-                    deviceList.map { device ->
-                        if (device.id == event.deviceId) device.copy(state = event.newState) else device
+    fun subscribeRealtime() {
+        if (realtimeJob?.isActive == true) return
+        realtimeJob = viewModelScope.launch {
+            val token = userPreferences.getTokenOnce() ?: return@launch
+            SocketManager.connect(token)
+            SocketManager.deviceEvents.collect { event ->
+                _devices.update { currentMap ->
+                    currentMap.mapValues { (_, deviceList) ->
+                        deviceList.map { device ->
+                            if (device.id == event.deviceId) device.copy(state = event.newState) else device
+                        }
                     }
                 }
             }
@@ -372,6 +387,18 @@ class AppViewModel(
     }
 
     fun removeRoutine(routineId: String) = _routines.update { it.filter { r -> r.id != routineId } }
+
+    private fun clearLocalState() {
+        _homes.value = emptyList()
+        _rooms.value = emptyMap()
+        _standaloneRooms.value = emptyList()
+        _devices.value = emptyMap()
+        _routines.value = emptyList()
+        _deviceTypes.value = emptyList()
+        _error.value = null
+        freeRoomId = null
+        freeHomeId = null
+    }
 
     override fun onCleared() {
         super.onCleared()
