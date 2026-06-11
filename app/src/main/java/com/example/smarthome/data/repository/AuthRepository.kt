@@ -3,6 +3,7 @@ package com.example.smarthome.data.repository
 import com.example.smarthome.data.api.SmarthomeApi
 import com.example.smarthome.data.api.models.*
 import com.example.smarthome.data.datastore.UserPreferences
+import retrofit2.HttpException
 
 class AccountNotVerifiedException : Exception("Cuenta no verificada")
 
@@ -18,10 +19,13 @@ class AuthRepository(
             Result.success(response.user)
         } catch (e: Exception) {
             val description = e.apiDescription()
-            if (description != null && description.contains("verif", ignoreCase = true)) {
-                Result.failure(AccountNotVerifiedException())
-            } else {
-                Result.failure(Exception(e.toFriendlyMessage("Error al iniciar sesión")))
+            when {
+                description != null && description.contains("verif", ignoreCase = true) ->
+                    Result.failure(AccountNotVerifiedException())
+                e is HttpException && e.code() == 401 ->
+                    Result.failure(Exception("Email o contraseña incorrectos."))
+                else ->
+                    Result.failure(Exception(e.toFriendlyMessage("Error al iniciar sesión")))
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.smarthome.ui.navigation
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.BarChart
@@ -8,19 +9,24 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.annotation.StringRes
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.example.smarthome.R
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -55,14 +61,14 @@ object Routes {
     fun room(roomId: String) = "room/$roomId"
 }
 
-private data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
+private data class BottomNavItem(val route: String, @StringRes val labelRes: Int, val icon: ImageVector)
 
 private val bottomNavItems = listOf(
-    BottomNavItem(Routes.HOME, "Inicio", Icons.Rounded.Home),
-    BottomNavItem(Routes.HOMES, "Casas", Icons.Rounded.Apartment),
-    BottomNavItem(Routes.DEVICES, "Dispositivos", Icons.Rounded.Devices),
-    BottomNavItem(Routes.ROUTINES, "Rutinas", Icons.Rounded.Schedule),
-    BottomNavItem(Routes.CONSUMPTION, "Consumo", Icons.Rounded.BarChart),
+    BottomNavItem(Routes.HOME, R.string.nav_home, Icons.Rounded.Home),
+    BottomNavItem(Routes.HOMES, R.string.nav_homes, Icons.Rounded.Apartment),
+    BottomNavItem(Routes.DEVICES, R.string.nav_devices, Icons.Rounded.Devices),
+    BottomNavItem(Routes.ROUTINES, R.string.nav_routines, Icons.Rounded.Schedule),
+    BottomNavItem(Routes.CONSUMPTION, R.string.nav_consumption, Icons.Rounded.BarChart),
 )
 
 private val bottomNavRoutes = bottomNavItems.map { it.route }.toSet()
@@ -83,42 +89,49 @@ fun NavGraph(
         }
     }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(snackbarData = data)
-            }
-        },
-        bottomBar = {
-            if (currentRoute in bottomNavRoutes || currentRoute == Routes.HOME_DETAIL || currentRoute == Routes.ROOM) {
-                NavigationBar {
-                    bottomNavItems.forEach { item ->
-                        NavigationBarItem(
-                            selected = currentRoute == item.route ||
-                                ((currentRoute == Routes.HOME_DETAIL || currentRoute == Routes.ROOM) && item.route == Routes.HOMES),
-                            onClick = {
-                                navController.navigate(item.route) {
-                                    popUpTo(Routes.HOME) {
-                                        saveState = false
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = false
-                                }
-                            },
-                            icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) }
-                        )
-                    }
-                }
+    LaunchedEffect(Unit) {
+        appViewModel.forceLogout.collect {
+            navController.navigate(Routes.LOGIN) {
+                popUpTo(0) { inclusive = true }
             }
         }
-    ) { innerPadding ->
-        // Only apply bottom padding from outer scaffold; each screen's TopAppBar handles top insets
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
-        ) {
+    }
+
+    // El login no muestra navegación; el resto deja que el componente adaptativo
+    // elija barra (teléfono) / rail (landscape) / drawer (tablet) según el ancho.
+    val showNav = currentRoute in bottomNavRoutes ||
+        currentRoute == Routes.HOME_DETAIL || currentRoute == Routes.ROOM
+    val layoutType = if (!showNav) {
+        NavigationSuiteType.None
+    } else {
+        NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+    }
+
+    NavigationSuiteScaffold(
+        layoutType = layoutType,
+        navigationSuiteItems = {
+            bottomNavItems.forEach { item ->
+                item(
+                    icon = { Icon(item.icon, contentDescription = stringResource(item.labelRes)) },
+                    label = { Text(stringResource(item.labelRes)) },
+                    selected = currentRoute == item.route ||
+                        ((currentRoute == Routes.HOME_DETAIL || currentRoute == Routes.ROOM) && item.route == Routes.HOMES),
+                    onClick = {
+                        navController.navigate(item.route) {
+                            popUpTo(Routes.HOME) { saveState = false }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
+                )
+            }
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination
+            ) {
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onNavigateToHome = {
@@ -179,6 +192,14 @@ fun NavGraph(
 
             composable(Routes.PROFILE) {
                 ProfileScreen(appViewModel = appViewModel, navController = navController)
+            }
+            }
+
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) { data ->
+                Snackbar(snackbarData = data)
             }
         }
     }

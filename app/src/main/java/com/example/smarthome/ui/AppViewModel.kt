@@ -1,11 +1,15 @@
 package com.example.smarthome.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
+import com.example.smarthome.ui.notifications.NotificationHelper
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.DeviceTypeDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -21,6 +25,7 @@ import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.toggleAction
 import com.example.smarthome.socket.SocketManager
 import com.example.smarthome.data.repository.isNetworkError
+import retrofit2.HttpException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.Job
@@ -36,11 +41,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AppViewModel(
+    application: Application,
     private val homeRepository: HomeRepository,
     private val deviceRepository: DeviceRepository,
     private val routineRepository: RoutineRepository,
     private val userPreferences: UserPreferences
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _homes = MutableStateFlow<List<HomeDto>>(emptyList())
     val homes: StateFlow<List<HomeDto>> = _homes.asStateFlow()
@@ -71,7 +77,16 @@ class AppViewModel(
     private val _errorEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
 
+    private val _forceLogout = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val forceLogout: SharedFlow<Unit> = _forceLogout.asSharedFlow()
+
     private var realtimeJob: Job? = null
+
+    private val appContext: Application get() = getApplication()
+
+    private fun notify(title: String, body: String) {
+        NotificationHelper.notify(appContext, title, body)
+    }
 
     val userName: StateFlow<String?> = userPreferences.userName
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -214,6 +229,15 @@ class AppViewModel(
             _rooms.value = roomsMap
             _devices.value = devicesMap
         } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                realtimeJob?.cancel()
+                realtimeJob = null
+                SocketManager.disconnect()
+                userPreferences.clear()
+                clearLocalState()
+                _forceLogout.tryEmit(Unit)
+                return@launch
+            }
             val msg = if (e.isNetworkError())
                 "Sin conexión a internet. Verificá tu red."
             else
@@ -231,11 +255,31 @@ class AppViewModel(
             val token = userPreferences.getTokenOnce() ?: return@launch
             SocketManager.connect(token)
             SocketManager.deviceEvents.collect { event ->
+                val changed = _devices.value.values
+                    .flatten()
+                    .find { it.id == event.deviceId }
+
                 _devices.update { currentMap ->
                     currentMap.mapValues { (_, deviceList) ->
                         deviceList.map { device ->
                             if (device.id == event.deviceId) device.copy(state = event.newState) else device
                         }
+                    }
+                }
+
+                if (changed != null) {
+                    val titleRes = when (changed.type.id) {
+                        DeviceTypes.ALARMA -> R.string.notif_alarm_title
+                        DeviceTypes.PUERTA -> R.string.notif_door_title
+                        else -> null
+                    }
+                    if (titleRes != null) {
+                        val stateLabel = isDeviceOn(changed.type.id, event.newState)
+                            .let { on -> if (on) R.string.notif_state_on else R.string.notif_state_off }
+                        notify(
+                            appContext.getString(titleRes),
+                            "${changed.name}: ${appContext.getString(stateLabel)}"
+                        )
                     }
                 }
             }
@@ -249,11 +293,28 @@ class AppViewModel(
         updateDevice(device.copy(state = optimisticState))
         deviceRepository.executeAction(device.id, action).onFailure {
             updateDevice(device)
+            notify(
+                appContext.getString(R.string.notif_device_error_title),
+                appContext.getString(R.string.notif_device_error_body, device.name)
+            )
         }
     }
 
     fun executeRoutine(routineId: String) = viewModelScope.launch {
+        val routineName = _routines.value.find { it.id == routineId }?.name ?: ""
         routineRepository.executeRoutine(routineId)
+            .onSuccess {
+                notify(
+                    appContext.getString(R.string.notif_routine_success_title),
+                    routineName
+                )
+            }
+            .onFailure {
+                notify(
+                    appContext.getString(R.string.notif_routine_error_title),
+                    appContext.getString(R.string.notif_routine_error_body, routineName)
+                )
+            }
     }
 
     fun loadDeviceTypes() = viewModelScope.launch {
@@ -409,6 +470,7 @@ class AppViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 AppViewModel(
+                    application = this[APPLICATION_KEY] as Application,
                     homeRepository = ServiceLocator.homeRepository,
                     deviceRepository = ServiceLocator.deviceRepository,
                     routineRepository = ServiceLocator.routineRepository,
