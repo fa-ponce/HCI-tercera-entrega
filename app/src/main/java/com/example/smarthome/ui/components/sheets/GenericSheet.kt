@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
@@ -28,14 +30,14 @@ fun GenericSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = device.type.name ?: "Dispositivo", deviceId = device.id, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = device.type.name ?: stringResource(R.string.device_type_generic), deviceId = device.id, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
             Text(
-                "Tipo de dispositivo no soportado.",
+                stringResource(R.string.sheet_unsupported),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
             OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                Text("Cerrar")
+                Text(stringResource(R.string.common_close))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)

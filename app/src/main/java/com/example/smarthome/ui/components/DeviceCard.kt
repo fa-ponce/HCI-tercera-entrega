@@ -32,11 +32,13 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.canToggle
 import com.example.smarthome.domain.deviceIcon
@@ -160,7 +162,7 @@ fun DeviceCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (subtitle.isNotEmpty()) subtitle else deviceTypeName(typeId),
+                        text = if (subtitle.isNotEmpty()) subtitle else stringResource(deviceTypeName(typeId)),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (free) FreeAccent else MaterialTheme.colorScheme.outline,
                         fontStyle = if (free) FontStyle.Italic else FontStyle.Normal,
@@ -316,9 +318,9 @@ private fun StatusRow(on: Boolean, toggleable: Boolean) {
         Spacer(Modifier.width(6.dp))
         Text(
             text = when {
-                !toggleable && on -> "Activo"
-                on -> "Encendido"
-                else -> "Apagado"
+                !toggleable && on -> stringResource(R.string.common_active)
+                on -> stringResource(R.string.common_on)
+                else -> stringResource(R.string.common_off)
             },
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,

@@ -9,8 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -41,9 +43,11 @@ fun ParlanteSheet(
     var songArtist by remember { mutableStateOf("") }
 
     val genres = listOf(
-        "clasica" to "Clasica", "country" to "Country", "dance" to "Dance",
-        "latina" to "Latina", "pop" to "Pop", "rock" to "Rock",
-        "folk" to "Folk", "jazz" to "Jazz", "blues" to "Blues"
+        "clasica" to R.string.sheet_genre_classical, "country" to R.string.sheet_genre_country,
+        "dance" to R.string.sheet_genre_dance, "latina" to R.string.sheet_genre_latin,
+        "pop" to R.string.sheet_genre_pop, "rock" to R.string.sheet_genre_rock,
+        "folk" to R.string.sheet_genre_folk, "jazz" to R.string.sheet_genre_jazz,
+        "blues" to R.string.sheet_genre_blues
     )
 
     val isPlaying = status == "playing"
@@ -74,7 +78,7 @@ fun ParlanteSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Parlante", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_speaker), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -90,9 +94,9 @@ fun ParlanteSheet(
                     ) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             val statusLabel = when (status) {
-                                "playing" -> "Reproduciendo"
-                                "paused" -> "Pausado"
-                                else -> "Detenido"
+                                "playing" -> stringResource(R.string.action_playing)
+                                "paused" -> stringResource(R.string.action_paused)
+                                else -> stringResource(R.string.action_stopped)
                             }
                             Text(statusLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f))
                             Text(songTitle, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.inverseOnSurface)
@@ -104,7 +108,7 @@ fun ParlanteSheet(
                 // Transport controls
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Reproduccion")
+                        SheetSectionLabel(stringResource(R.string.sheet_playback))
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -116,7 +120,7 @@ fun ParlanteSheet(
                                     if (!routineMode) scope.launch { repo.executeAction(device.id, "previousSong") }
                                 },
                                 enabled = routineMode || isPlaying
-                            ) { Icon(Icons.Rounded.SkipPrevious, "Anterior", Modifier.size(28.dp)) }
+                            ) { Icon(Icons.Rounded.SkipPrevious, stringResource(R.string.sheet_previous), Modifier.size(28.dp)) }
 
                             // Stop
                             IconButton(
@@ -126,7 +130,7 @@ fun ParlanteSheet(
                                     }
                                 },
                                 enabled = routineMode || !isStopped
-                            ) { Icon(Icons.Rounded.Stop, "Detener", Modifier.size(28.dp), tint = MaterialTheme.colorScheme.error) }
+                            ) { Icon(Icons.Rounded.Stop, stringResource(R.string.sheet_stop), Modifier.size(28.dp), tint = MaterialTheme.colorScheme.error) }
 
                             // Play / Resume
                             FilledIconButton(
@@ -138,7 +142,7 @@ fun ParlanteSheet(
                                 },
                                 modifier = Modifier.size(52.dp),
                                 enabled = routineMode || !isPlaying
-                            ) { Icon(Icons.Rounded.PlayArrow, "Reproducir", Modifier.size(32.dp)) }
+                            ) { Icon(Icons.Rounded.PlayArrow, stringResource(R.string.sheet_play), Modifier.size(32.dp)) }
 
                             // Pause
                             IconButton(
@@ -148,7 +152,7 @@ fun ParlanteSheet(
                                     }
                                 },
                                 enabled = routineMode || isPlaying
-                            ) { Icon(Icons.Rounded.Pause, "Pausar", Modifier.size(28.dp), tint = MaterialTheme.colorScheme.tertiary) }
+                            ) { Icon(Icons.Rounded.Pause, stringResource(R.string.sheet_pause), Modifier.size(28.dp), tint = MaterialTheme.colorScheme.tertiary) }
 
                             // Next
                             IconButton(
@@ -156,7 +160,7 @@ fun ParlanteSheet(
                                     if (!routineMode) scope.launch { repo.executeAction(device.id, "nextSong") }
                                 },
                                 enabled = routineMode || isPlaying
-                            ) { Icon(Icons.Rounded.SkipNext, "Siguiente", Modifier.size(28.dp)) }
+                            ) { Icon(Icons.Rounded.SkipNext, stringResource(R.string.sheet_next), Modifier.size(28.dp)) }
                         }
                     }
                 }
@@ -165,7 +169,7 @@ fun ParlanteSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel("Volumen")
+                            SheetSectionLabel(stringResource(R.string.sheet_volume))
                             Text("$volume", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -204,16 +208,16 @@ fun ParlanteSheet(
                 // Genre
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Genero")
+                        SheetSectionLabel(stringResource(R.string.sheet_genre))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            genres.forEach { (value, label) ->
+                            genres.forEach { (value, labelRes) ->
                                 FilterChip(
                                     selected = genre == value,
                                     onClick = {
                                         genre = value
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setGenre", mapOf("genre" to value)) }
                                     },
-                                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }

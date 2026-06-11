@@ -1,8 +1,10 @@
 package com.example.smarthome.domain
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.smarthome.R
 
 object DeviceTypes {
     const val LAMPARA     = "eu0v2xgprrhhg41g"
@@ -60,19 +62,47 @@ fun deviceIcon(typeId: String): ImageVector = when (typeId) {
     else                   -> Icons.Rounded.DevicesOther
 }
 
-/** Nombre amigable en español del tipo de dispositivo, para subtítulos y etiquetas. */
-fun deviceTypeName(typeId: String): String = when (typeId) {
-    DeviceTypes.LAMPARA    -> "Lámpara"
-    DeviceTypes.AC         -> "Aire acondicionado"
-    DeviceTypes.ALARMA     -> "Alarma"
-    DeviceTypes.PERSIANA   -> "Persiana"
-    DeviceTypes.PUERTA     -> "Puerta"
-    DeviceTypes.GRIFO      -> "Grifo"
-    DeviceTypes.HORNO      -> "Horno"
-    DeviceTypes.PARLANTE   -> "Parlante"
-    DeviceTypes.ASPIRADORA -> "Aspiradora"
-    DeviceTypes.HELADERA   -> "Heladera"
-    else                   -> "Dispositivo"
+/** Recurso de string del nombre amigable del tipo de dispositivo, para subtítulos y etiquetas. */
+@StringRes
+fun deviceTypeName(typeId: String): Int = when (typeId) {
+    DeviceTypes.LAMPARA    -> R.string.device_type_lamp
+    DeviceTypes.AC         -> R.string.device_type_ac
+    DeviceTypes.ALARMA     -> R.string.device_type_alarm
+    DeviceTypes.PERSIANA   -> R.string.device_type_blinds
+    DeviceTypes.PUERTA     -> R.string.device_type_door
+    DeviceTypes.GRIFO      -> R.string.device_type_faucet
+    DeviceTypes.HORNO      -> R.string.device_type_oven
+    DeviceTypes.PARLANTE   -> R.string.device_type_speaker
+    DeviceTypes.ASPIRADORA -> R.string.device_type_vacuum
+    DeviceTypes.HELADERA   -> R.string.device_type_fridge
+    else                   -> R.string.device_type_generic
+}
+
+/** Recurso de string del label (en pasado) de un evento del historial, o null si no se conoce. */
+@StringRes
+fun logActionLabelRes(event: String?): Int? = when (event) {
+    "turnOn"        -> R.string.action_turned_on
+    "turnOff"       -> R.string.action_turned_off
+    "open"          -> R.string.action_opened
+    "close"         -> R.string.action_closed
+    "armAway", "arm" -> R.string.action_armed
+    "disarm"        -> R.string.action_disarmed
+    "trigger"       -> R.string.action_triggered
+    "play"          -> R.string.action_playing
+    "pause"         -> R.string.action_paused
+    "stop"          -> R.string.action_stopped
+    "startCleaning" -> R.string.action_cleaning
+    "dock"          -> R.string.action_docked
+    "up"            -> R.string.action_raised
+    "down"          -> R.string.action_lowered
+    "lock"          -> R.string.action_locked
+    "unlock"        -> R.string.action_unlocked
+    "start"         -> R.string.action_started
+    "setBrightness" -> R.string.action_brightness_set
+    "setTemperature" -> R.string.action_temperature_set
+    "setColor"      -> R.string.action_color_set
+    "setVolume"     -> R.string.action_volume_set
+    else            -> null
 }
 
 fun deviceConsumptionW(typeId: String): Int = when (typeId) {

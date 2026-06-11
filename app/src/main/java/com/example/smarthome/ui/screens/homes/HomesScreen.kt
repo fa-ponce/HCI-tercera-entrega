@@ -58,9 +58,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -70,9 +72,14 @@ import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.ui.text.style.TextAlign
+import androidx.window.core.layout.WindowWidthSizeClass
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +99,15 @@ fun HomesScreen(
     var search by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var showRoomDialog by remember { mutableStateOf(false) }
+
+    // En tablets (ancho EXPANDED) mostramos lista + detalle en dos paneles.
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val isExpanded = adaptiveInfo.windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.EXPANDED
+    var selectedHomeId by remember { mutableStateOf<String?>(null) }
+    // Si la casa seleccionada deja de existir (p. ej. tras borrarla), limpiar.
+    if (selectedHomeId != null && homes.none { it.id == selectedHomeId }) {
+        selectedHomeId = null
+    }
 
     val filtered = remember(homes, search) {
         if (search.isBlank()) homes
@@ -145,7 +161,7 @@ fun HomesScreen(
                 modifier = Modifier.appBarGradient(),
                 title = {
                     Text(
-                        "Casas",
+                        stringResource(R.string.nav_homes),
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -153,7 +169,7 @@ fun HomesScreen(
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = stringResource(R.string.common_profile), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = gradientTopBarColors()
@@ -163,7 +179,7 @@ fun HomesScreen(
             ExtendedFloatingActionButton(
                 onClick = { showDialog = true },
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary) },
-                text = { Text("Nueva casa", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold) },
+                text = { Text(stringResource(R.string.homes_new_home), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold) },
                 containerColor = MaterialTheme.colorScheme.primary
             )
         },
@@ -193,7 +209,7 @@ fun HomesScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Button(onClick = { appViewModel.retryLoad() }) {
-                        Text("Reintentar")
+                        Text(stringResource(R.string.common_retry))
                     }
                 }
             }
@@ -212,20 +228,21 @@ fun HomesScreen(
             return@Scaffold
         }
 
+        Row(Modifier.fillMaxSize()) {
         LazyColumn(
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 8.dp,
                 start = 16.dp, end = 16.dp, bottom = 88.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = if (isExpanded) Modifier.weight(0.35f).fillMaxHeight() else Modifier.fillMaxSize()
         ) {
             item {
                 Column {
                     OutlinedTextField(
                         value = search,
                         onValueChange = { search = it },
-                        placeholder = { Text("Buscar casa o habitación…") },
+                        placeholder = { Text(stringResource(R.string.homes_search_placeholder)) },
                         leadingIcon = { Icon(Icons.Rounded.Search, null) },
                         singleLine = true,
                         shape = RoundedCornerShape(50),
@@ -238,7 +255,7 @@ fun HomesScreen(
                     ) {
                         Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Agregar habitación", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.homes_add_room), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -250,7 +267,11 @@ fun HomesScreen(
                     subtitle = listOfNotNull(home.metadata?.city, home.metadata?.address).joinToString(" · "),
                     homeRooms = rooms[home.id] ?: emptyList(),
                     devices = devices,
-                    onHomeClick = { navController.navigate(Routes.homeDetail(home.id)) },
+                    selected = isExpanded && selectedHomeId == home.id,
+                    onHomeClick = {
+                        if (isExpanded) selectedHomeId = home.id
+                        else navController.navigate(Routes.homeDetail(home.id))
+                    },
                     onRoomClick = { roomId -> navController.navigate(Routes.room(roomId)) }
                 )
             }
@@ -265,7 +286,7 @@ fun HomesScreen(
                         ) {
                             Icon(Icons.Rounded.MeetingRoom, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
-                                "Sin casa",
+                                stringResource(R.string.homes_no_home),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -275,7 +296,8 @@ fun HomesScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    "${filteredStandalone.size} habitaci${if (filteredStandalone.size != 1) "ones" else "ón"}",
+                                    if (filteredStandalone.size != 1) stringResource(R.string.common_rooms_count_many, filteredStandalone.size)
+                                    else stringResource(R.string.common_rooms_count_one, filteredStandalone.size),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -298,7 +320,44 @@ fun HomesScreen(
                         Modifier.fillMaxWidth().padding(top = 48.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Sin resultados", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.common_no_results), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+
+            // Panel de detalle (solo en tablets)
+            if (isExpanded) {
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Box(Modifier.weight(0.65f).fillMaxHeight()) {
+                    val selId = selectedHomeId
+                    if (selId != null) {
+                        HomeDetailContent(
+                            homeId = selId,
+                            appViewModel = appViewModel,
+                            navController = navController,
+                            showBackButton = false,
+                            onHomeDeleted = { selectedHomeId = null }
+                        )
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                Icons.Rounded.Apartment, null,
+                                modifier = Modifier.size(56.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                stringResource(R.string.homes_select_home),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -317,6 +376,7 @@ private fun HomeSection(
     subtitle: String,
     homeRooms: List<RoomDto>,
     devices: Map<String, List<DeviceDto>>,
+    selected: Boolean = false,
     onHomeClick: () -> Unit,
     onRoomClick: (String) -> Unit
 ) {
@@ -326,7 +386,15 @@ private fun HomeSection(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.clickable(onClick = onHomeClick)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .then(
+                        if (selected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
+                        else Modifier
+                    )
+                    .clickable(onClick = onHomeClick)
+                    .padding(vertical = 4.dp)
             ) {
                 Icon(Icons.Rounded.Apartment, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 Text(
@@ -335,7 +403,10 @@ private fun HomeSection(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                CountBadge("${homeRooms.size} habitaci${if (homeRooms.size != 1) "ones" else "ón"}")
+                CountBadge(
+                    if (homeRooms.size != 1) stringResource(R.string.common_rooms_count_many, homeRooms.size)
+                    else stringResource(R.string.common_rooms_count_one, homeRooms.size)
+                )
                 Icon(Icons.Rounded.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
             }
             if (subtitle.isNotEmpty()) {
@@ -349,7 +420,7 @@ private fun HomeSection(
             RoomsGrid(roomList = homeRooms, devices = devices, onRoomClick = onRoomClick)
         } else {
             Text(
-                "Esta casa no tiene habitaciones.",
+                stringResource(R.string.homes_no_rooms),
                 style = MaterialTheme.typography.bodySmall,
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -427,7 +498,7 @@ private fun WebRoomCard(
                 }
             } else {
                 Text(
-                    "Sin dispositivos",
+                    stringResource(R.string.homes_no_devices),
                     style = MaterialTheme.typography.labelSmall,
                     fontStyle = FontStyle.Italic,
                     color = MaterialTheme.colorScheme.outline
@@ -488,14 +559,14 @@ private fun NewRoomDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva habitación", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.homes_new_room), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre *") },
-                    placeholder = { Text("Ej: Dormitorio Principal") },
+                    label = { Text(stringResource(R.string.common_name_required)) },
+                    placeholder = { Text(stringResource(R.string.homes_room_name_placeholder)) },
                     singleLine = true,
                     isError = nameError != null,
                     supportingText = nameError?.let { msg -> { Text(msg) } },
@@ -509,7 +580,7 @@ private fun NewRoomDialog(
                         value = selectedType,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Tipo") },
+                        label = { Text(stringResource(R.string.common_type)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -524,16 +595,16 @@ private fun NewRoomDialog(
                 // Casa (o Sin casa)
                 ExposedDropdownMenuBox(expanded = homeExpanded, onExpandedChange = { homeExpanded = it }) {
                     OutlinedTextField(
-                        value = selectedHome?.name ?: "Sin casa",
+                        value = selectedHome?.name ?: stringResource(R.string.homes_no_home),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Casa") },
+                        label = { Text(stringResource(R.string.common_home)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(homeExpanded) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
                     ExposedDropdownMenu(expanded = homeExpanded, onDismissRequest = { homeExpanded = false }) {
-                        DropdownMenuItem(text = { Text("Sin casa") }, onClick = { selectedHome = null; homeExpanded = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.homes_no_home)) }, onClick = { selectedHome = null; homeExpanded = false })
                         homes.forEach { home ->
                             DropdownMenuItem(text = { Text(home.name) }, onClick = { selectedHome = home; homeExpanded = false })
                         }
@@ -542,7 +613,7 @@ private fun NewRoomDialog(
 
                 // Piso
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Piso", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.common_floor), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     IconButton(onClick = { if (floor > 1) floor-- }, modifier = Modifier.size(36.dp)) {
                         Text("−", style = MaterialTheme.typography.titleLarge)
                     }
@@ -554,21 +625,23 @@ private fun NewRoomDialog(
             }
         },
         confirmButton = {
+            val errMin = stringResource(R.string.common_name_min_chars)
+            val errMax = stringResource(R.string.common_name_max_chars)
             TextButton(
                 onClick = {
                     val trimmed = name.trim()
                     when {
-                        trimmed.length < 3 -> nameError = "El nombre debe tener al menos 3 caracteres"
-                        trimmed.length > 100 -> nameError = "El nombre no puede superar 100 caracteres"
+                        trimmed.length < 3 -> nameError = errMin
+                        trimmed.length > 100 -> nameError = errMax
                         else -> onCreate(trimmed, selectedType, floor, selectedHome?.id)
                     }
                 }
             ) {
-                Text("Crear", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
@@ -590,14 +663,14 @@ private fun NewHomeDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva casa", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.homes_new_home), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre de la casa *") },
-                    placeholder = { Text("Ej: Casa de playa") },
+                    label = { Text(stringResource(R.string.homes_home_name_label)) },
+                    placeholder = { Text(stringResource(R.string.homes_home_name_placeholder)) },
                     singleLine = true,
                     isError = nameError != null,
                     supportingText = nameError?.let { msg -> { Text(msg) } },
@@ -612,7 +685,7 @@ private fun NewHomeDialog(
                         value = selectedType,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Tipo de propiedad") },
+                        label = { Text(stringResource(R.string.homes_property_type)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -635,8 +708,8 @@ private fun NewHomeDialog(
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text("Dirección") },
-                    placeholder = { Text("Ej: Av. Libertador 1234") },
+                    label = { Text(stringResource(R.string.homes_address)) },
+                    placeholder = { Text(stringResource(R.string.homes_address_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -644,8 +717,8 @@ private fun NewHomeDialog(
                 OutlinedTextField(
                     value = city,
                     onValueChange = { city = it },
-                    label = { Text("Ciudad") },
-                    placeholder = { Text("Ej: Buenos Aires") },
+                    label = { Text(stringResource(R.string.homes_city)) },
+                    placeholder = { Text(stringResource(R.string.homes_city_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -653,21 +726,23 @@ private fun NewHomeDialog(
             }
         },
         confirmButton = {
+            val errMin = stringResource(R.string.common_name_min_chars)
+            val errMax = stringResource(R.string.common_name_max_chars)
             TextButton(
                 onClick = {
                     val trimmed = name.trim()
                     when {
-                        trimmed.length < 3 -> nameError = "El nombre debe tener al menos 3 caracteres"
-                        trimmed.length > 100 -> nameError = "El nombre no puede superar 100 caracteres"
+                        trimmed.length < 3 -> nameError = errMin
+                        trimmed.length > 100 -> nameError = errMax
                         else -> onCreate(trimmed, selectedType, address.trim(), city.trim())
                     }
                 }
             ) {
-                Text("Crear", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

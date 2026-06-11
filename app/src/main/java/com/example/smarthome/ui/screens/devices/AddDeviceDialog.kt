@@ -29,8 +29,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceTypeDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
@@ -76,7 +78,7 @@ fun AddDeviceDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuevo dispositivo", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.device_new), fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier
@@ -87,8 +89,8 @@ fun AddDeviceDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre del dispositivo *") },
-                    placeholder = { Text("Ej: Lampara LED") },
+                    label = { Text(stringResource(R.string.device_name_label)) },
+                    placeholder = { Text(stringResource(R.string.device_name_placeholder)) },
                     singleLine = true,
                     isError = nameError != null,
                     supportingText = nameError?.let { msg -> { Text(msg) } },
@@ -106,8 +108,8 @@ fun AddDeviceDialog(
                         value = selectedType?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Tipo de dispositivo *") },
-                        placeholder = { Text("Seleccionar tipo") },
+                        label = { Text(stringResource(R.string.device_type_label)) },
+                        placeholder = { Text(stringResource(R.string.device_type_placeholder)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
@@ -137,11 +139,11 @@ fun AddDeviceDialog(
                     onExpandedChange = { if (!locked) homeExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedHome?.name ?: "Sin casa",
+                        value = selectedHome?.name ?: stringResource(R.string.homes_no_home),
                         onValueChange = {},
                         readOnly = true,
                         enabled = !locked,
-                        label = { Text("Casa") },
+                        label = { Text(stringResource(R.string.common_home)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = homeExpanded && !locked) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
@@ -153,7 +155,7 @@ fun AddDeviceDialog(
                         onDismissRequest = { homeExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Sin casa") },
+                            text = { Text(stringResource(R.string.homes_no_home)) },
                             onClick = {
                                 selectedHome = null
                                 selectedRoom = null
@@ -180,11 +182,11 @@ fun AddDeviceDialog(
                     onExpandedChange = { if (selectedHome != null && !locked) roomExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedRoom?.name ?: "Sin habitación",
+                        value = selectedRoom?.name ?: stringResource(R.string.device_no_room),
                         onValueChange = {},
                         readOnly = true,
                         enabled = selectedHome != null && !locked,
-                        label = { Text("Habitación") },
+                        label = { Text(stringResource(R.string.common_room)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roomExpanded && selectedHome != null && !locked) },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
@@ -196,7 +198,7 @@ fun AddDeviceDialog(
                         onDismissRequest = { roomExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Sin habitación (dispositivo libre)") },
+                            text = { Text(stringResource(R.string.device_no_room_free)) },
                             onClick = {
                                 selectedRoom = null
                                 roomExpanded = false
@@ -219,8 +221,8 @@ fun AddDeviceDialog(
                 OutlinedTextField(
                     value = marca,
                     onValueChange = { marca = it },
-                    label = { Text("Marca/Modelo") },
-                    placeholder = { Text("Ej: Phillips Hue") },
+                    label = { Text(stringResource(R.string.device_brand)) },
+                    placeholder = { Text(stringResource(R.string.device_brand_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -228,12 +230,14 @@ fun AddDeviceDialog(
             }
         },
         confirmButton = {
+            val errMin = stringResource(R.string.common_name_min_chars)
+            val errMax = stringResource(R.string.common_name_max_chars)
             TextButton(
                 onClick = {
                     val trimmed = name.trim()
                     when {
-                        trimmed.length < 3 -> { nameError = "El nombre debe tener al menos 3 caracteres"; return@TextButton }
-                        trimmed.length > 100 -> { nameError = "El nombre no puede superar 100 caracteres"; return@TextButton }
+                        trimmed.length < 3 -> { nameError = errMin; return@TextButton }
+                        trimmed.length > 100 -> { nameError = errMax; return@TextButton }
                         selectedType == null -> return@TextButton
                     }
                     if (!isSaving) {
@@ -252,12 +256,12 @@ fun AddDeviceDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
-                    Text("Crear", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Cancelar") }
+            TextButton(onClick = onDismiss, enabled = !isSaving) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

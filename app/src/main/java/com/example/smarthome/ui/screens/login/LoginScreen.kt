@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -46,6 +47,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import com.example.smarthome.R
 import com.example.smarthome.ui.components.appBarBrush
 
 @Composable
@@ -98,7 +100,7 @@ fun LoginScreen(
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "Smarthome",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -108,11 +110,11 @@ fun LoginScreen(
 
                 Text(
                     text = when (state.mode) {
-                        LoginMode.Login -> "Iniciar sesión"
-                        LoginMode.Register -> "Crear cuenta"
-                        LoginMode.Verify -> "Verificar cuenta"
-                        LoginMode.ForgotPassword -> "Recuperar contraseña"
-                        LoginMode.ResetPassword -> "Nueva contraseña"
+                        LoginMode.Login -> stringResource(R.string.login_title_login)
+                        LoginMode.Register -> stringResource(R.string.login_title_register)
+                        LoginMode.Verify -> stringResource(R.string.login_title_verify)
+                        LoginMode.ForgotPassword -> stringResource(R.string.login_title_forgot)
+                        LoginMode.ResetPassword -> stringResource(R.string.login_title_reset)
                     },
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -125,7 +127,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.name,
                             onValueChange = viewModel::setName,
-                            label = { Text("Nombre") },
+                            label = { Text(stringResource(R.string.common_name)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
@@ -133,7 +135,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = viewModel::setEmail,
-                            label = { Text("Email") },
+                            label = { Text(stringResource(R.string.login_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -142,7 +144,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.password,
                             onValueChange = viewModel::setPassword,
-                            label = { Text("Contraseña") },
+                            label = { Text(stringResource(R.string.login_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -162,7 +164,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = viewModel::setEmail,
-                            label = { Text("Email") },
+                            label = { Text(stringResource(R.string.login_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -171,7 +173,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.password,
                             onValueChange = viewModel::setPassword,
-                            label = { Text("Contraseña") },
+                            label = { Text(stringResource(R.string.login_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -189,7 +191,7 @@ fun LoginScreen(
 
                     LoginMode.Verify -> {
                         Text(
-                            text = "Ingresá el código que enviamos a ${state.email}",
+                            text = stringResource(R.string.login_verify_hint, state.email),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -198,7 +200,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.code,
                             onValueChange = viewModel::setCode,
-                            label = { Text("Código") },
+                            label = { Text(stringResource(R.string.login_code)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -207,7 +209,7 @@ fun LoginScreen(
 
                     LoginMode.ForgotPassword -> {
                         Text(
-                            text = "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
+                            text = stringResource(R.string.login_forgot_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -216,7 +218,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.email,
                             onValueChange = viewModel::setEmail,
-                            label = { Text("Email") },
+                            label = { Text(stringResource(R.string.login_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -225,7 +227,7 @@ fun LoginScreen(
 
                     LoginMode.ResetPassword -> {
                         Text(
-                            text = "Ingresá el código que enviamos a ${state.email} y tu nueva contraseña.",
+                            text = stringResource(R.string.login_reset_hint, state.email),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -234,7 +236,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.code,
                             onValueChange = viewModel::setCode,
-                            label = { Text("Código") },
+                            label = { Text(stringResource(R.string.login_code)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -243,7 +245,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.newPassword,
                             onValueChange = viewModel::setNewPassword,
-                            label = { Text("Nueva contraseña") },
+                            label = { Text(stringResource(R.string.login_new_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -296,11 +298,11 @@ fun LoginScreen(
                     } else {
                         Text(
                             text = when (state.mode) {
-                                LoginMode.Login -> "Iniciar sesión"
-                                LoginMode.Register -> "Registrarse"
-                                LoginMode.Verify -> "Verificar"
-                                LoginMode.ForgotPassword -> "Enviar código"
-                                LoginMode.ResetPassword -> "Cambiar contraseña"
+                                LoginMode.Login -> stringResource(R.string.login_title_login)
+                                LoginMode.Register -> stringResource(R.string.login_button_register)
+                                LoginMode.Verify -> stringResource(R.string.login_button_verify)
+                                LoginMode.ForgotPassword -> stringResource(R.string.login_button_send_code)
+                                LoginMode.ResetPassword -> stringResource(R.string.login_button_change_password)
                             }
                         )
                     }
@@ -312,17 +314,17 @@ fun LoginScreen(
                 when (state.mode) {
                     LoginMode.Login -> {
                         TextButton(onClick = { viewModel.setMode(LoginMode.Register) }) {
-                            Text("No tenés cuenta? Registrarte")
+                            Text(stringResource(R.string.login_no_account))
                         }
                         TextButton(onClick = { viewModel.setMode(LoginMode.ForgotPassword) }) {
-                            Text("¿Olvidaste tu contraseña?")
+                            Text(stringResource(R.string.login_forgot_password))
                         }
                     }
                     LoginMode.Register -> TextButton(onClick = { viewModel.setMode(LoginMode.Login) }) {
-                        Text("Ya tenés cuenta? Iniciar sesión")
+                        Text(stringResource(R.string.login_have_account))
                     }
                     LoginMode.Verify -> TextButton(onClick = { viewModel.sendVerification() }) {
-                        Text("Reenviar código")
+                        Text(stringResource(R.string.login_resend_code))
                     }
                     LoginMode.ForgotPassword, LoginMode.ResetPassword -> {}
                 }
@@ -336,7 +338,7 @@ fun LoginScreen(
                         .align(Alignment.TopStart)
                         .padding(8.dp)
                 ) {
-                    Icon(Icons.Rounded.ArrowBack, contentDescription = "Volver")
+                    Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back))
                 }
             }
         }

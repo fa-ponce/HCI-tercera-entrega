@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -38,9 +40,21 @@ fun HornoSheet(
     var grill by remember { mutableStateOf("off") }
     var convection by remember { mutableStateOf("off") }
 
-    val heatOpts = listOf("convencional" to "Convencional", "abajo" to "Abajo", "arriba" to "Arriba")
-    val grillOpts = listOf("off" to "Apagado", "eco" to "Economico", "large" to "Completo")
-    val convectionOpts = listOf("off" to "Apagado", "eco" to "Economico", "conventional" to "Convencional")
+    val heatOpts = listOf(
+        "convencional" to R.string.sheet_heat_conventional,
+        "abajo" to R.string.sheet_heat_bottom,
+        "arriba" to R.string.sheet_heat_top
+    )
+    val grillOpts = listOf(
+        "off" to R.string.common_off,
+        "eco" to R.string.sheet_eco,
+        "large" to R.string.sheet_grill_full
+    )
+    val convectionOpts = listOf(
+        "off" to R.string.common_off,
+        "eco" to R.string.sheet_eco,
+        "conventional" to R.string.sheet_heat_conventional
+    )
 
     // API returns English values for heat, normalize on load
     val heatNorm = mapOf("conventional" to "convencional", "top" to "arriba", "bottom" to "abajo")
@@ -69,7 +83,7 @@ fun HornoSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Horno", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_oven), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -79,7 +93,7 @@ fun HornoSheet(
                 // Power
                 SheetSectionCard {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (isOn) "Encendido" else "Apagado", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(if (isOn) stringResource(R.string.common_on) else stringResource(R.string.common_off), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         Switch(checked = isOn, onCheckedChange = { v ->
                             isOn = v
                             if (!routineMode) scope.launch { repo.executeAction(device.id, if (v) "turnOn" else "turnOff") }
@@ -91,7 +105,7 @@ fun HornoSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel("Temperatura")
+                            SheetSectionLabel(stringResource(R.string.sheet_temperature))
                             Text("${temperature.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                         Slider(
@@ -112,16 +126,16 @@ fun HornoSheet(
                 // Heat source
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Fuente de calor")
+                        SheetSectionLabel(stringResource(R.string.sheet_heat_source))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            heatOpts.forEach { (value, label) ->
+                            heatOpts.forEach { (value, labelRes) ->
                                 FilterChip(
                                     selected = heat == value,
                                     onClick = {
                                         heat = value
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setHeat", mapOf("heat" to value)) }
                                     },
-                                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }
@@ -131,16 +145,16 @@ fun HornoSheet(
                 // Grill
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Modo grill")
+                        SheetSectionLabel(stringResource(R.string.sheet_grill_mode))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            grillOpts.forEach { (value, label) ->
+                            grillOpts.forEach { (value, labelRes) ->
                                 FilterChip(
                                     selected = grill == value,
                                     onClick = {
                                         grill = value
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setGrill", mapOf("grill" to value)) }
                                     },
-                                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }
@@ -150,16 +164,16 @@ fun HornoSheet(
                 // Convection
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Modo conveccion")
+                        SheetSectionLabel(stringResource(R.string.sheet_convection_mode))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            convectionOpts.forEach { (value, label) ->
+                            convectionOpts.forEach { (value, labelRes) ->
                                 FilterChip(
                                     selected = convection == value,
                                     onClick = {
                                         convection = value
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setConvection", mapOf("convection" to value)) }
                                     },
-                                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }

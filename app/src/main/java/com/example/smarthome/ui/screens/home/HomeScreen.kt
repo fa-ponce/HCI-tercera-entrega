@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -74,7 +76,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.lazy.LazyListScope
+import android.content.res.Configuration
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.LogEntryDto
@@ -83,6 +89,7 @@ import com.example.smarthome.domain.canToggle
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
+import com.example.smarthome.domain.logActionLabelRes
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.components.truncateName
@@ -151,16 +158,17 @@ fun HomeScreen(
 
     var showCustomize by remember { mutableStateOf(false) }
 
-    val saludo = remember {
+    val saludoRes = remember {
         when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-            in 6..11 -> "Buenos días"
-            in 12..19 -> "Buenas tardes"
-            else -> "Buenas noches"
+            in 6..11 -> R.string.home_greeting_morning
+            in 12..19 -> R.string.home_greeting_afternoon
+            else -> R.string.home_greeting_evening
         }
     }
-    val nombre = userName?.split(" ")?.firstOrNull() ?: "Usuario"
+    val saludo = stringResource(saludoRes)
+    val nombre = userName?.split(" ")?.firstOrNull() ?: stringResource(R.string.common_user)
     val fecha = remember {
-        SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "AR"))
+        SimpleDateFormat("EEEE, d MMMM", Locale.getDefault())
             .format(Date()).replaceFirstChar { it.uppercase() }
     }
 
@@ -177,12 +185,11 @@ fun HomeScreen(
             return@Box
         }
 
-        LazyColumn(
-            contentPadding = PaddingValues(bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Encabezado con gradiente
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        // Encabezado con gradiente
+        val headerItem: LazyListScope.() -> Unit = {
             item {
                 HomeHeader(
                     saludo = saludo,
@@ -191,8 +198,10 @@ fun HomeScreen(
                     onProfile = { navController.navigate(Routes.PROFILE) }
                 )
             }
+        }
 
-            // Tarjeta de estado (anillo animado + encendidos/apagados)
+        // Tarjeta de estado (anillo animado + encendidos/apagados)
+        val statusItem: LazyListScope.() -> Unit = {
             item {
                 DeviceStatusCard(
                     onCount = onDevices.size,
@@ -200,8 +209,10 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
+        }
 
-            // Resumen numérico navegable
+        // Resumen numérico navegable
+        val statsItem: LazyListScope.() -> Unit = {
             item {
                 Row(
                     modifier = Modifier
@@ -212,35 +223,37 @@ fun HomeScreen(
                     StatTile(
                         modifier = Modifier.weight(1f),
                         value = "${homes.size}",
-                        label = "Casas",
+                        label = stringResource(R.string.nav_homes),
                         icon = Icons.Rounded.Apartment,
                         onClick = { navController.navigateTab(Routes.HOMES) }
                     )
                     StatTile(
                         modifier = Modifier.weight(1f),
                         value = "${rooms.values.sumOf { it.size }}",
-                        label = "Habitaciones",
+                        label = stringResource(R.string.common_rooms),
                         icon = Icons.Rounded.MeetingRoom,
                         onClick = { navController.navigateTab(Routes.HOMES) }
                     )
                     StatTile(
                         modifier = Modifier.weight(1f),
                         value = "${allDevices.size}",
-                        label = "Dispositivos",
+                        label = stringResource(R.string.nav_devices),
                         icon = Icons.Rounded.Devices,
                         onClick = { navController.navigateTab(Routes.DEVICES) }
                     )
                     StatTile(
                         modifier = Modifier.weight(1f),
                         value = formatPower(totalW),
-                        label = "Consumo",
+                        label = stringResource(R.string.nav_consumption),
                         icon = Icons.Rounded.Bolt,
                         onClick = { navController.navigateTab(Routes.CONSUMPTION) }
                     )
                 }
             }
+        }
 
-            // Accesos directos personalizables
+        // Accesos directos personalizables
+        val shortcutsItem: LazyListScope.() -> Unit = {
             item {
                 Column(Modifier.padding(horizontal = 16.dp)) {
                     Row(
@@ -249,7 +262,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Accesos directos",
+                            stringResource(R.string.home_shortcuts),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -260,7 +273,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(6.dp))
-                            Text("Personalizar")
+                            Text(stringResource(R.string.home_customize))
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -288,8 +301,10 @@ fun HomeScreen(
                     }
                 }
             }
+        }
 
-            // Actividad reciente
+        // Actividad reciente
+        val recentItem: LazyListScope.() -> Unit = {
             if (recentLogs.isNotEmpty()) {
                 item {
                     Column(Modifier.padding(horizontal = 16.dp)) {
@@ -299,12 +314,12 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Actividad reciente",
+                                stringResource(R.string.home_recent_activity),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                             TextButton(onClick = { navController.navigate(Routes.HISTORY) }) {
-                                Text("Ver historial")
+                                Text(stringResource(R.string.home_view_history))
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -316,7 +331,7 @@ fun HomeScreen(
                                 recentLogs.take(5).forEach { log ->
                                     val (_, hora) = formatTimestamp(log.timestamp)
                                     val device = deviceById[log.deviceId]
-                                    val deviceName = truncateName(device?.name ?: "Dispositivo")
+                                    val deviceName = truncateName(device?.name ?: stringResource(R.string.device_type_generic))
                                     val typeId = device?.type?.id ?: ""
                                     Row(
                                         modifier = Modifier
@@ -362,6 +377,41 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (isLandscape) {
+            // Dos columnas: izquierda con cabecera/estado/stats, derecha con accesos + actividad.
+            Row(Modifier.fillMaxSize()) {
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                ) {
+                    headerItem()
+                    statusItem()
+                    statsItem()
+                }
+                LazyColumn(
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                ) {
+                    shortcutsItem()
+                    recentItem()
+                }
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                headerItem()
+                statusItem()
+                statsItem()
+                shortcutsItem()
+                recentItem()
             }
         }
     }
@@ -446,7 +496,7 @@ private fun HomeHeader(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Rounded.AccountCircle,
-                            contentDescription = "Perfil",
+                            contentDescription = stringResource(R.string.common_profile),
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(28.dp)
                         )
@@ -548,7 +598,7 @@ private fun DeviceStatusCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        if (total == 1) "dispositivo" else "dispositivos",
+                        if (total == 1) stringResource(R.string.home_device_singular) else stringResource(R.string.home_device_plural),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -559,20 +609,20 @@ private fun DeviceStatusCard(
 
             Column(Modifier.weight(1f)) {
                 Text(
-                    "Estado del hogar",
+                    stringResource(R.string.home_status_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(14.dp))
                 StatusLegend(
                     color = MaterialTheme.colorScheme.primary,
-                    label = "Encendidos",
+                    label = stringResource(R.string.common_on_plural),
                     value = animOn
                 )
                 Spacer(Modifier.height(10.dp))
                 StatusLegend(
                     color = MaterialTheme.colorScheme.outline,
-                    label = "Apagados",
+                    label = stringResource(R.string.common_off_plural),
                     value = animOff
                 )
             }
@@ -695,7 +745,7 @@ private fun ShortcutTile(
                 iconTint = if (on) MaterialTheme.colorScheme.primary else content,
                 iconBg = if (on) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f)
                 else MaterialTheme.colorScheme.surface,
-                badge = if (canToggle(device.type.id)) (if (on) "Encendido" else "Apagado") else "Activo",
+                badge = if (canToggle(device.type.id)) (if (on) stringResource(R.string.common_on) else stringResource(R.string.common_off)) else stringResource(R.string.common_active),
                 badgeColor = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 title = device.name,
                 titleColor = content,
@@ -712,7 +762,7 @@ private fun ShortcutTile(
                 icon = if (tipo == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
                 iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                 iconBg = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                badge = "Rutina",
+                badge = stringResource(R.string.home_routine_badge),
                 badgeColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                 title = routine.name,
                 titleColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -817,12 +867,12 @@ private fun EmptyShortcuts(onAdd: () -> Unit) {
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    "Agregá accesos directos",
+                    stringResource(R.string.home_add_shortcuts_title),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    "Tus rutinas y dispositivos favoritos, a un toque",
+                    stringResource(R.string.home_add_shortcuts_sub),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -853,19 +903,19 @@ private fun CustomizeShortcutsSheet(
                 .padding(bottom = 28.dp)
         ) {
             Text(
-                "Personalizar accesos directos",
+                stringResource(R.string.home_customize_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Elegí qué rutinas y dispositivos aparecen en el inicio.",
+                stringResource(R.string.home_customize_sub),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(16.dp))
 
             if (routines.isNotEmpty()) {
-                SheetSectionTitle("Rutinas")
+                SheetSectionTitle(stringResource(R.string.nav_routines))
                 routines.forEach { routine ->
                     val token = routineToken(routine.id)
                     val tipo = routine.metadata?.tipoTrigger ?: "manual"
@@ -880,7 +930,7 @@ private fun CustomizeShortcutsSheet(
             }
 
             if (devices.isNotEmpty()) {
-                SheetSectionTitle("Dispositivos")
+                SheetSectionTitle(stringResource(R.string.nav_devices))
                 devices.forEach { device ->
                     val token = deviceToken(device.id)
                     PickerRow(
@@ -894,7 +944,7 @@ private fun CustomizeShortcutsSheet(
 
             if (routines.isEmpty() && devices.isEmpty()) {
                 Text(
-                    "Todavía no tenés rutinas ni dispositivos para agregar.",
+                    stringResource(R.string.home_no_items),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 24.dp)
@@ -991,16 +1041,8 @@ private fun formatTimestamp(ts: String?): Pair<String, String> {
     }
 }
 
+@Composable
 private fun translateAction(event: String?): String {
-    val map = mapOf(
-        "turnOn" to "Encendido", "turnOff" to "Apagado",
-        "open" to "Abierto", "close" to "Cerrado",
-        "armAway" to "Armado", "disarm" to "Desarmado",
-        "play" to "Reproduciendo", "stop" to "Detenido",
-        "startCleaning" to "Limpiando", "dock" to "En base",
-        "up" to "Subido", "down" to "Bajado",
-        "lock" to "Bloqueado", "unlock" to "Desbloqueado",
-        "start" to "Iniciado", "pause" to "Pausado"
-    )
-    return map[event] ?: event ?: "—"
+    val res = logActionLabelRes(event)
+    return if (res != null) stringResource(res) else event ?: "—"
 }

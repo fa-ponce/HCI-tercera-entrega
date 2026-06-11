@@ -59,9 +59,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
@@ -94,6 +96,7 @@ fun DevicesScreen(
         val roomId: String
     )
 
+    val freeLabel = stringResource(R.string.device_free_label)
     val allItems = remember(homes, rooms, devices) {
         val roomItems = homes.flatMap { home ->
             (rooms[home.id] ?: emptyList()).flatMap { room ->
@@ -103,7 +106,7 @@ fun DevicesScreen(
             }
         }
         val freeItems = (devices["free"] ?: emptyList()).map { device ->
-            DeviceItem(device, "", "Libre", "free")
+            DeviceItem(device, "", freeLabel, "free")
         }
         roomItems + freeItems
     }
@@ -150,7 +153,7 @@ fun DevicesScreen(
                 modifier = Modifier.appBarGradient(),
                 title = {
                     Text(
-                        "Dispositivos",
+                        stringResource(R.string.nav_devices),
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -158,7 +161,7 @@ fun DevicesScreen(
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = stringResource(R.string.common_profile), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = gradientTopBarColors()
@@ -170,7 +173,7 @@ fun DevicesScreen(
                 icon = { Icon(Icons.Rounded.Add, null, tint = MaterialTheme.colorScheme.onPrimary) },
                 text = {
                     Text(
-                        "Nuevo Dispositivo",
+                        stringResource(R.string.device_new),
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -195,9 +198,9 @@ fun DevicesScreen(
             // Resumen general (ancho completo)
             item(span = fullSpan) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatPill("${allItems.size}", "Total", Icons.Rounded.DevicesOther, Modifier.weight(1f))
-                    StatPill("$totalOn", "Encendidos", Icons.Rounded.Bolt, Modifier.weight(1f), highlight = true)
-                    StatPill("$totalOff", "Apagados", Icons.Rounded.PowerSettingsNew, Modifier.weight(1f))
+                    StatPill("${allItems.size}", stringResource(R.string.device_total), Icons.Rounded.DevicesOther, Modifier.weight(1f))
+                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.Bolt, Modifier.weight(1f), highlight = true)
+                    StatPill("$totalOff", stringResource(R.string.common_off_plural), Icons.Rounded.PowerSettingsNew, Modifier.weight(1f))
                 }
             }
 
@@ -211,10 +214,10 @@ fun DevicesScreen(
                         OutlinedTextField(
                             value = search,
                             onValueChange = { search = it },
-                            placeholder = { Text("Buscar dispositivo…") },
+                            placeholder = { Text(stringResource(R.string.device_search_placeholder)) },
                             leadingIcon = { Icon(Icons.Rounded.Search, null) },
                             trailingIcon = if (search.isNotEmpty()) {
-                                { IconButton(onClick = { search = "" }) { Icon(Icons.Rounded.Clear, "Limpiar") } }
+                                { IconButton(onClick = { search = "" }) { Icon(Icons.Rounded.Clear, stringResource(R.string.common_clear)) } }
                             } else null,
                             singleLine = true,
                             shape = RoundedCornerShape(50),
@@ -269,7 +272,7 @@ fun DevicesScreen(
             items(filtered, key = { it.device.id }) { item ->
                 val free = item.roomId == "free"
                 val subtitle = when {
-                    free -> "Sin habitación"
+                    free -> stringResource(R.string.device_no_room)
                     item.homeName.isNotEmpty() -> "${item.homeName} · ${item.roomName}"
                     else -> item.roomName
                 }
@@ -381,7 +384,7 @@ private fun FilterButton(
                 ) {
                     Icon(
                         Icons.Rounded.FilterList,
-                        contentDescription = "Filtrar",
+                        contentDescription = stringResource(R.string.device_filter),
                         tint = if (active) MaterialTheme.colorScheme.onPrimary
                                else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -393,9 +396,9 @@ private fun FilterButton(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) }
         ) {
-            MenuLabel("Casa")
+            MenuLabel(stringResource(R.string.common_home))
             DropdownMenuItem(
-                text = { Text("Todas las casas") },
+                text = { Text(stringResource(R.string.device_all_homes)) },
                 leadingIcon = { Icon(Icons.Rounded.Home, null) },
                 trailingIcon = { if (homeFilter == null) Icon(Icons.Rounded.Check, null, tint = MaterialTheme.colorScheme.primary) },
                 onClick = { onClear(); onExpandedChange(false) }
@@ -411,9 +414,9 @@ private fun FilterButton(
 
             if (homeFilter != null && rooms.isNotEmpty()) {
                 HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                MenuLabel("Habitación")
+                MenuLabel(stringResource(R.string.common_room))
                 DropdownMenuItem(
-                    text = { Text("Todas las habitaciones") },
+                    text = { Text(stringResource(R.string.device_all_rooms)) },
                     trailingIcon = { if (roomFilter == null) Icon(Icons.Rounded.Check, null, tint = MaterialTheme.colorScheme.primary) },
                     onClick = { onSelectRoom(null); onExpandedChange(false) }
                 )
@@ -471,7 +474,7 @@ private fun FilterChipPill(
             IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
                 Icon(
                     Icons.Rounded.Clear,
-                    "Quitar filtro",
+                    stringResource(R.string.device_filter_remove),
                     Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -502,14 +505,14 @@ private fun EmptyState() {
         }
         Spacer(Modifier.size(14.dp))
         Text(
-            "No se encontraron dispositivos",
+            stringResource(R.string.device_none_found),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.size(4.dp))
         Text(
-            "Probá ajustar la búsqueda o los filtros",
+            stringResource(R.string.device_adjust_filters),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
         )

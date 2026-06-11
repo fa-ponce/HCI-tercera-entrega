@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -37,9 +39,9 @@ fun HeladeraSheet(
     var modo by remember { mutableStateOf("normal") }
 
     val modos = listOf(
-        Triple("normal", "Normal", "Operacion estandar"),
-        Triple("fiesta", "Fiesta", "Reduce temp. del freezer"),
-        Triple("vacaciones", "Vacaciones", "Ahorra energia")
+        Triple("normal", R.string.sheet_mode_normal, R.string.sheet_mode_normal_desc),
+        Triple("fiesta", R.string.sheet_mode_party, R.string.sheet_mode_party_desc),
+        Triple("vacaciones", R.string.sheet_mode_vacation, R.string.sheet_mode_vacation_desc)
     )
 
     LaunchedEffect(device.id) {
@@ -63,7 +65,7 @@ fun HeladeraSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Heladera", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_fridge), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -74,7 +76,7 @@ fun HeladeraSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel("Temperatura Heladera")
+                            SheetSectionLabel(stringResource(R.string.sheet_fridge_temp))
                             Text("${fridgeTemp.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                         Slider(
@@ -96,7 +98,7 @@ fun HeladeraSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel("Temperatura Freezer")
+                            SheetSectionLabel(stringResource(R.string.sheet_freezer_temp))
                             Text("${freezerTemp.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                         }
                         Slider(
@@ -118,9 +120,9 @@ fun HeladeraSheet(
                 // Mode
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        SheetSectionLabel("Modo de operacion")
+                        SheetSectionLabel(stringResource(R.string.sheet_operation_mode))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                            modos.forEach { (value, label, desc) ->
+                            modos.forEach { (value, labelRes, descRes) ->
                                 val active = modo == value
                                 Surface(
                                     onClick = {
@@ -139,8 +141,8 @@ fun HeladeraSheet(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
-                                        Text(desc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                        Text(stringResource(labelRes), style = MaterialTheme.typography.labelMedium, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                                        Text(stringResource(descRes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                                     }
                                 }
                             }

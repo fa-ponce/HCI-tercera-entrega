@@ -8,9 +8,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -42,10 +44,10 @@ fun GrifoSheet(
     var dispensedMsg by remember { mutableStateOf<String?>(null) }
 
     val unidades = listOf(
-        "mililitro" to "Mililitro",
-        "centilitro" to "Centilitro",
-        "decilitro" to "Decilitro",
-        "litro" to "Litro"
+        "mililitro" to R.string.sheet_unit_ml,
+        "centilitro" to R.string.sheet_unit_cl,
+        "decilitro" to R.string.sheet_unit_dl,
+        "litro" to R.string.sheet_unit_l
     )
 
     LaunchedEffect(device.id) {
@@ -67,7 +69,7 @@ fun GrifoSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Grifo", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_faucet), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -82,7 +84,7 @@ fun GrifoSheet(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            if (isOpen) "Abierto" else "Cerrado",
+                            if (isOpen) stringResource(R.string.sheet_open_m) else stringResource(R.string.sheet_closed_m),
                             modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
@@ -108,7 +110,7 @@ fun GrifoSheet(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = if (openActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                             )
-                        ) { Text("Abrir") }
+                        ) { Text(stringResource(R.string.sheet_open_action)) }
 
                         val closeActive = if (routineMode) selectedAction == "close" else !isOpen
                         OutlinedButton(
@@ -125,18 +127,18 @@ fun GrifoSheet(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = if (closeActive) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
                             )
-                        ) { Text("Cerrar") }
+                        ) { Text(stringResource(R.string.sheet_close_action)) }
                     }
                 }
 
                 // Dispense section
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        SheetSectionLabel("Dispensar")
+                        SheetSectionLabel(stringResource(R.string.sheet_dispense))
 
                         // Quantity
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Cantidad", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.sheet_quantity), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 FilledIconButton(
                                     onClick = { if (quantity > 0) quantity-- },
@@ -160,13 +162,13 @@ fun GrifoSheet(
 
                         // Unit
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Unidad", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.sheet_unit), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                                unidades.forEach { (value, label) ->
+                                unidades.forEach { (value, labelRes) ->
                                     FilterChip(
                                         selected = unit == value,
                                         onClick = { unit = value },
-                                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                                        label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -174,6 +176,7 @@ fun GrifoSheet(
                         }
 
                         // Dispense button
+                        val dispensedFmt = stringResource(R.string.sheet_dispensed_fmt, quantity, unit)
                         Button(
                             onClick = {
                                 if (routineMode) {
@@ -183,7 +186,7 @@ fun GrifoSheet(
                                         isDispensing = true
                                         dispensedMsg = null
                                         repo.executeAction(device.id, "dispense", mapOf("quantity" to quantity, "unit" to unit))
-                                            .onSuccess { dispensedMsg = "Dispensado: $quantity $unit" }
+                                            .onSuccess { dispensedMsg = dispensedFmt }
                                         isDispensing = false
                                     }
                                 }
@@ -191,7 +194,7 @@ fun GrifoSheet(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !isDispensing && quantity > 0
                         ) {
-                            Text(if (isDispensing) "Dispensando..." else "Dispensar $quantity $unit")
+                            Text(if (isDispensing) stringResource(R.string.sheet_dispensing) else stringResource(R.string.sheet_dispense_fmt, quantity, unit))
                         }
 
                         dispensedMsg?.let {

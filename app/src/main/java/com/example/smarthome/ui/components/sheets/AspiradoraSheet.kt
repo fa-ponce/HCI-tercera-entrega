@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -37,8 +39,11 @@ fun AspiradoraSheet(
     var selectedAction by remember { mutableStateOf("start") }
     var isSaving by remember { mutableStateOf(false) }
 
-    val statusLabels = mapOf("active" to "Limpiando", "paused" to "Pausado", "docked" to "En base", "inactive" to "Inactivo")
-    val modoOpts = listOf("vacuum" to "Aspirar", "mop" to "Trapear")
+    val statusLabels = mapOf(
+        "active" to R.string.action_cleaning, "paused" to R.string.action_paused,
+        "docked" to R.string.action_docked, "inactive" to R.string.sheet_inactive
+    )
+    val modoOpts = listOf("vacuum" to R.string.sheet_vacuum, "mop" to R.string.sheet_mop)
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
@@ -60,7 +65,7 @@ fun AspiradoraSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Aspiradora", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_vacuum), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -77,7 +82,7 @@ fun AspiradoraSheet(
                     }
                     Surface(color = statusColor, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            statusLabels[status] ?: status,
+                            statusLabels[status]?.let { stringResource(it) } ?: status,
                             modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
@@ -88,7 +93,7 @@ fun AspiradoraSheet(
                 // Control buttons
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Controles")
+                        SheetSectionLabel(stringResource(R.string.sheet_controls))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                             // Start
                             val startActive = if (routineMode) selectedAction == "start" else status == "active"
@@ -108,7 +113,7 @@ fun AspiradoraSheet(
                                 enabled = !isSaving
                             ) {
                                 Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
-                                    Text("Iniciar", style = MaterialTheme.typography.labelLarge, fontWeight = if (startActive) FontWeight.Bold else FontWeight.Normal)
+                                    Text(stringResource(R.string.sheet_start), style = MaterialTheme.typography.labelLarge, fontWeight = if (startActive) FontWeight.Bold else FontWeight.Normal)
                                 }
                             }
 
@@ -130,7 +135,7 @@ fun AspiradoraSheet(
                                     enabled = !isSaving && status == "active"
                                 ) {
                                     Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
-                                        Text("Pausar", style = MaterialTheme.typography.labelLarge)
+                                        Text(stringResource(R.string.sheet_pause), style = MaterialTheme.typography.labelLarge)
                                     }
                                 }
                             }
@@ -153,7 +158,7 @@ fun AspiradoraSheet(
                                 enabled = !isSaving
                             ) {
                                 Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
-                                    Text("Volver a base", style = MaterialTheme.typography.labelMedium, fontWeight = if (dockActive) FontWeight.Bold else FontWeight.Normal)
+                                    Text(stringResource(R.string.sheet_dock), style = MaterialTheme.typography.labelMedium, fontWeight = if (dockActive) FontWeight.Bold else FontWeight.Normal)
                                 }
                             }
                         }
@@ -163,16 +168,16 @@ fun AspiradoraSheet(
                 // Mode
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Modo")
+                        SheetSectionLabel(stringResource(R.string.sheet_mode))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            modoOpts.forEach { (value, label) ->
+                            modoOpts.forEach { (value, labelRes) ->
                                 FilterChip(
                                     selected = mode == value,
                                     onClick = {
                                         mode = value
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setMode", mapOf("mode" to value)) }
                                     },
-                                    label = { Text(label) },
+                                    label = { Text(stringResource(labelRes)) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }

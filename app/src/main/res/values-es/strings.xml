@@ -1,0 +1,403 @@
+<resources>
+    <string name="app_name">Smarthome</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_homes">Casas</string>
+    <string name="nav_devices">Dispositivos</string>
+    <string name="nav_routines">Rutinas</string>
+    <string name="nav_consumption">Consumo</string>
+
+    <!-- Common -->
+    <string name="common_save">Guardar</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_create">Crear</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_edit">Editar</string>
+    <string name="common_name">Nombre</string>
+    <string name="common_name_required">Nombre *</string>
+    <string name="common_back">Volver</string>
+    <string name="common_profile">Perfil</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_retry">Reintentar</string>
+    <string name="common_clear">Limpiar</string>
+    <string name="common_no_results">Sin resultados</string>
+    <string name="common_edit_name">Editar nombre</string>
+    <string name="common_user">Usuario</string>
+    <string name="common_on">Encendido</string>
+    <string name="common_off">Apagado</string>
+    <string name="common_on_plural">Encendidos</string>
+    <string name="common_off_plural">Apagados</string>
+    <string name="common_active">Activo</string>
+    <string name="common_name_min_chars">El nombre debe tener al menos 3 caracteres</string>
+    <string name="common_name_max_chars">El nombre no puede superar 100 caracteres</string>
+    <string name="common_home">Casa</string>
+    <string name="common_room">Habitación</string>
+    <string name="common_rooms">Habitaciones</string>
+    <string name="common_floor">Piso</string>
+    <string name="common_type">Tipo</string>
+    <string name="common_next">Siguiente</string>
+    <string name="common_previous">Anterior</string>
+    <string name="common_delete_confirm">¿Estás seguro que querés eliminar \"%1$s\"? Esta acción no se puede deshacer.</string>
+    <string name="common_rooms_count_one">%1$d habitación</string>
+    <string name="common_rooms_count_many">%1$d habitaciones</string>
+
+    <!-- Login -->
+    <string name="login_title_login">Iniciar sesión</string>
+    <string name="login_title_register">Crear cuenta</string>
+    <string name="login_title_verify">Verificar cuenta</string>
+    <string name="login_title_forgot">Recuperar contraseña</string>
+    <string name="login_title_reset">Nueva contraseña</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_new_password">Nueva contraseña</string>
+    <string name="login_code">Código</string>
+    <string name="login_verify_hint">Ingresá el código que enviamos a %1$s</string>
+    <string name="login_forgot_hint">Ingresá tu email y te enviaremos un código para restablecer tu contraseña.</string>
+    <string name="login_reset_hint">Ingresá el código que enviamos a %1$s y tu nueva contraseña.</string>
+    <string name="login_button_register">Registrarse</string>
+    <string name="login_button_verify">Verificar</string>
+    <string name="login_button_send_code">Enviar código</string>
+    <string name="login_button_change_password">Cambiar contraseña</string>
+    <string name="login_no_account">No tenés cuenta? Registrarte</string>
+    <string name="login_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="login_have_account">Ya tenés cuenta? Iniciar sesión</string>
+    <string name="login_resend_code">Reenviar código</string>
+
+    <!-- Home screen -->
+    <string name="home_greeting_morning">Buenos días</string>
+    <string name="home_greeting_afternoon">Buenas tardes</string>
+    <string name="home_greeting_evening">Buenas noches</string>
+    <string name="home_status_title">Estado del hogar</string>
+    <string name="home_device_singular">dispositivo</string>
+    <string name="home_device_plural">dispositivos</string>
+    <string name="home_shortcuts">Accesos directos</string>
+    <string name="home_customize">Personalizar</string>
+    <string name="home_recent_activity">Actividad reciente</string>
+    <string name="home_view_history">Ver historial</string>
+    <string name="home_routine_badge">Rutina</string>
+    <string name="home_add_shortcuts_title">Agregá accesos directos</string>
+    <string name="home_add_shortcuts_sub">Tus rutinas y dispositivos favoritos, a un toque</string>
+    <string name="home_customize_title">Personalizar accesos directos</string>
+    <string name="home_customize_sub">Elegí qué rutinas y dispositivos aparecen en el inicio.</string>
+    <string name="home_no_items">Todavía no tenés rutinas ni dispositivos para agregar.</string>
+
+    <!-- Homes screen -->
+    <string name="homes_new_home">Nueva casa</string>
+    <string name="homes_search_placeholder">Buscar casa o habitación…</string>
+    <string name="homes_add_room">Agregar habitación</string>
+    <string name="homes_no_home">Sin casa</string>
+    <string name="homes_select_home">Seleccioná una casa para ver sus detalles</string>
+    <string name="homes_no_rooms">Esta casa no tiene habitaciones.</string>
+    <string name="homes_no_devices">Sin dispositivos</string>
+    <string name="homes_new_room">Nueva habitación</string>
+    <string name="homes_room_name_placeholder">Ej: Dormitorio Principal</string>
+    <string name="homes_property_type">Tipo de propiedad</string>
+    <string name="homes_home_name_label">Nombre de la casa *</string>
+    <string name="homes_home_name_placeholder">Ej: Casa de playa</string>
+    <string name="homes_address">Dirección</string>
+    <string name="homes_address_placeholder">Ej: Av. Libertador 1234</string>
+    <string name="homes_city">Ciudad</string>
+    <string name="homes_city_placeholder">Ej: Buenos Aires</string>
+    <string name="homes_rename_home">Renombrar casa</string>
+    <string name="homes_delete_home">Eliminar casa</string>
+    <string name="homes_room_device_stats">%1$d disp. · %2$d enc.</string>
+
+    <!-- Devices screen -->
+    <string name="device_new">Nuevo dispositivo</string>
+    <string name="device_search_placeholder">Buscar dispositivo…</string>
+    <string name="device_total">Total</string>
+    <string name="device_filter">Filtrar</string>
+    <string name="device_filter_remove">Quitar filtro</string>
+    <string name="device_all_homes">Todas las casas</string>
+    <string name="device_all_rooms">Todas las habitaciones</string>
+    <string name="device_none_found">No se encontraron dispositivos</string>
+    <string name="device_adjust_filters">Probá ajustar la búsqueda o los filtros</string>
+    <string name="device_no_room">Sin habitación</string>
+    <string name="device_free_label">Libre</string>
+    <string name="device_name_label">Nombre del dispositivo *</string>
+    <string name="device_name_placeholder">Ej: Lampara LED</string>
+    <string name="device_type_label">Tipo de dispositivo *</string>
+    <string name="device_type_placeholder">Seleccionar tipo</string>
+    <string name="device_no_room_free">Sin habitación (dispositivo libre)</string>
+    <string name="device_brand">Marca/Modelo</string>
+    <string name="device_brand_placeholder">Ej: Phillips Hue</string>
+
+    <!-- Device types -->
+    <string name="device_type_lamp">Lámpara</string>
+    <string name="device_type_ac">Aire acondicionado</string>
+    <string name="device_type_alarm">Alarma</string>
+    <string name="device_type_blinds">Persiana</string>
+    <string name="device_type_door">Puerta</string>
+    <string name="device_type_faucet">Grifo</string>
+    <string name="device_type_oven">Horno</string>
+    <string name="device_type_speaker">Parlante</string>
+    <string name="device_type_vacuum">Aspiradora</string>
+    <string name="device_type_fridge">Heladera</string>
+    <string name="device_type_generic">Dispositivo</string>
+
+    <!-- Routines -->
+    <string name="routine_new">Nueva rutina</string>
+    <string name="routine_none">No hay rutinas.</string>
+    <string name="routine_scheduled">Programada</string>
+    <string name="routine_by_event">Por evento</string>
+    <string name="routine_manual">Manual</string>
+    <string name="routine_execute">Ejecutar</string>
+    <string name="routine_edit">Editar rutina</string>
+    <string name="routine_name_placeholder">Ej: Llegada a casa</string>
+    <string name="routine_name_required_err">El nombre es obligatorio</string>
+    <string name="routine_description">Descripción</string>
+    <string name="routine_optional">Opcional</string>
+    <string name="routine_trigger_type">Tipo de activación</string>
+    <string name="routine_trigger_time">Hora específica</string>
+    <string name="routine_time_label">Hora (HH:mm)</string>
+    <string name="routine_devices_involved">Dispositivos involucrados</string>
+    <string name="routine_search_device">Buscar dispositivo…</string>
+    <string name="routine_no_devices">No hay dispositivos disponibles.</string>
+    <string name="routine_no_search_results">Sin resultados para \"%1$s\".</string>
+    <string name="routine_all_added">Todos los dispositivos ya están en la rutina.</string>
+    <string name="routine_save_changes">Guardar cambios</string>
+    <string name="routine_create">Crear rutina</string>
+    <string name="routine_duration">Duración:</string>
+    <string name="routine_no_limit">sin límite</string>
+    <string name="routine_min">min</string>
+    <string name="routine_remove">Quitar</string>
+
+    <!-- Routine action labels (imperative) -->
+    <string name="routine_action_turn_on">Encender</string>
+    <string name="routine_action_turn_off">Apagar</string>
+    <string name="routine_action_open">Abrir</string>
+    <string name="routine_action_close">Cerrar</string>
+    <string name="routine_action_level">Posición</string>
+    <string name="routine_action_lock">Bloquear</string>
+    <string name="routine_action_unlock">Desbloquear</string>
+    <string name="routine_action_arm">Activar</string>
+    <string name="routine_action_temp">Temp.</string>
+    <string name="routine_action_freezer_temp">Temp. freezer</string>
+    <string name="routine_action_speed">Velocidad</string>
+    <string name="routine_action_vblades">Aspas V</string>
+    <string name="routine_action_hblades">Aspas H</string>
+    <string name="routine_action_brightness">Brillo</string>
+    <string name="routine_action_heat">Fuente</string>
+    <string name="routine_action_grill">Grill</string>
+    <string name="routine_action_convection">Convección</string>
+
+    <!-- Log / history action labels (past tense) -->
+    <string name="action_turned_on">Encendido</string>
+    <string name="action_turned_off">Apagado</string>
+    <string name="action_opened">Abierto</string>
+    <string name="action_closed">Cerrado</string>
+    <string name="action_armed">Armado</string>
+    <string name="action_disarmed">Desarmado</string>
+    <string name="action_triggered">Activado</string>
+    <string name="action_playing">Reproduciendo</string>
+    <string name="action_paused">Pausado</string>
+    <string name="action_stopped">Detenido</string>
+    <string name="action_cleaning">Limpiando</string>
+    <string name="action_docked">En base</string>
+    <string name="action_raised">Subido</string>
+    <string name="action_lowered">Bajado</string>
+    <string name="action_locked">Bloqueado</string>
+    <string name="action_unlocked">Desbloqueado</string>
+    <string name="action_started">Iniciado</string>
+    <string name="action_brightness_set">Brillo ajustado</string>
+    <string name="action_temperature_set">Temp. ajustada</string>
+    <string name="action_color_set">Color ajustado</string>
+    <string name="action_volume_set">Volumen ajustado</string>
+
+    <!-- Room screen -->
+    <string name="room_devices_count">%1$d dispositivos</string>
+    <string name="room_status_fmt">%1$d encendidos · %2$s</string>
+    <string name="room_no_devices">No hay dispositivos en esta habitación.</string>
+    <string name="room_add_device">Agregar dispositivo</string>
+    <string name="room_delete">Eliminar habitación</string>
+    <string name="room_rename">Renombrar habitación</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_tut_home_desc">El panel principal de tu hogar. Muestra un resumen de tus casas, dispositivos activos, consumo actual y actividad reciente.</string>
+    <string name="profile_tut_homes_desc">Administrá todas tus casas y sus habitaciones. Podés agregar nuevas casas, ver los cuartos de cada una y navegar a sus dispositivos.</string>
+    <string name="profile_tut_devices_desc">Controlá todos tus dispositivos desde un solo lugar. Podés encender, apagar y configurar cada dispositivo, además de filtrarlos por tipo.</string>
+    <string name="profile_tut_routines_desc">Automatizá acciones con rutinas. Podés crearlas de forma manual, programarlas por horario o disparadas por eventos del hogar.</string>
+    <string name="profile_tut_consumption_desc">Monitoreá el consumo energético en tiempo real. Ves el total de watts activos, el costo estimado por hora y el desglose por casa.</string>
+    <string name="profile_password_sub">Cambiá tu contraseña actual</string>
+    <string name="profile_change">Cambiar</string>
+    <string name="profile_energy_cost">Costo de energía</string>
+    <string name="profile_kwh_label">$/kWh</string>
+    <string name="profile_dark_mode">Modo oscuro</string>
+    <string name="profile_enabled">Activado</string>
+    <string name="profile_disabled">Desactivado</string>
+    <string name="profile_help">Ayuda</string>
+    <string name="profile_help_sub">Recorrido por las funciones de la app</string>
+    <string name="profile_logout">Cerrar sesión</string>
+    <string name="profile_logout_confirm">¿Estás seguro que querés cerrar sesión?</string>
+    <string name="profile_change_password">Cambiar contraseña</string>
+    <string name="profile_password_updated">Contraseña actualizada correctamente.</string>
+    <string name="profile_current_password">Contraseña actual *</string>
+    <string name="profile_new_password_label">Nueva contraseña *</string>
+    <string name="profile_confirm_password">Confirmar nueva contraseña *</string>
+    <string name="profile_fill_fields">Completá todos los campos.</string>
+    <string name="profile_passwords_mismatch">Las contraseñas nuevas no coinciden.</string>
+    <string name="profile_password_min">La nueva contraseña debe tener al menos 6 caracteres.</string>
+    <string name="profile_password_error">Error al cambiar la contraseña.</string>
+    <string name="profile_saving">Guardando…</string>
+    <string name="profile_skip">Omitir</string>
+    <string name="profile_finish">Finalizar</string>
+
+    <!-- Consumption -->
+    <string name="consumption_current">Consumo actual</string>
+    <string name="consumption_devices_on">%1$d dispositivos encendidos</string>
+    <string name="consumption_per_hour">Est. por hora</string>
+    <string name="consumption_if_continues">si continúa así</string>
+    <string name="consumption_cost_hour">Costo/hora</string>
+    <string name="consumption_cost_day">Costo/día est.</string>
+    <string name="consumption_by_tariff">según tarifa configurada</string>
+    <string name="consumption_no_tariff">Sin tarifa configurada</string>
+    <string name="consumption_if_24h">si continúa 24h así</string>
+    <string name="consumption_per_home">Consumo por casa</string>
+    <string name="consumption_no_devices">Sin dispositivos cargados.</string>
+
+    <!-- History -->
+    <string name="history_title">Historial</string>
+    <string name="history_refresh">Actualizar</string>
+    <string name="history_search_placeholder">Buscar dispositivo, acción…</string>
+    <string name="history_records">%1$d registros</string>
+    <string name="history_page">Pág. %1$d/%2$d</string>
+    <string name="history_none">Sin registros.</string>
+    <string name="history_col_time">Hora</string>
+    <string name="history_col_device">Dispositivo</string>
+    <string name="history_col_action">Acción</string>
+
+    <!-- Device sheets (shared) -->
+    <string name="sheet_rename_device">Renombrar dispositivo</string>
+    <string name="sheet_delete_device">Eliminar dispositivo</string>
+    <string name="sheet_delete_confirm">¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.</string>
+    <string name="sheet_unlink">Desvincular</string>
+    <string name="sheet_link">Vincular</string>
+    <string name="sheet_unlink_title">Desvincular dispositivo</string>
+    <string name="sheet_unlink_msg">El dispositivo se desvinculará de su habitación actual y quedará libre.</string>
+    <string name="sheet_free_room_error">No se pudo preparar el espacio para dispositivos libres</string>
+    <string name="sheet_link_title">Vincular a habitación</string>
+    <string name="sheet_select_home">Seleccionar casa</string>
+    <string name="sheet_select_room">Seleccionar habitación</string>
+    <string name="sheet_add_to_routine">Agregar a rutina</string>
+    <string name="sheet_unsupported">Tipo de dispositivo no soportado.</string>
+
+    <!-- Lamp sheet -->
+    <string name="sheet_on_f">Encendida</string>
+    <string name="sheet_off_f">Apagada</string>
+    <string name="sheet_color">Color</string>
+    <string name="sheet_current_color">Color actual</string>
+    <string name="sheet_hue">Tono</string>
+    <string name="sheet_saturation">Saturación</string>
+    <string name="sheet_brightness">Intensidad</string>
+
+    <!-- AC sheet -->
+    <string name="sheet_temperature">Temperatura</string>
+    <string name="sheet_mode">Modo</string>
+    <string name="sheet_mode_fan">Ventilación</string>
+    <string name="sheet_mode_cold">Frío</string>
+    <string name="sheet_mode_heat">Calor</string>
+    <string name="sheet_vertical_blades">Aspas verticales</string>
+    <string name="sheet_horizontal_blades">Aspas horizontales</string>
+    <string name="sheet_fan_speed">Velocidad del ventilador</string>
+    <string name="sheet_auto">Auto</string>
+
+    <!-- Door sheet -->
+    <string name="sheet_door_open_f">Abierta</string>
+    <string name="sheet_door_closed_f">Cerrada</string>
+    <string name="sheet_locked_f">Bloqueada</string>
+    <string name="sheet_unlocked_f">Desbloqueada</string>
+    <string name="sheet_actions">Acciones</string>
+    <string name="sheet_open_action">Abrir</string>
+    <string name="sheet_close_action">Cerrar</string>
+    <string name="sheet_lock_action">Bloquear</string>
+    <string name="sheet_unlock_action">Desbloquear</string>
+
+    <!-- Alarm sheet -->
+    <string name="sheet_security_code">Código de seguridad</string>
+    <string name="sheet_enter_code">Ingresá tu código</string>
+    <string name="sheet_wrong_code">Código incorrecto</string>
+    <string name="sheet_confirm_code">Confirmar código</string>
+    <string name="sheet_mode_home">Modo Casa</string>
+    <string name="sheet_mode_away">Modo Regular</string>
+    <string name="sheet_disarm">Desactivar</string>
+
+    <!-- Blinds sheet -->
+    <string name="sheet_status_fmt">Estado: %1$s</string>
+    <string name="sheet_position">Posición</string>
+
+    <!-- Oven sheet -->
+    <string name="sheet_heat_source">Fuente de calor</string>
+    <string name="sheet_heat_conventional">Convencional</string>
+    <string name="sheet_heat_bottom">Abajo</string>
+    <string name="sheet_heat_top">Arriba</string>
+    <string name="sheet_grill_mode">Modo grill</string>
+    <string name="sheet_eco">Económico</string>
+    <string name="sheet_grill_full">Completo</string>
+    <string name="sheet_convection_mode">Modo convección</string>
+
+    <!-- Faucet sheet -->
+    <string name="sheet_open_m">Abierto</string>
+    <string name="sheet_closed_m">Cerrado</string>
+    <string name="sheet_dispense">Dispensar</string>
+    <string name="sheet_quantity">Cantidad</string>
+    <string name="sheet_unit">Unidad</string>
+    <string name="sheet_unit_ml">Mililitro</string>
+    <string name="sheet_unit_cl">Centilitro</string>
+    <string name="sheet_unit_dl">Decilitro</string>
+    <string name="sheet_unit_l">Litro</string>
+    <string name="sheet_dispensing">Dispensando…</string>
+    <string name="sheet_dispense_fmt">Dispensar %1$d %2$s</string>
+    <string name="sheet_dispensed_fmt">Dispensado: %1$d %2$s</string>
+
+    <!-- Speaker sheet -->
+    <string name="sheet_playback">Reproducción</string>
+    <string name="sheet_previous">Anterior</string>
+    <string name="sheet_stop">Detener</string>
+    <string name="sheet_play">Reproducir</string>
+    <string name="sheet_pause">Pausar</string>
+    <string name="sheet_next">Siguiente</string>
+    <string name="sheet_volume">Volumen</string>
+    <string name="sheet_genre">Género</string>
+    <string name="sheet_genre_classical">Clásica</string>
+    <string name="sheet_genre_country">Country</string>
+    <string name="sheet_genre_dance">Dance</string>
+    <string name="sheet_genre_latin">Latina</string>
+    <string name="sheet_genre_pop">Pop</string>
+    <string name="sheet_genre_rock">Rock</string>
+    <string name="sheet_genre_folk">Folk</string>
+    <string name="sheet_genre_jazz">Jazz</string>
+    <string name="sheet_genre_blues">Blues</string>
+
+    <!-- Vacuum sheet -->
+    <string name="sheet_inactive">Inactivo</string>
+    <string name="sheet_controls">Controles</string>
+    <string name="sheet_start">Iniciar</string>
+    <string name="sheet_dock">Volver a base</string>
+    <string name="sheet_vacuum">Aspirar</string>
+    <string name="sheet_mop">Trapear</string>
+
+    <!-- Fridge sheet -->
+    <string name="sheet_fridge_temp">Temperatura Heladera</string>
+    <string name="sheet_freezer_temp">Temperatura Freezer</string>
+    <string name="sheet_operation_mode">Modo de operación</string>
+    <string name="sheet_mode_normal">Normal</string>
+    <string name="sheet_mode_normal_desc">Operación estándar</string>
+    <string name="sheet_mode_party">Fiesta</string>
+    <string name="sheet_mode_party_desc">Reduce temp. del freezer</string>
+    <string name="sheet_mode_vacation">Vacaciones</string>
+    <string name="sheet_mode_vacation_desc">Ahorra energía</string>
+
+    <!-- Notificaciones (RF20) -->
+    <string name="notif_channel_name">Smarthome</string>
+    <string name="notif_routine_success_title">Rutina ejecutada</string>
+    <string name="notif_routine_error_title">Error en rutina</string>
+    <string name="notif_routine_error_body">No se pudo ejecutar %1$s</string>
+    <string name="notif_device_error_title">Error de control</string>
+    <string name="notif_device_error_body">No se pudo controlar %1$s</string>
+    <string name="notif_alarm_title">Alarma</string>
+    <string name="notif_door_title">Puerta</string>
+    <string name="notif_state_on">Activado</string>
+    <string name="notif_state_off">Desactivado</string>
+</resources>

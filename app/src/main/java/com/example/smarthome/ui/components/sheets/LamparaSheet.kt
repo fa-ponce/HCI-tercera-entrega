@@ -13,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -73,7 +75,7 @@ fun LamparaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Lampara", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_lamp), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -88,7 +90,7 @@ fun LamparaSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            if (isOn) "Encendida" else "Apagada",
+                            if (isOn) stringResource(R.string.sheet_on_f) else stringResource(R.string.sheet_off_f),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
@@ -109,7 +111,7 @@ fun LamparaSheet(
                 // Color picker
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text("Color", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.sheet_color), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             Box(
@@ -120,7 +122,7 @@ fun LamparaSheet(
                                     .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape)
                             )
                             Column {
-                                Text("Color actual", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                Text(stringResource(R.string.sheet_current_color), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                                 Text(
                                     colorToHex(color),
                                     style = MaterialTheme.typography.bodyMedium,
@@ -131,7 +133,7 @@ fun LamparaSheet(
 
                         // Hue slider
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("Tono", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.sheet_hue), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             Slider(
                                 value = hue,
                                 onValueChange = { hue = it },
@@ -148,7 +150,7 @@ fun LamparaSheet(
 
                         // Saturation slider
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("Saturacion", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.sheet_saturation), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             Slider(
                                 value = saturation,
                                 onValueChange = { saturation = it },
@@ -169,7 +171,7 @@ fun LamparaSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Intensidad", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.sheet_brightness), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("${brightness.toInt()}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                         Slider(

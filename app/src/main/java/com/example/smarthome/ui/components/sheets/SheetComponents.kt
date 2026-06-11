@@ -10,9 +10,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -66,7 +68,7 @@ fun SheetHeader(
             IconButton(onClick = { editText = displayTitle; showDialog = true }) {
                 Icon(
                     Icons.Rounded.Edit,
-                    contentDescription = "Editar nombre",
+                    contentDescription = stringResource(R.string.common_edit_name),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -78,13 +80,13 @@ fun SheetHeader(
         var saveError by remember { mutableStateOf<String?>(null) }
         AlertDialog(
             onDismissRequest = { if (!isSaving) showDialog = false },
-            title = { Text("Renombrar dispositivo", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.sheet_rename_device), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = editText,
                         onValueChange = { editText = it; saveError = null },
-                        label = { Text("Nombre") },
+                        label = { Text(stringResource(R.string.common_name)) },
                         singleLine = true,
                         enabled = !isSaving,
                         modifier = Modifier.fillMaxWidth()
@@ -119,11 +121,11 @@ fun SheetHeader(
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Guardar")
+                    Text(stringResource(R.string.common_save))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }, enabled = !isSaving) { Text("Cancelar") }
+                TextButton(onClick = { showDialog = false }, enabled = !isSaving) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -168,16 +170,16 @@ fun SheetDeleteButton(
         modifier = modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
     ) {
-        Text("Eliminar", color = Color.White, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.common_delete), color = Color.White, fontWeight = FontWeight.SemiBold)
     }
 
     if (showConfirm) {
         AlertDialog(
             onDismissRequest = { if (!isDeleting) showConfirm = false },
-            title = { Text("Eliminar dispositivo", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.sheet_delete_device), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.")
+                    Text(stringResource(R.string.sheet_delete_confirm))
                     if (deleteError != null) {
                         Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
@@ -207,11 +209,11 @@ fun SheetDeleteButton(
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Eliminar", color = Color.White)
+                    Text(stringResource(R.string.common_delete), color = Color.White)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirm = false }, enabled = !isDeleting) { Text("Cancelar") }
+                TextButton(onClick = { showConfirm = false }, enabled = !isDeleting) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -250,22 +252,23 @@ fun SheetRoomLinkButton(
             if (isLinked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         )
     ) {
-        Text(if (isLinked) "Desvincular" else "Vincular", fontWeight = FontWeight.SemiBold)
+        Text(if (isLinked) stringResource(R.string.sheet_unlink) else stringResource(R.string.sheet_link), fontWeight = FontWeight.SemiBold)
     }
 
     if (showUnlinkConfirm) {
         AlertDialog(
             onDismissRequest = { if (!isUnlinking) showUnlinkConfirm = false },
-            title = { Text("Desvincular dispositivo", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.sheet_unlink_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("El dispositivo se desvinculará de su habitación actual y quedará libre.")
+                    Text(stringResource(R.string.sheet_unlink_msg))
                     if (unlinkError != null) {
                         Text(unlinkError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
             confirmButton = {
+                val freeRoomErr = stringResource(R.string.sheet_free_room_error)
                 Button(
                     onClick = {
                         if (!isUnlinking) {
@@ -274,7 +277,7 @@ fun SheetRoomLinkButton(
                             scope.launch {
                                 val freeRoomId = ensureFreeRoomId()
                                 if (freeRoomId == null) {
-                                    unlinkError = "No se pudo preparar el espacio para dispositivos libres"
+                                    unlinkError = freeRoomErr
                                 } else {
                                     ServiceLocator.deviceRepository.addDeviceToRoom(freeRoomId, device.id)
                                         .onSuccess {
@@ -294,11 +297,11 @@ fun SheetRoomLinkButton(
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Desvincular", color = Color.White)
+                    Text(stringResource(R.string.sheet_unlink), color = Color.White)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showUnlinkConfirm = false }, enabled = !isUnlinking) { Text("Cancelar") }
+                TextButton(onClick = { showUnlinkConfirm = false }, enabled = !isUnlinking) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -306,7 +309,7 @@ fun SheetRoomLinkButton(
     if (showLinkDialog) {
         AlertDialog(
             onDismissRequest = { showLinkDialog = false; selectedHome = null; selectedRoom = null },
-            title = { Text("Vincular a habitación", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.sheet_link_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (linkError != null) {
@@ -320,8 +323,8 @@ fun SheetRoomLinkButton(
                             value = selectedHome?.name ?: "",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Casa") },
-                            placeholder = { Text("Seleccionar casa") },
+                            label = { Text(stringResource(R.string.common_home)) },
+                            placeholder = { Text(stringResource(R.string.sheet_select_home)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(homeExpanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
@@ -352,8 +355,8 @@ fun SheetRoomLinkButton(
                                 value = selectedRoom?.name ?: "",
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Habitación") },
-                                placeholder = { Text("Seleccionar habitación") },
+                                label = { Text(stringResource(R.string.common_room)) },
+                                placeholder = { Text(stringResource(R.string.sheet_select_room)) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(roomExpanded) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth()
                             )
@@ -398,14 +401,14 @@ fun SheetRoomLinkButton(
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Vincular")
+                    Text(stringResource(R.string.sheet_link))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showLinkDialog = false; selectedHome = null; selectedRoom = null },
                     enabled = !isLinking
-                ) { Text("Cancelar") }
+                ) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -418,10 +421,10 @@ fun SheetRoutineFooter(onCancel: () -> Unit, onAdd: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-            Text("Cancelar")
+            Text(stringResource(R.string.common_cancel))
         }
         Button(onClick = onAdd, modifier = Modifier.weight(1f)) {
-            Text("Agregar a rutina")
+            Text(stringResource(R.string.sheet_add_to_routine))
         }
     }
 }

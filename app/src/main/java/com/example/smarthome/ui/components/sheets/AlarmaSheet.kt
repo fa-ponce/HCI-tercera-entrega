@@ -8,10 +8,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -64,7 +66,7 @@ fun AlarmaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Alarma", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_alarm), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -75,16 +77,16 @@ fun AlarmaSheet(
                 if (!codeVerified) {
                     SheetSectionCard {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            SheetSectionLabel("Codigo de seguridad")
+                            SheetSectionLabel(stringResource(R.string.sheet_security_code))
                             OutlinedTextField(
                                 value = codeInput,
                                 onValueChange = { codeInput = it; codeError = false },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Ingresa tu codigo") },
+                                label = { Text(stringResource(R.string.sheet_enter_code)) },
                                 visualTransformation = PasswordVisualTransformation(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                 isError = codeError,
-                                supportingText = if (codeError) { { Text("Codigo incorrecto") } } else null,
+                                supportingText = if (codeError) { { Text(stringResource(R.string.sheet_wrong_code)) } } else null,
                                 singleLine = true
                             )
                             Button(
@@ -94,7 +96,7 @@ fun AlarmaSheet(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Confirmar código")
+                                Text(stringResource(R.string.sheet_confirm_code))
                             }
                         }
                     }
@@ -104,15 +106,15 @@ fun AlarmaSheet(
                 if (codeVerified) {
                     SheetSectionCard {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            SheetSectionLabel("Acciones")
+                            SheetSectionLabel(stringResource(R.string.sheet_actions))
                             Row(
                                 Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 listOf(
-                                    Triple("armStay", "armedStay", "Modo Casa"),
-                                    Triple("armAway", "armedAway", "Modo Regular"),
-                                    Triple("disarm", "disarmed", "Desactivar")
+                                    Triple("armStay", "armedStay", stringResource(R.string.sheet_mode_home)),
+                                    Triple("armAway", "armedAway", stringResource(R.string.sheet_mode_away)),
+                                    Triple("disarm", "disarmed", stringResource(R.string.sheet_disarm))
                                 ).forEach { (action, targetStatus, label) ->
                                     val active = status == targetStatus
                                     Surface(

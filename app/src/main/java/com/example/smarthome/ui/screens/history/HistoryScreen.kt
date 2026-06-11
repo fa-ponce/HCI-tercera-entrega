@@ -38,10 +38,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
+import com.example.smarthome.domain.logActionLabelRes
 import com.example.smarthome.ui.AppViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -49,20 +52,6 @@ import java.util.TimeZone
 import androidx.compose.foundation.layout.WindowInsets
 
 private const val PAGE_SIZE = 20
-
-private val ACTION_LABELS = mapOf(
-    "turnOn" to "Encendido", "turnOff" to "Apagado",
-    "open" to "Abierto", "close" to "Cerrado",
-    "lock" to "Bloqueado", "unlock" to "Desbloqueado",
-    "armAway" to "Armado", "disarm" to "Desarmado",
-    "arm" to "Armado", "trigger" to "Activado",
-    "play" to "Reproduciendo", "pause" to "Pausado", "stop" to "Detenido",
-    "startCleaning" to "Limpiando", "dock" to "En base",
-    "up" to "Subido", "down" to "Bajado",
-    "setBrightness" to "Brillo ajustado", "setTemperature" to "Temp. ajustada",
-    "setColor" to "Color ajustado", "setVolume" to "Volumen ajustado",
-    "start" to "Iniciado",
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +72,10 @@ fun HistoryScreen(
         topBar = {
             TopAppBar(
                 modifier = Modifier.appBarGradient(),
-                title = { Text("Historial", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = { vm.fetchLogs() }) {
-                        Icon(Icons.Rounded.Refresh, "Actualizar")
+                        Icon(Icons.Rounded.Refresh, stringResource(R.string.history_refresh))
                     }
                 },
                 colors = gradientTopBarColors()
@@ -107,12 +96,12 @@ fun HistoryScreen(
                 OutlinedTextField(
                     value = search,
                     onValueChange = { vm.search.value = it; vm.page.value = 0 },
-                    placeholder = { Text("Buscar dispositivo, acción…") },
+                    placeholder = { Text(stringResource(R.string.history_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Rounded.Search, null) },
                     trailingIcon = if (search.isNotEmpty()) {
                         {
                             IconButton(onClick = { vm.search.value = ""; vm.page.value = 0 }) {
-                                Icon(Icons.Rounded.Clear, "Limpiar")
+                                Icon(Icons.Rounded.Clear, stringResource(R.string.common_clear))
                             }
                         }
                     } else null,
@@ -124,8 +113,8 @@ fun HistoryScreen(
             // Info
             item {
                 Text(
-                    "${filtered.size} registros" +
-                        if (totalPages > 1) " · Pág. ${page + 1}/$totalPages" else "",
+                    stringResource(R.string.history_records, filtered.size) +
+                        if (totalPages > 1) " · " + stringResource(R.string.history_page, page + 1, totalPages) else "",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -141,7 +130,7 @@ fun HistoryScreen(
             } else if (filtered.isEmpty()) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-                        Text("Sin registros.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.history_none), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else {
@@ -154,9 +143,9 @@ fun HistoryScreen(
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
-                            Text("Hora", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp))
-                            Text("Dispositivo", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            Text("Acción", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.8f))
+                            Text(stringResource(R.string.history_col_time), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp))
+                            Text(stringResource(R.string.history_col_device), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.history_col_action), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.8f))
                         }
                     }
                 }
@@ -190,7 +179,7 @@ fun HistoryScreen(
                             }
                         }
                         Text(
-                            ACTION_LABELS[log.event] ?: log.event ?: "—",
+                            logActionLabelRes(log.event)?.let { stringResource(it) } ?: log.event ?: "—",
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.weight(0.8f),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -215,7 +204,7 @@ fun HistoryScreen(
                             ) {
                                 Icon(Icons.Rounded.ArrowBack, null, Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Anterior")
+                                Text(stringResource(R.string.common_previous))
                             }
                             Text(
                                 "${page + 1} / $totalPages",
@@ -225,7 +214,7 @@ fun HistoryScreen(
                                 onClick = { vm.page.value = (page + 1).coerceAtMost(totalPages - 1) },
                                 enabled = page < totalPages - 1
                             ) {
-                                Text("Siguiente")
+                                Text(stringResource(R.string.common_next))
                                 Spacer(Modifier.width(4.dp))
                                 Icon(Icons.Rounded.ArrowForward, null, Modifier.size(16.dp))
                             }

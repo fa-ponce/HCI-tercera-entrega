@@ -40,9 +40,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
@@ -90,7 +92,7 @@ fun ConsumptionScreen(
                 modifier = Modifier.appBarGradient(),
                 title = {
                     Text(
-                        "Consumo",
+                        stringResource(R.string.nav_consumption),
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -98,7 +100,7 @@ fun ConsumptionScreen(
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = stringResource(R.string.common_profile), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = gradientTopBarColors()
@@ -119,17 +121,17 @@ fun ConsumptionScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ConsumptionStatCard(
                         icon = Icons.Rounded.BarChart,
-                        title = "Consumo actual",
+                        title = stringResource(R.string.consumption_current),
                         value = if (totalW >= 1000) "${"%.2f".format(totalW / 1000f)} kW"
                                 else "$totalW W",
-                        subtitle = "${onDevices.size} dispositivos encendidos",
+                        subtitle = stringResource(R.string.consumption_devices_on, onDevices.size),
                         modifier = Modifier.weight(1f)
                     )
                     ConsumptionStatCard(
                         icon = Icons.Rounded.Schedule,
-                        title = "Est. por hora",
+                        title = stringResource(R.string.consumption_per_hour),
                         value = "${"%.3f".format(kwhPerHour)} kWh/h",
-                        subtitle = "si continúa así",
+                        subtitle = stringResource(R.string.consumption_if_continues),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -138,19 +140,19 @@ fun ConsumptionScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ConsumptionStatCard(
                         icon = Icons.Rounded.CalendarToday,
-                        title = "Costo/hora",
+                        title = stringResource(R.string.consumption_cost_hour),
                         value = costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
-                        subtitle = if (costoKwh != null) "según tarifa configurada"
-                                   else "Sin tarifa configurada",
+                        subtitle = if (costoKwh != null) stringResource(R.string.consumption_by_tariff)
+                                   else stringResource(R.string.consumption_no_tariff),
                         highlight = costoKwh != null,
                         modifier = Modifier.weight(1f)
                     )
                     ConsumptionStatCard(
                         icon = Icons.Rounded.CalendarToday,
-                        title = "Costo/día est.",
+                        title = stringResource(R.string.consumption_cost_day),
                         value = costoDia?.let { "$${"%.2f".format(it)}" } ?: "—",
-                        subtitle = if (costoKwh != null) "si continúa 24h así"
-                                   else "Sin tarifa configurada",
+                        subtitle = if (costoKwh != null) stringResource(R.string.consumption_if_24h)
+                                   else stringResource(R.string.consumption_no_tariff),
                         highlight = costoKwh != null,
                         modifier = Modifier.weight(1f)
                     )
@@ -161,7 +163,7 @@ fun ConsumptionScreen(
             if (perHome.isNotEmpty()) {
                 item {
                     Text(
-                        "Consumo por casa",
+                        stringResource(R.string.consumption_per_home),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -204,7 +206,7 @@ fun ConsumptionScreen(
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
-                                    "${item.activeDevices} dispositivos encendidos",
+                                    stringResource(R.string.consumption_devices_on, item.activeDevices),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.outline
                                 )
@@ -220,7 +222,7 @@ fun ConsumptionScreen(
                         Modifier.fillMaxWidth().padding(top = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Sin dispositivos cargados.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.consumption_no_devices), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

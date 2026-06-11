@@ -58,9 +58,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.annotation.StringRes
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +70,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
@@ -75,35 +78,35 @@ import androidx.compose.foundation.layout.WindowInsets
 
 private data class TutorialStep(
     val icon: ImageVector,
-    val title: String,
-    val description: String
+    @StringRes val titleRes: Int,
+    @StringRes val descriptionRes: Int
 )
 
 private val tutorialSteps = listOf(
     TutorialStep(
         icon = Icons.Rounded.Home,
-        title = "Inicio",
-        description = "El panel principal de tu hogar. Muestra un resumen de tus casas, dispositivos activos, consumo actual y actividad reciente."
+        titleRes = R.string.nav_home,
+        descriptionRes = R.string.profile_tut_home_desc
     ),
     TutorialStep(
         icon = Icons.Rounded.Apartment,
-        title = "Casas",
-        description = "Administrá todas tus casas y sus habitaciones. Podés agregar nuevas casas, ver los cuartos de cada una y navegar a sus dispositivos."
+        titleRes = R.string.nav_homes,
+        descriptionRes = R.string.profile_tut_homes_desc
     ),
     TutorialStep(
         icon = Icons.Rounded.Devices,
-        title = "Dispositivos",
-        description = "Controlá todos tus dispositivos desde un solo lugar. Podés encender, apagar y configurar cada dispositivo, además de filtrarlos por tipo."
+        titleRes = R.string.nav_devices,
+        descriptionRes = R.string.profile_tut_devices_desc
     ),
     TutorialStep(
         icon = Icons.Rounded.Schedule,
-        title = "Rutinas",
-        description = "Automatizá acciones con rutinas. Podés crearlas de forma manual, programarlas por horario o disparadas por eventos del hogar."
+        titleRes = R.string.nav_routines,
+        descriptionRes = R.string.profile_tut_routines_desc
     ),
     TutorialStep(
         icon = Icons.Rounded.BarChart,
-        title = "Consumo",
-        description = "Monitoreá el consumo energético en tiempo real. Ves el total de watts activos, el costo estimado por hora y el desglose por casa."
+        titleRes = R.string.nav_consumption,
+        descriptionRes = R.string.profile_tut_consumption_desc
     )
 )
 
@@ -133,7 +136,7 @@ fun ProfileScreen(
                 modifier = Modifier.appBarGradient(),
                 title = {
                     Text(
-                        "Perfil",
+                        stringResource(R.string.profile_title),
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -141,7 +144,7 @@ fun ProfileScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Volver", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = gradientTopBarColors()
@@ -166,7 +169,7 @@ fun ProfileScreen(
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                userName ?: "Usuario",
+                userName ?: stringResource(R.string.common_user),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -189,14 +192,14 @@ fun ProfileScreen(
                     Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Contraseña", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                        Text("Cambiá tu contraseña actual", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.login_password), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.profile_password_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     OutlinedButton(
                         onClick = { showPasswordDialog = true },
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Cambiar", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.profile_change), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -212,19 +215,19 @@ fun ProfileScreen(
                     Icon(Icons.Rounded.BarChart, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Costo de energía", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.profile_energy_cost), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(
                             value = costoInput,
                             onValueChange = { costoInput = it },
-                            label = { Text("$/kWh") },
+                            label = { Text(stringResource(R.string.profile_kwh_label)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             trailingIcon = {
                                 TextButton(onClick = {
                                     costoInput.toFloatOrNull()?.let { appViewModel.updateCostoKwh(it) }
                                 }) {
-                                    Text("Guardar", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                                    Text(stringResource(R.string.common_save), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
@@ -244,8 +247,8 @@ fun ProfileScreen(
                     Icon(Icons.Rounded.DarkMode, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Modo oscuro", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                        Text(if (darkMode) "Activado" else "Desactivado", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.profile_dark_mode), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(if (darkMode) stringResource(R.string.profile_enabled) else stringResource(R.string.profile_disabled), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Switch(
                         checked = darkMode,
@@ -266,8 +269,8 @@ fun ProfileScreen(
                     Icon(Icons.Rounded.Help, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Ayuda", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                        Text("Recorrido por las funciones de la app", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.profile_help), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.profile_help_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Icon(Icons.Rounded.ArrowForward, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                 }
@@ -281,7 +284,7 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.profile_logout), color = Color.White, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -292,8 +295,8 @@ fun ProfileScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Estás seguro que querés cerrar sesión?") },
+            title = { Text(stringResource(R.string.profile_logout), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.profile_logout_confirm)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -305,12 +308,12 @@ fun ProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Cerrar sesión", color = Color.White)
+                    Text(stringResource(R.string.profile_logout), color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -371,16 +374,16 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
 
     AlertDialog(
         onDismissRequest = { if (!loading) onDismiss() },
-        title = { Text("Cambiar contraseña", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.profile_change_password), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (success) {
-                    Text("Contraseña actualizada correctamente.", color = Color(0xFF2E7D32))
+                    Text(stringResource(R.string.profile_password_updated), color = Color(0xFF2E7D32))
                 } else {
                     OutlinedTextField(
                         value = oldPass,
                         onValueChange = { oldPass = it; errorMsg = null },
-                        label = { Text("Contraseña actual *") },
+                        label = { Text(stringResource(R.string.profile_current_password)) },
                         singleLine = true,
                         visualTransformation = if (oldVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -393,7 +396,7 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                     OutlinedTextField(
                         value = newPass,
                         onValueChange = { newPass = it; errorMsg = null },
-                        label = { Text("Nueva contraseña *") },
+                        label = { Text(stringResource(R.string.profile_new_password_label)) },
                         singleLine = true,
                         visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -406,7 +409,7 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                     OutlinedTextField(
                         value = confirmPass,
                         onValueChange = { confirmPass = it; errorMsg = null },
-                        label = { Text("Confirmar nueva contraseña *") },
+                        label = { Text(stringResource(R.string.profile_confirm_password)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
@@ -422,35 +425,39 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) { Text("Cerrar", color = MaterialTheme.colorScheme.onPrimary) }
+                ) { Text(stringResource(R.string.common_close), color = MaterialTheme.colorScheme.onPrimary) }
             } else {
+                val errFill = stringResource(R.string.profile_fill_fields)
+                val errMismatch = stringResource(R.string.profile_passwords_mismatch)
+                val errMin = stringResource(R.string.profile_password_min)
+                val errGeneric = stringResource(R.string.profile_password_error)
                 Button(
                     onClick = {
                         when {
                             oldPass.isBlank() || newPass.isBlank() || confirmPass.isBlank() ->
-                                errorMsg = "Completá todos los campos."
+                                errorMsg = errFill
                             newPass != confirmPass ->
-                                errorMsg = "Las contraseñas nuevas no coinciden."
+                                errorMsg = errMismatch
                             newPass.length < 6 ->
-                                errorMsg = "La nueva contraseña debe tener al menos 6 caracteres."
+                                errorMsg = errMin
                             else -> {
                                 loading = true
                                 appViewModel.changePassword(oldPass, newPass) { ok, err ->
                                     loading = false
                                     if (ok) success = true
-                                    else errorMsg = err ?: "Error al cambiar la contraseña."
+                                    else errorMsg = err ?: errGeneric
                                 }
                             }
                         }
                     },
                     enabled = !loading,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) { Text(if (loading) "Guardando…" else "Guardar", color = MaterialTheme.colorScheme.onPrimary) }
+                ) { Text(if (loading) stringResource(R.string.profile_saving) else stringResource(R.string.common_save), color = MaterialTheme.colorScheme.onPrimary) }
             }
         },
         dismissButton = {
             if (!success) {
-                TextButton(onClick = { if (!loading) onDismiss() }) { Text("Cancelar") }
+                TextButton(onClick = { if (!loading) onDismiss() }) { Text(stringResource(R.string.common_cancel)) }
             }
         }
     )
@@ -497,14 +504,14 @@ private fun TutorialOverlay(
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        current.title,
+                        stringResource(current.titleRes),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
                 Spacer(Modifier.height(12.dp))
-                Text(current.description, style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(current.descriptionRes), style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(20.dp))
 
                 // Botones de navegación
@@ -513,16 +520,16 @@ private fun TutorialOverlay(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onClose) { Text("Omitir") }
+                    TextButton(onClick = onClose) { Text(stringResource(R.string.profile_skip)) }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (step > 0) {
-                            OutlinedButton(onClick = onBack) { Text("Anterior") }
+                            OutlinedButton(onClick = onBack) { Text(stringResource(R.string.common_previous)) }
                         }
                         Button(
                             onClick = onNext,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Text(if (isLast) "Finalizar" else "Siguiente", color = MaterialTheme.colorScheme.onPrimary)
+                            Text(if (isLast) stringResource(R.string.profile_finish) else stringResource(R.string.common_next), color = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                 }

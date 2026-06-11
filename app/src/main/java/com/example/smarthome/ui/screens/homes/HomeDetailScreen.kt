@@ -58,9 +58,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.deviceConsumptionW
@@ -71,12 +73,28 @@ import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeDetailScreen(
     homeId: String,
     appViewModel: AppViewModel,
     navController: NavHostController
+) {
+    HomeDetailContent(
+        homeId = homeId,
+        appViewModel = appViewModel,
+        navController = navController,
+        showBackButton = true
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeDetailContent(
+    homeId: String,
+    appViewModel: AppViewModel,
+    navController: NavHostController,
+    showBackButton: Boolean = true,
+    onHomeDeleted: () -> Unit = { navController.popBackStack() }
 ) {
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
@@ -112,24 +130,26 @@ fun HomeDetailScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            home?.name ?: "Casa",
+                            home?.name ?: stringResource(R.string.common_home),
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
                         IconButton(onClick = { renameText = home?.name ?: ""; showRenameDialog = true }) {
-                            Icon(Icons.Rounded.Edit, contentDescription = "Editar nombre", tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.common_edit_name), tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
                         }
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "Volver", tint = MaterialTheme.colorScheme.onPrimary)
+                    if (showBackButton) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Rounded.ArrowBack, stringResource(R.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
+                        }
                     }
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = stringResource(R.string.common_profile), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = gradientTopBarColors()
@@ -139,7 +159,7 @@ fun HomeDetailScreen(
             ExtendedFloatingActionButton(
                 onClick = { showAddRoomDialog = true },
                 icon = { Icon(Icons.Rounded.Add, null, tint = MaterialTheme.colorScheme.onPrimary) },
-                text = { Text("Nueva habitación", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold) },
+                text = { Text(stringResource(R.string.homes_new_room), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold) },
                 containerColor = MaterialTheme.colorScheme.primary
             )
         },
@@ -177,18 +197,18 @@ fun HomeDetailScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     StatBox(
                         value = "${homeRooms.size}",
-                        label = "Habitaciones",
+                        label = stringResource(R.string.common_rooms),
                         modifier = Modifier.weight(1f)
                     )
                     StatBox(
                         value = "$totalOn",
-                        label = "Encendidos",
+                        label = stringResource(R.string.common_on_plural),
                         highlight = true,
                         modifier = Modifier.weight(1f)
                     )
                     StatBox(
                         value = if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)}kW" else "${totalW}W",
-                        label = "Consumo",
+                        label = stringResource(R.string.nav_consumption),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -197,7 +217,7 @@ fun HomeDetailScreen(
             // Habitaciones
             if (homeRooms.isNotEmpty()) {
                 item(span = fullSpan) {
-                    SectionTitle(Icons.Rounded.MeetingRoom, "Habitaciones", homeRooms.size)
+                    SectionTitle(Icons.Rounded.MeetingRoom, stringResource(R.string.common_rooms), homeRooms.size)
                 }
                 items(homeRooms, key = { it.id }) { room ->
                     val roomDevices = devices[room.id] ?: emptyList()
@@ -212,7 +232,7 @@ fun HomeDetailScreen(
             } else {
                 item(span = fullSpan) {
                     Box(Modifier.fillMaxWidth().padding(top = 32.dp), contentAlignment = Alignment.Center) {
-                        Text("Esta casa no tiene habitaciones.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.homes_no_rooms), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -220,7 +240,7 @@ fun HomeDetailScreen(
             // Dispositivos de la casa
             if (homeDeviceItems.isNotEmpty()) {
                 item(span = fullSpan) {
-                    SectionTitle(Icons.Rounded.Devices, "Dispositivos", homeDeviceItems.size)
+                    SectionTitle(Icons.Rounded.Devices, stringResource(R.string.nav_devices), homeDeviceItems.size)
                 }
                 items(homeDeviceItems, key = { it.first.id }) { (device, roomName) ->
                     DeviceGridCard(
@@ -239,7 +259,7 @@ fun HomeDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar casa", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.homes_delete_home), color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -260,13 +280,13 @@ fun HomeDetailScreen(
     if (showRenameDialog) {
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
-            title = { Text("Renombrar casa", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.homes_rename_home), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = renameText,
                         onValueChange = { renameText = it; renameError = null },
-                        label = { Text("Nombre") },
+                        label = { Text(stringResource(R.string.common_name)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -304,11 +324,11 @@ fun HomeDetailScreen(
                         CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+                    Text(stringResource(R.string.common_save), color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text("Cancelar") }
+                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -316,10 +336,10 @@ fun HomeDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar casa", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.homes_delete_home), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("¿Estás seguro que querés eliminar \"${home?.name}\"? Esta acción no se puede deshacer.")
+                    Text(stringResource(R.string.common_delete_confirm, home?.name ?: ""))
                     if (deleteError != null) {
                         Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
@@ -335,7 +355,7 @@ fun HomeDetailScreen(
                                 ServiceLocator.homeRepository.deleteHome(homeId)
                                     .onSuccess {
                                         appViewModel.removeHome(homeId)
-                                        navController.popBackStack()
+                                        onHomeDeleted()
                                     }
                                     .onFailure { deleteError = it.message }
                                 isDeleteSaving = false
@@ -349,11 +369,11 @@ fun HomeDetailScreen(
                         CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Eliminar", color = Color.White)
+                    Text(stringResource(R.string.common_delete), color = Color.White)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -388,7 +408,7 @@ private fun AddRoomDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva habitación", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.homes_new_room), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
@@ -396,8 +416,8 @@ private fun AddRoomDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null },
-                    label = { Text("Nombre *") },
-                    placeholder = { Text("Ej: Dormitorio Principal") },
+                    label = { Text(stringResource(R.string.common_name_required)) },
+                    placeholder = { Text(stringResource(R.string.homes_room_name_placeholder)) },
                     singleLine = true,
                     isError = nameError != null,
                     supportingText = nameError?.let { msg -> { Text(msg) } },
@@ -413,7 +433,7 @@ private fun AddRoomDialog(
                         value = selectedType,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Tipo") },
+                        label = { Text(stringResource(R.string.common_type)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
@@ -435,7 +455,7 @@ private fun AddRoomDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Piso", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.common_floor), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     IconButton(
                         onClick = { if (floor > 1) floor-- },
                         modifier = Modifier.size(36.dp)
@@ -457,12 +477,14 @@ private fun AddRoomDialog(
             }
         },
         confirmButton = {
+            val errMin = stringResource(R.string.common_name_min_chars)
+            val errMax = stringResource(R.string.common_name_max_chars)
             Button(
                 onClick = {
                     val trimmed = name.trim()
                     when {
-                        trimmed.length < 3 -> { nameError = "El nombre debe tener al menos 3 caracteres"; return@Button }
-                        trimmed.length > 100 -> { nameError = "El nombre no puede superar 100 caracteres"; return@Button }
+                        trimmed.length < 3 -> { nameError = errMin; return@Button }
+                        trimmed.length > 100 -> { nameError = errMax; return@Button }
                     }
                     if (!isSaving) {
                         isSaving = true
@@ -483,11 +505,11 @@ private fun AddRoomDialog(
                     CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
                 }
-                Text("Crear", color = MaterialTheme.colorScheme.onPrimary)
+                Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Cancelar") }
+            TextButton(onClick = onDismiss, enabled = !isSaving) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
@@ -558,7 +580,7 @@ private fun RoomGridCard(
             ) {
                 Icon(Icons.Rounded.Devices, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
                 Text(
-                    "$deviceCount disp. · $onCount on",
+                    stringResource(R.string.homes_room_device_stats, deviceCount, onCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )

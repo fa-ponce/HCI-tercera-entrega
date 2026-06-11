@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -59,7 +61,7 @@ fun PersianaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Persiana", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_blinds), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -73,7 +75,7 @@ fun PersianaSheet(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            "Estado: $movementStatus",
+                            stringResource(R.string.sheet_status_fmt, movementStatus ?: ""),
                             modifier = Modifier.padding(10.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -104,7 +106,7 @@ fun PersianaSheet(
                         ) {
                             Icon(Icons.Rounded.KeyboardArrowUp, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Abrir")
+                            Text(stringResource(R.string.sheet_open_action))
                         }
                         val downActive = if (routineMode) selectedAction == "down" else level <= 0f
                         OutlinedButton(
@@ -126,7 +128,7 @@ fun PersianaSheet(
                         ) {
                             Icon(Icons.Rounded.KeyboardArrowDown, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Cerrar")
+                            Text(stringResource(R.string.sheet_close_action))
                         }
                     }
                 }
@@ -135,7 +137,7 @@ fun PersianaSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel("Posicion")
+                            SheetSectionLabel(stringResource(R.string.sheet_position))
                             Text("${level.toInt()}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                         Slider(
@@ -151,8 +153,8 @@ fun PersianaSheet(
                             valueRange = 0f..100f
                         )
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Cerrada", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                            Text("Abierta", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.sheet_door_closed_f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.sheet_door_open_f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                         }
                     }
                 }

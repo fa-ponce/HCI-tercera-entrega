@@ -1,3 +1,403 @@
 <resources>
     <string name="app_name">Smarthome</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_homes">Homes</string>
+    <string name="nav_devices">Devices</string>
+    <string name="nav_routines">Routines</string>
+    <string name="nav_consumption">Consumption</string>
+
+    <!-- Common -->
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_create">Create</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_edit">Edit</string>
+    <string name="common_name">Name</string>
+    <string name="common_name_required">Name *</string>
+    <string name="common_back">Back</string>
+    <string name="common_profile">Profile</string>
+    <string name="common_close">Close</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_no_results">No results</string>
+    <string name="common_edit_name">Edit name</string>
+    <string name="common_user">User</string>
+    <string name="common_on">On</string>
+    <string name="common_off">Off</string>
+    <string name="common_on_plural">On</string>
+    <string name="common_off_plural">Off</string>
+    <string name="common_active">Active</string>
+    <string name="common_name_min_chars">Name must be at least 3 characters</string>
+    <string name="common_name_max_chars">Name cannot exceed 100 characters</string>
+    <string name="common_home">Home</string>
+    <string name="common_room">Room</string>
+    <string name="common_rooms">Rooms</string>
+    <string name="common_floor">Floor</string>
+    <string name="common_type">Type</string>
+    <string name="common_next">Next</string>
+    <string name="common_previous">Previous</string>
+    <string name="common_delete_confirm">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+    <string name="common_rooms_count_one">%1$d room</string>
+    <string name="common_rooms_count_many">%1$d rooms</string>
+
+    <!-- Login -->
+    <string name="login_title_login">Sign in</string>
+    <string name="login_title_register">Create account</string>
+    <string name="login_title_verify">Verify account</string>
+    <string name="login_title_forgot">Recover password</string>
+    <string name="login_title_reset">New password</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_new_password">New password</string>
+    <string name="login_code">Code</string>
+    <string name="login_verify_hint">Enter the code we sent to %1$s</string>
+    <string name="login_forgot_hint">Enter your email and we will send you a code to reset your password.</string>
+    <string name="login_reset_hint">Enter the code we sent to %1$s and your new password.</string>
+    <string name="login_button_register">Register</string>
+    <string name="login_button_verify">Verify</string>
+    <string name="login_button_send_code">Send code</string>
+    <string name="login_button_change_password">Change password</string>
+    <string name="login_no_account">Don\'t have an account? Register</string>
+    <string name="login_forgot_password">Forgot your password?</string>
+    <string name="login_have_account">Already have an account? Sign in</string>
+    <string name="login_resend_code">Resend code</string>
+
+    <!-- Home screen -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_status_title">Home status</string>
+    <string name="home_device_singular">device</string>
+    <string name="home_device_plural">devices</string>
+    <string name="home_shortcuts">Shortcuts</string>
+    <string name="home_customize">Customize</string>
+    <string name="home_recent_activity">Recent activity</string>
+    <string name="home_view_history">View history</string>
+    <string name="home_routine_badge">Routine</string>
+    <string name="home_add_shortcuts_title">Add shortcuts</string>
+    <string name="home_add_shortcuts_sub">Your favorite routines and devices, one tap away</string>
+    <string name="home_customize_title">Customize shortcuts</string>
+    <string name="home_customize_sub">Choose which routines and devices appear on the home screen.</string>
+    <string name="home_no_items">You don\'t have routines or devices to add yet.</string>
+
+    <!-- Homes screen -->
+    <string name="homes_new_home">New home</string>
+    <string name="homes_search_placeholder">Search home or room…</string>
+    <string name="homes_add_room">Add room</string>
+    <string name="homes_no_home">No home</string>
+    <string name="homes_select_home">Select a home to see its details</string>
+    <string name="homes_no_rooms">This home has no rooms.</string>
+    <string name="homes_no_devices">No devices</string>
+    <string name="homes_new_room">New room</string>
+    <string name="homes_room_name_placeholder">e.g. Master bedroom</string>
+    <string name="homes_property_type">Property type</string>
+    <string name="homes_home_name_label">Home name *</string>
+    <string name="homes_home_name_placeholder">e.g. Beach house</string>
+    <string name="homes_address">Address</string>
+    <string name="homes_address_placeholder">e.g. Av. Libertador 1234</string>
+    <string name="homes_city">City</string>
+    <string name="homes_city_placeholder">e.g. Buenos Aires</string>
+    <string name="homes_rename_home">Rename home</string>
+    <string name="homes_delete_home">Delete home</string>
+    <string name="homes_room_device_stats">%1$d dev. · %2$d on</string>
+
+    <!-- Devices screen -->
+    <string name="device_new">New device</string>
+    <string name="device_search_placeholder">Search device…</string>
+    <string name="device_total">Total</string>
+    <string name="device_filter">Filter</string>
+    <string name="device_filter_remove">Remove filter</string>
+    <string name="device_all_homes">All homes</string>
+    <string name="device_all_rooms">All rooms</string>
+    <string name="device_none_found">No devices found</string>
+    <string name="device_adjust_filters">Try adjusting your search or filters</string>
+    <string name="device_no_room">No room</string>
+    <string name="device_free_label">Free</string>
+    <string name="device_name_label">Device name *</string>
+    <string name="device_name_placeholder">e.g. LED lamp</string>
+    <string name="device_type_label">Device type *</string>
+    <string name="device_type_placeholder">Select type</string>
+    <string name="device_no_room_free">No room (free device)</string>
+    <string name="device_brand">Brand/Model</string>
+    <string name="device_brand_placeholder">e.g. Phillips Hue</string>
+
+    <!-- Device types -->
+    <string name="device_type_lamp">Lamp</string>
+    <string name="device_type_ac">Air conditioner</string>
+    <string name="device_type_alarm">Alarm</string>
+    <string name="device_type_blinds">Blinds</string>
+    <string name="device_type_door">Door</string>
+    <string name="device_type_faucet">Faucet</string>
+    <string name="device_type_oven">Oven</string>
+    <string name="device_type_speaker">Speaker</string>
+    <string name="device_type_vacuum">Vacuum</string>
+    <string name="device_type_fridge">Fridge</string>
+    <string name="device_type_generic">Device</string>
+
+    <!-- Routines -->
+    <string name="routine_new">New routine</string>
+    <string name="routine_none">No routines.</string>
+    <string name="routine_scheduled">Scheduled</string>
+    <string name="routine_by_event">By event</string>
+    <string name="routine_manual">Manual</string>
+    <string name="routine_execute">Run</string>
+    <string name="routine_edit">Edit routine</string>
+    <string name="routine_name_placeholder">e.g. Arriving home</string>
+    <string name="routine_name_required_err">Name is required</string>
+    <string name="routine_description">Description</string>
+    <string name="routine_optional">Optional</string>
+    <string name="routine_trigger_type">Trigger type</string>
+    <string name="routine_trigger_time">Specific time</string>
+    <string name="routine_time_label">Time (HH:mm)</string>
+    <string name="routine_devices_involved">Devices involved</string>
+    <string name="routine_search_device">Search device…</string>
+    <string name="routine_no_devices">No devices available.</string>
+    <string name="routine_no_search_results">No results for \"%1$s\".</string>
+    <string name="routine_all_added">All devices are already in the routine.</string>
+    <string name="routine_save_changes">Save changes</string>
+    <string name="routine_create">Create routine</string>
+    <string name="routine_duration">Duration:</string>
+    <string name="routine_no_limit">no limit</string>
+    <string name="routine_min">min</string>
+    <string name="routine_remove">Remove</string>
+
+    <!-- Routine action labels (imperative) -->
+    <string name="routine_action_turn_on">Turn on</string>
+    <string name="routine_action_turn_off">Turn off</string>
+    <string name="routine_action_open">Open</string>
+    <string name="routine_action_close">Close</string>
+    <string name="routine_action_level">Position</string>
+    <string name="routine_action_lock">Lock</string>
+    <string name="routine_action_unlock">Unlock</string>
+    <string name="routine_action_arm">Activate</string>
+    <string name="routine_action_temp">Temp.</string>
+    <string name="routine_action_freezer_temp">Freezer temp.</string>
+    <string name="routine_action_speed">Speed</string>
+    <string name="routine_action_vblades">V blades</string>
+    <string name="routine_action_hblades">H blades</string>
+    <string name="routine_action_brightness">Brightness</string>
+    <string name="routine_action_heat">Heat source</string>
+    <string name="routine_action_grill">Grill</string>
+    <string name="routine_action_convection">Convection</string>
+
+    <!-- Log / history action labels (past tense) -->
+    <string name="action_turned_on">Turned on</string>
+    <string name="action_turned_off">Turned off</string>
+    <string name="action_opened">Opened</string>
+    <string name="action_closed">Closed</string>
+    <string name="action_armed">Armed</string>
+    <string name="action_disarmed">Disarmed</string>
+    <string name="action_triggered">Triggered</string>
+    <string name="action_playing">Playing</string>
+    <string name="action_paused">Paused</string>
+    <string name="action_stopped">Stopped</string>
+    <string name="action_cleaning">Cleaning</string>
+    <string name="action_docked">Docked</string>
+    <string name="action_raised">Raised</string>
+    <string name="action_lowered">Lowered</string>
+    <string name="action_locked">Locked</string>
+    <string name="action_unlocked">Unlocked</string>
+    <string name="action_started">Started</string>
+    <string name="action_brightness_set">Brightness set</string>
+    <string name="action_temperature_set">Temp. set</string>
+    <string name="action_color_set">Color set</string>
+    <string name="action_volume_set">Volume set</string>
+
+    <!-- Room screen -->
+    <string name="room_devices_count">%1$d devices</string>
+    <string name="room_status_fmt">%1$d on · %2$s</string>
+    <string name="room_no_devices">No devices in this room.</string>
+    <string name="room_add_device">Add device</string>
+    <string name="room_delete">Delete room</string>
+    <string name="room_rename">Rename room</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_tut_home_desc">Your home\'s main dashboard. Shows a summary of your homes, active devices, current consumption and recent activity.</string>
+    <string name="profile_tut_homes_desc">Manage all your homes and their rooms. You can add new homes, see the rooms in each one and navigate to their devices.</string>
+    <string name="profile_tut_devices_desc">Control all your devices from one place. You can turn each device on, off and configure it, as well as filter them by type.</string>
+    <string name="profile_tut_routines_desc">Automate actions with routines. You can create them manually, schedule them by time or trigger them by home events.</string>
+    <string name="profile_tut_consumption_desc">Monitor energy consumption in real time. See the total active watts, the estimated cost per hour and the breakdown per home.</string>
+    <string name="profile_password_sub">Change your current password</string>
+    <string name="profile_change">Change</string>
+    <string name="profile_energy_cost">Energy cost</string>
+    <string name="profile_kwh_label">$/kWh</string>
+    <string name="profile_dark_mode">Dark mode</string>
+    <string name="profile_enabled">Enabled</string>
+    <string name="profile_disabled">Disabled</string>
+    <string name="profile_help">Help</string>
+    <string name="profile_help_sub">Tour of the app\'s features</string>
+    <string name="profile_logout">Log out</string>
+    <string name="profile_logout_confirm">Are you sure you want to log out?</string>
+    <string name="profile_change_password">Change password</string>
+    <string name="profile_password_updated">Password updated successfully.</string>
+    <string name="profile_current_password">Current password *</string>
+    <string name="profile_new_password_label">New password *</string>
+    <string name="profile_confirm_password">Confirm new password *</string>
+    <string name="profile_fill_fields">Fill in all fields.</string>
+    <string name="profile_passwords_mismatch">The new passwords don\'t match.</string>
+    <string name="profile_password_min">The new password must be at least 6 characters.</string>
+    <string name="profile_password_error">Error changing the password.</string>
+    <string name="profile_saving">Saving…</string>
+    <string name="profile_skip">Skip</string>
+    <string name="profile_finish">Finish</string>
+
+    <!-- Consumption -->
+    <string name="consumption_current">Current consumption</string>
+    <string name="consumption_devices_on">%1$d devices on</string>
+    <string name="consumption_per_hour">Hourly est.</string>
+    <string name="consumption_if_continues">if it continues like this</string>
+    <string name="consumption_cost_hour">Cost/hour</string>
+    <string name="consumption_cost_day">Est. cost/day</string>
+    <string name="consumption_by_tariff">based on configured tariff</string>
+    <string name="consumption_no_tariff">No tariff configured</string>
+    <string name="consumption_if_24h">if it continues 24h like this</string>
+    <string name="consumption_per_home">Consumption per home</string>
+    <string name="consumption_no_devices">No devices loaded.</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="history_refresh">Refresh</string>
+    <string name="history_search_placeholder">Search device, action…</string>
+    <string name="history_records">%1$d records</string>
+    <string name="history_page">Page %1$d/%2$d</string>
+    <string name="history_none">No records.</string>
+    <string name="history_col_time">Time</string>
+    <string name="history_col_device">Device</string>
+    <string name="history_col_action">Action</string>
+
+    <!-- Device sheets (shared) -->
+    <string name="sheet_rename_device">Rename device</string>
+    <string name="sheet_delete_device">Delete device</string>
+    <string name="sheet_delete_confirm">Are you sure you want to delete this device? This action cannot be undone.</string>
+    <string name="sheet_unlink">Unlink</string>
+    <string name="sheet_link">Link</string>
+    <string name="sheet_unlink_title">Unlink device</string>
+    <string name="sheet_unlink_msg">The device will be unlinked from its current room and left free.</string>
+    <string name="sheet_free_room_error">Could not prepare the space for free devices</string>
+    <string name="sheet_link_title">Link to room</string>
+    <string name="sheet_select_home">Select home</string>
+    <string name="sheet_select_room">Select room</string>
+    <string name="sheet_add_to_routine">Add to routine</string>
+    <string name="sheet_unsupported">Unsupported device type.</string>
+
+    <!-- Lamp sheet -->
+    <string name="sheet_on_f">On</string>
+    <string name="sheet_off_f">Off</string>
+    <string name="sheet_color">Color</string>
+    <string name="sheet_current_color">Current color</string>
+    <string name="sheet_hue">Hue</string>
+    <string name="sheet_saturation">Saturation</string>
+    <string name="sheet_brightness">Brightness</string>
+
+    <!-- AC sheet -->
+    <string name="sheet_temperature">Temperature</string>
+    <string name="sheet_mode">Mode</string>
+    <string name="sheet_mode_fan">Fan</string>
+    <string name="sheet_mode_cold">Cool</string>
+    <string name="sheet_mode_heat">Heat</string>
+    <string name="sheet_vertical_blades">Vertical blades</string>
+    <string name="sheet_horizontal_blades">Horizontal blades</string>
+    <string name="sheet_fan_speed">Fan speed</string>
+    <string name="sheet_auto">Auto</string>
+
+    <!-- Door sheet -->
+    <string name="sheet_door_open_f">Open</string>
+    <string name="sheet_door_closed_f">Closed</string>
+    <string name="sheet_locked_f">Locked</string>
+    <string name="sheet_unlocked_f">Unlocked</string>
+    <string name="sheet_actions">Actions</string>
+    <string name="sheet_open_action">Open</string>
+    <string name="sheet_close_action">Close</string>
+    <string name="sheet_lock_action">Lock</string>
+    <string name="sheet_unlock_action">Unlock</string>
+
+    <!-- Alarm sheet -->
+    <string name="sheet_security_code">Security code</string>
+    <string name="sheet_enter_code">Enter your code</string>
+    <string name="sheet_wrong_code">Wrong code</string>
+    <string name="sheet_confirm_code">Confirm code</string>
+    <string name="sheet_mode_home">Home mode</string>
+    <string name="sheet_mode_away">Away mode</string>
+    <string name="sheet_disarm">Disarm</string>
+
+    <!-- Blinds sheet -->
+    <string name="sheet_status_fmt">Status: %1$s</string>
+    <string name="sheet_position">Position</string>
+
+    <!-- Oven sheet -->
+    <string name="sheet_heat_source">Heat source</string>
+    <string name="sheet_heat_conventional">Conventional</string>
+    <string name="sheet_heat_bottom">Bottom</string>
+    <string name="sheet_heat_top">Top</string>
+    <string name="sheet_grill_mode">Grill mode</string>
+    <string name="sheet_eco">Eco</string>
+    <string name="sheet_grill_full">Full</string>
+    <string name="sheet_convection_mode">Convection mode</string>
+
+    <!-- Faucet sheet -->
+    <string name="sheet_open_m">Open</string>
+    <string name="sheet_closed_m">Closed</string>
+    <string name="sheet_dispense">Dispense</string>
+    <string name="sheet_quantity">Quantity</string>
+    <string name="sheet_unit">Unit</string>
+    <string name="sheet_unit_ml">Milliliter</string>
+    <string name="sheet_unit_cl">Centiliter</string>
+    <string name="sheet_unit_dl">Deciliter</string>
+    <string name="sheet_unit_l">Liter</string>
+    <string name="sheet_dispensing">Dispensing…</string>
+    <string name="sheet_dispense_fmt">Dispense %1$d %2$s</string>
+    <string name="sheet_dispensed_fmt">Dispensed: %1$d %2$s</string>
+
+    <!-- Speaker sheet -->
+    <string name="sheet_playback">Playback</string>
+    <string name="sheet_previous">Previous</string>
+    <string name="sheet_stop">Stop</string>
+    <string name="sheet_play">Play</string>
+    <string name="sheet_pause">Pause</string>
+    <string name="sheet_next">Next</string>
+    <string name="sheet_volume">Volume</string>
+    <string name="sheet_genre">Genre</string>
+    <string name="sheet_genre_classical">Classical</string>
+    <string name="sheet_genre_country">Country</string>
+    <string name="sheet_genre_dance">Dance</string>
+    <string name="sheet_genre_latin">Latin</string>
+    <string name="sheet_genre_pop">Pop</string>
+    <string name="sheet_genre_rock">Rock</string>
+    <string name="sheet_genre_folk">Folk</string>
+    <string name="sheet_genre_jazz">Jazz</string>
+    <string name="sheet_genre_blues">Blues</string>
+
+    <!-- Vacuum sheet -->
+    <string name="sheet_inactive">Inactive</string>
+    <string name="sheet_controls">Controls</string>
+    <string name="sheet_start">Start</string>
+    <string name="sheet_dock">Return to dock</string>
+    <string name="sheet_vacuum">Vacuum</string>
+    <string name="sheet_mop">Mop</string>
+
+    <!-- Fridge sheet -->
+    <string name="sheet_fridge_temp">Fridge temperature</string>
+    <string name="sheet_freezer_temp">Freezer temperature</string>
+    <string name="sheet_operation_mode">Operation mode</string>
+    <string name="sheet_mode_normal">Normal</string>
+    <string name="sheet_mode_normal_desc">Standard operation</string>
+    <string name="sheet_mode_party">Party</string>
+    <string name="sheet_mode_party_desc">Lowers freezer temp.</string>
+    <string name="sheet_mode_vacation">Vacation</string>
+    <string name="sheet_mode_vacation_desc">Saves energy</string>
+
+    <!-- Notifications (RF20) -->
+    <string name="notif_channel_name">Smarthome</string>
+    <string name="notif_routine_success_title">Routine executed</string>
+    <string name="notif_routine_error_title">Routine error</string>
+    <string name="notif_routine_error_body">Could not execute %1$s</string>
+    <string name="notif_device_error_title">Control error</string>
+    <string name="notif_device_error_body">Could not control %1$s</string>
+    <string name="notif_alarm_title">Alarm</string>
+    <string name="notif_door_title">Door</string>
+    <string name="notif_state_on">On</string>
+    <string name="notif_state_off">Off</string>
 </resources>

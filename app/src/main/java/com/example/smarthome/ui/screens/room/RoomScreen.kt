@@ -47,9 +47,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.R
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.domain.isDeviceOn
@@ -105,24 +107,24 @@ fun RoomScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            room?.name ?: "Habitación",
+                            room?.name ?: stringResource(R.string.common_room),
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
                         IconButton(onClick = { renameText = room?.name ?: ""; showRenameDialog = true }) {
-                            Icon(Icons.Rounded.Edit, contentDescription = "Editar nombre", tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.common_edit_name), tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
                         }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "Volver", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Rounded.ArrowBack, stringResource(R.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.AccountCircle, contentDescription = stringResource(R.string.common_profile), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = gradientTopBarColors()
@@ -160,13 +162,17 @@ fun RoomScreen(
                         ) {
                             Icon(Icons.Rounded.Devices, null, Modifier, tint = MaterialTheme.colorScheme.primary)
                             Text(
-                                "${roomDevices.size} dispositivos",
+                                stringResource(R.string.room_devices_count, roomDevices.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                         Text(
-                            "$totalOn encendidos · ${if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)} kW" else "$totalW W"}",
+                            stringResource(
+                                R.string.room_status_fmt,
+                                totalOn,
+                                if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)} kW" else "$totalW W"
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -182,7 +188,7 @@ fun RoomScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "No hay dispositivos en esta habitación.",
+                            stringResource(R.string.room_no_devices),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -192,7 +198,7 @@ fun RoomScreen(
             items(roomDevices, key = { it.id }) { device ->
                 DeviceGridCard(
                     device = device,
-                    subtitle = deviceTypeName(device.type.id),
+                    subtitle = stringResource(deviceTypeName(device.type.id)),
                     onToggle = { appViewModel.toggleDevice(device) },
                     onClick = { selectedDevice = device }
                 )
@@ -206,7 +212,7 @@ fun RoomScreen(
                 ) {
                     Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Agregar dispositivo", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.room_add_device), fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -216,7 +222,7 @@ fun RoomScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar habitación", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.room_delete), color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -240,10 +246,10 @@ fun RoomScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar habitación", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.room_delete), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("¿Estás seguro que querés eliminar \"${room?.name}\"? Esta acción no se puede deshacer.")
+                    Text(stringResource(R.string.common_delete_confirm, room?.name ?: ""))
                     if (deleteError != null) {
                         Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
@@ -273,11 +279,11 @@ fun RoomScreen(
                         CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Eliminar", color = Color.White)
+                    Text(stringResource(R.string.common_delete), color = Color.White)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -285,13 +291,13 @@ fun RoomScreen(
     if (showRenameDialog) {
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
-            title = { Text("Renombrar habitación", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.room_rename), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = renameText,
                         onValueChange = { renameText = it; renameError = null },
-                        label = { Text("Nombre") },
+                        label = { Text(stringResource(R.string.common_name)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -329,11 +335,11 @@ fun RoomScreen(
                         CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+                    Text(stringResource(R.string.common_save), color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text("Cancelar") }
+                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }

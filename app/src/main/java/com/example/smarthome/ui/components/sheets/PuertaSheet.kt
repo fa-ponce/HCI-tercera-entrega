@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -57,7 +59,7 @@ fun PuertaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Puerta", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_door), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -68,14 +70,14 @@ fun PuertaSheet(
                 if (!routineMode) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         val openColor = if (isOpen) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer
-                        val openText = if (isOpen) "Abierta" else "Cerrada"
+                        val openText = if (isOpen) stringResource(R.string.sheet_door_open_f) else stringResource(R.string.sheet_door_closed_f)
                         Surface(color = openColor, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) {
                             Box(Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
                                 Text(openText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                             }
                         }
                         val lockColor = if (isLocked) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant
-                        val lockText = if (isLocked) "Bloqueada" else "Desbloqueada"
+                        val lockText = if (isLocked) stringResource(R.string.sheet_locked_f) else stringResource(R.string.sheet_unlocked_f)
                         Surface(color = lockColor, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) {
                             Box(Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
                                 Text(lockText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
@@ -87,10 +89,10 @@ fun PuertaSheet(
                 // Actions
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Acciones")
+                        SheetSectionLabel(stringResource(R.string.sheet_actions))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                             DoorActionButton(
-                                label = "Abrir",
+                                label = stringResource(R.string.sheet_open_action),
                                 active = if (routineMode) selectedDoor == "open" else isOpen,
                                 enabled = routineMode || !isOpen,
                                 modifier = Modifier.weight(1f)
@@ -103,7 +105,7 @@ fun PuertaSheet(
                                 }
                             }
                             DoorActionButton(
-                                label = "Cerrar",
+                                label = stringResource(R.string.sheet_close_action),
                                 active = if (routineMode) selectedDoor == "close" else !isOpen,
                                 enabled = routineMode || isOpen,
                                 modifier = Modifier.weight(1f)
@@ -118,7 +120,7 @@ fun PuertaSheet(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                             DoorActionButton(
-                                label = "Bloquear",
+                                label = stringResource(R.string.sheet_lock_action),
                                 active = if (routineMode) selectedLock == "lock" else isLocked,
                                 enabled = routineMode || (!isLocked && !isOpen),
                                 modifier = Modifier.weight(1f)
@@ -131,7 +133,7 @@ fun PuertaSheet(
                                 }
                             }
                             DoorActionButton(
-                                label = "Desbloquear",
+                                label = stringResource(R.string.sheet_unlock_action),
                                 active = if (routineMode) selectedLock == "unlock" else !isLocked,
                                 enabled = routineMode || isLocked,
                                 modifier = Modifier.weight(1f)

@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
@@ -41,11 +43,9 @@ fun AcSheet(
     var fanSpeed by remember { mutableStateOf("auto") }
 
     val modos = listOf("ventilacion", "frio", "calor")
-    val modoLabels = mapOf("ventilacion" to "Ventilacion", "frio" to "Frio", "calor" to "Calor")
     val verticalOpts = listOf("auto", "22", "45", "67", "90")
     val horizontalOpts = listOf("auto", "-90", "-45", "0", "45", "90")
     val fanOpts = listOf("auto", "25", "50", "75", "100")
-    val fanLabels = mapOf("auto" to "Auto", "25" to "25%", "50" to "50%", "75" to "75%", "100" to "100%")
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
@@ -71,7 +71,7 @@ fun AcSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = "Aire acondicionado", deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_ac), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -85,7 +85,7 @@ fun AcSheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (isOn) "Encendido" else "Apagado", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(if (isOn) stringResource(R.string.common_on) else stringResource(R.string.common_off), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         Switch(checked = isOn, onCheckedChange = { v ->
                             isOn = v
                             if (!routineMode) scope.launch { repo.executeAction(device.id, if (v) "turnOn" else "turnOff") }
@@ -97,7 +97,7 @@ fun AcSheet(
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel("Temperatura")
+                            SheetSectionLabel(stringResource(R.string.sheet_temperature))
                             Text("${temperature.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                         Slider(
@@ -118,7 +118,7 @@ fun AcSheet(
                 // Mode
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Modo")
+                        SheetSectionLabel(stringResource(R.string.sheet_mode))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             modos.forEach { m ->
                                 FilterChip(
@@ -127,7 +127,14 @@ fun AcSheet(
                                         mode = m
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setMode", mapOf("mode" to m)) }
                                     },
-                                    label = { Text(modoLabels[m] ?: m) }
+                                    label = {
+                                        Text(when (m) {
+                                            "ventilacion" -> stringResource(R.string.sheet_mode_fan)
+                                            "frio" -> stringResource(R.string.sheet_mode_cold)
+                                            "calor" -> stringResource(R.string.sheet_mode_heat)
+                                            else -> m
+                                        })
+                                    }
                                 )
                             }
                         }
@@ -137,7 +144,7 @@ fun AcSheet(
                 // Vertical swing
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Aspas verticales")
+                        SheetSectionLabel(stringResource(R.string.sheet_vertical_blades))
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
                             verticalOpts.forEach { v ->
                                 FilterChip(
@@ -146,7 +153,7 @@ fun AcSheet(
                                         verticalSwing = v
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setVerticalSwing", mapOf("verticalSwing" to v)) }
                                     },
-                                    label = { Text(if (v == "auto") "Auto" else "$v°", style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(if (v == "auto") stringResource(R.string.sheet_auto) else "$v°", style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }
@@ -156,7 +163,7 @@ fun AcSheet(
                 // Horizontal swing
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Aspas horizontales")
+                        SheetSectionLabel(stringResource(R.string.sheet_horizontal_blades))
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                             horizontalOpts.forEach { h ->
                                 FilterChip(
@@ -165,7 +172,7 @@ fun AcSheet(
                                         horizontalSwing = h
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setHorizontalSwing", mapOf("horizontalSwing" to h)) }
                                     },
-                                    label = { Text(if (h == "auto") "Auto" else "$h°", style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(if (h == "auto") stringResource(R.string.sheet_auto) else "$h°", style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }
@@ -175,7 +182,7 @@ fun AcSheet(
                 // Fan speed
                 SheetSectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel("Velocidad del ventilador")
+                        SheetSectionLabel(stringResource(R.string.sheet_fan_speed))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             fanOpts.forEach { f ->
                                 FilterChip(
@@ -184,7 +191,7 @@ fun AcSheet(
                                         fanSpeed = f
                                         if (!routineMode) scope.launch { repo.executeAction(device.id, "setFanSpeed", mapOf("fanSpeed" to f)) }
                                     },
-                                    label = { Text(fanLabels[f] ?: f, style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(if (f == "auto") stringResource(R.string.sheet_auto) else "$f%", style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }
