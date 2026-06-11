@@ -43,6 +43,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
+import com.example.smarthome.ui.components.appBarGradient
+import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -106,6 +108,7 @@ fun HomeDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                modifier = Modifier.appBarGradient(),
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -129,9 +132,7 @@ fun HomeDetailScreen(
                         Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = gradientTopBarColors()
             )
         },
         floatingActionButton = {

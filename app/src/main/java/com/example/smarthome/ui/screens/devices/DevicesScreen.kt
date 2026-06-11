@@ -34,6 +34,8 @@ import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
+import com.example.smarthome.ui.components.appBarGradient
+import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -144,6 +146,7 @@ fun DevicesScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                modifier = Modifier.appBarGradient(),
                 title = {
                     Text(
                         "Dispositivos",
@@ -157,9 +160,7 @@ fun DevicesScreen(
                         Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = gradientTopBarColors()
             )
         },
         floatingActionButton = {

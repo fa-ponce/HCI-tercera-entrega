@@ -31,6 +31,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import com.example.smarthome.ui.components.appBarGradient
+import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -80,12 +82,14 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial") },
+                modifier = Modifier.appBarGradient(),
+                title = { Text("Historial", fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = { vm.fetchLogs() }) {
                         Icon(Icons.Rounded.Refresh, "Actualizar")
                     }
-                }
+                },
+                colors = gradientTopBarColors()
             )
         },
         contentWindowInsets = WindowInsets(0)

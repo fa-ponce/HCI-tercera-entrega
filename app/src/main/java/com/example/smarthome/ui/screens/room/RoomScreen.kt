@@ -34,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CenterAlignedTopAppBar
+import com.example.smarthome.ui.components.appBarGradient
+import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -99,6 +101,7 @@ fun RoomScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                modifier = Modifier.appBarGradient(),
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -122,9 +125,7 @@ fun RoomScreen(
                         Icon(Icons.Rounded.AccountCircle, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(28.dp))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = gradientTopBarColors()
             )
         },
         contentWindowInsets = WindowInsets(0)
