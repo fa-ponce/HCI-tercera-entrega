@@ -12,8 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -54,13 +55,17 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.ServiceLocator
+import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.DeviceGridCard
+import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
 
@@ -78,11 +83,16 @@ fun HomeDetailScreen(
     val home = homes.find { it.id == homeId }
     val homeRooms = rooms[homeId] ?: emptyList()
 
-    val allHomeDevices = homeRooms.flatMap { devices[it.id] ?: emptyList() }
+    // Dispositivos de la casa con el nombre de su habitación, para mostrarlos en grilla.
+    val homeDeviceItems = homeRooms.flatMap { room ->
+        (devices[room.id] ?: emptyList()).map { device -> device to room.name }
+    }
+    val allHomeDevices = homeDeviceItems.map { it.first }
     val totalOn = allHomeDevices.count { isDeviceOn(it.type.id, it.state) }
     val totalW = allHomeDevices.filter { isDeviceOn(it.type.id, it.state) }
         .sumOf { deviceConsumptionW(it.type.id) }
 
+    var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAddRoomDialog by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
@@ -134,16 +144,20 @@ fun HomeDetailScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
-                start = 16.dp, end = 16.dp, bottom = 24.dp
+                start = 16.dp, end = 16.dp, bottom = 96.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
+            val fullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
+
             // Info de la casa
-            item {
+            item(span = fullSpan) {
                 val subtitle = listOfNotNull(
                     home?.metadata?.city,
                     home?.metadata?.address
@@ -158,7 +172,7 @@ fun HomeDetailScreen(
             }
 
             // Stats
-            item {
+            item(span = fullSpan) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     StatBox(
                         value = "${homeRooms.size}",
@@ -181,80 +195,44 @@ fun HomeDetailScreen(
 
             // Habitaciones
             if (homeRooms.isNotEmpty()) {
-                item {
-                    Text(
-                        "Habitaciones",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                item(span = fullSpan) {
+                    SectionTitle(Icons.Rounded.MeetingRoom, "Habitaciones", homeRooms.size)
+                }
+                items(homeRooms, key = { it.id }) { room ->
+                    val roomDevices = devices[room.id] ?: emptyList()
+                    val roomOn = roomDevices.count { isDeviceOn(it.type.id, it.state) }
+                    RoomGridCard(
+                        name = room.name,
+                        deviceCount = roomDevices.size,
+                        onCount = roomOn,
+                        onClick = { navController.navigate(Routes.room(room.id)) }
                     )
                 }
-                item {
-                    // Grid 2 columnas dentro de LazyColumn
-                    val chunked = homeRooms.chunked(2)
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        chunked.forEach { pair ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                pair.forEach { room ->
-                                    val roomDevices = devices[room.id] ?: emptyList()
-                                    val roomOn = roomDevices.count { isDeviceOn(it.type.id, it.state) }
-                                    Card(
-                                        onClick = { navController.navigate(Routes.room(room.id)) },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth().padding(14.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Surface(
-                                                shape = MaterialTheme.shapes.small,
-                                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                                modifier = Modifier.size(36.dp)
-                                            ) {
-                                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                                    Icon(
-                                                        Icons.Rounded.MeetingRoom, null,
-                                                        Modifier.size(20.dp),
-                                                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                                    )
-                                                }
-                                            }
-                                            Spacer(Modifier.height(10.dp))
-                                            Text(
-                                                room.name,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Spacer(Modifier.height(4.dp))
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Icon(Icons.Rounded.Devices, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
-                                                Text(
-                                                    "${roomDevices.size} dispositivos · $roomOn encendidos",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.outline
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                                // Relleno si el par tiene solo 1 elemento
-                                if (pair.size == 1) Spacer(Modifier.weight(1f))
-                            }
-                        }
-                    }
-                }
             } else {
-                item {
+                item(span = fullSpan) {
                     Box(Modifier.fillMaxWidth().padding(top = 32.dp), contentAlignment = Alignment.Center) {
                         Text("Esta casa no tiene habitaciones.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
 
-            item {
-                Spacer(Modifier.height(16.dp))
+            // Dispositivos de la casa
+            if (homeDeviceItems.isNotEmpty()) {
+                item(span = fullSpan) {
+                    SectionTitle(Icons.Rounded.Devices, "Dispositivos", homeDeviceItems.size)
+                }
+                items(homeDeviceItems, key = { it.first.id }) { (device, roomName) ->
+                    DeviceGridCard(
+                        device = device,
+                        subtitle = roomName,
+                        onToggle = { appViewModel.toggleDevice(device) },
+                        onClick = { selectedDevice = device }
+                    )
+                }
+            }
+
+            item(span = fullSpan) {
+                Spacer(Modifier.height(4.dp))
                 Button(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -264,6 +242,18 @@ fun HomeDetailScreen(
                 }
             }
         }
+    }
+
+    selectedDevice?.let { device ->
+        DeviceSheetRouter(
+            device = device,
+            onDismiss = { selectedDevice = null },
+            onDeviceRenamed = { appViewModel.updateDevice(it) },
+            onDeviceDeleted = { appViewModel.removeDevice(it) },
+            onDeviceRoomChanged = { appViewModel.relocateDevice(it) },
+            homes = homes,
+            rooms = rooms
+        )
     }
 
     if (showRenameDialog) {
@@ -499,6 +489,81 @@ private fun AddRoomDialog(
             TextButton(onClick = onDismiss, enabled = !isSaving) { Text("Cancelar") }
         }
     )
+}
+
+@Composable
+private fun SectionTitle(icon: ImageVector, title: String, count: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Surface(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.surfaceVariant
+        ) {
+            Text(
+                "$count",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RoomGridCard(
+    name: String,
+    deviceCount: Int,
+    onCount: Int,
+    onClick: () -> Unit
+) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.MeetingRoom, null,
+                        Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(Icons.Rounded.Devices, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
+                Text(
+                    "$deviceCount disp. · $onCount on",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+    }
 }
 
 @Composable

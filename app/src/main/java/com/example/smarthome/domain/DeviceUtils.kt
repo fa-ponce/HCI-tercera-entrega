@@ -60,6 +60,21 @@ fun deviceIcon(typeId: String): ImageVector = when (typeId) {
     else                   -> Icons.Rounded.DevicesOther
 }
 
+/** Nombre amigable en español del tipo de dispositivo, para subtítulos y etiquetas. */
+fun deviceTypeName(typeId: String): String = when (typeId) {
+    DeviceTypes.LAMPARA    -> "Lámpara"
+    DeviceTypes.AC         -> "Aire acondicionado"
+    DeviceTypes.ALARMA     -> "Alarma"
+    DeviceTypes.PERSIANA   -> "Persiana"
+    DeviceTypes.PUERTA     -> "Puerta"
+    DeviceTypes.GRIFO      -> "Grifo"
+    DeviceTypes.HORNO      -> "Horno"
+    DeviceTypes.PARLANTE   -> "Parlante"
+    DeviceTypes.ASPIRADORA -> "Aspiradora"
+    DeviceTypes.HELADERA   -> "Heladera"
+    else                   -> "Dispositivo"
+}
+
 fun deviceConsumptionW(typeId: String): Int = when (typeId) {
     DeviceTypes.LAMPARA    -> 10
     DeviceTypes.AC         -> 1500

@@ -1,23 +1,32 @@
 package com.example.smarthome.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
@@ -31,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.canToggle
 import com.example.smarthome.domain.deviceIcon
+import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.domain.isDeviceOn
 
 /**
@@ -38,11 +48,14 @@ import com.example.smarthome.domain.isDeviceOn
  * uniformes. Si el nombre supera el límite, muestra los primeros [max]
  * caracteres seguidos de "...".
  */
-fun truncateName(name: String, max: Int = 12): String =
+fun truncateName(name: String, max: Int = 18): String =
     if (name.length > max) name.take(max).trimEnd() + "..." else name
 
 /** Color naranja para señalar dispositivos sin habitación (igual que la web). */
 private val FreeAccent = Color(0xFFE67E22)
+
+/** Verde para el indicador de estado "encendido". */
+private val OnAccent = Color(0xFF2E9E5B)
 
 /** Dibuja un borde punteado (dashed) redondeado, para las tarjetas de dispositivos libres. */
 private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 1.5.dp) =
@@ -70,71 +83,246 @@ fun DeviceCard(
     val on = isDeviceOn(typeId, device.state)
     val toggleable = canToggle(typeId)
 
+    val accent = when {
+        free -> FreeAccent
+        on -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.outlineVariant
+    }
+
+    // El contenedor del ícono cambia de color al encender, con una transición suave.
+    val iconBg by animateColorAsState(
+        targetValue = if (on) MaterialTheme.colorScheme.primaryContainer
+                      else MaterialTheme.colorScheme.surfaceVariant,
+        label = "iconBg"
+    )
+    val iconTint by animateColorAsState(
+        targetValue = if (on) MaterialTheme.colorScheme.onPrimaryContainer
+                      else MaterialTheme.colorScheme.onSurfaceVariant,
+        label = "iconTint"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (on) 3.dp else 1.dp,
+        label = "elevation"
+    )
+
     Card(
         onClick = onClick,
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         modifier = modifier
             .fillMaxWidth()
             .then(
                 if (free) Modifier.dashedBorder(
                     color = MaterialTheme.colorScheme.outline,
-                    cornerRadius = 12.dp
+                    cornerRadius = 16.dp
                 ) else Modifier
             )
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = if (on) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(48.dp)
+            // Franja de acento a la izquierda que marca el estado de un vistazo.
+            Box(
+                Modifier
+                    .size(width = 4.dp, height = 56.dp)
+                    .drawBehind { drawRect(accent) }
+            )
+
+            Row(
+                modifier = Modifier
+                    .padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(
-                        imageVector = deviceIcon(typeId),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = if (on) MaterialTheme.colorScheme.onPrimaryContainer
-                               else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = iconBg,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = deviceIcon(typeId),
+                            contentDescription = null,
+                            modifier = Modifier.size(26.dp),
+                            tint = iconTint
+                        )
+                    }
                 }
-            }
 
-            Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(14.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = truncateName(device.name),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (subtitle.isNotEmpty()) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = subtitle,
+                        text = truncateName(device.name),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (subtitle.isNotEmpty()) subtitle else deviceTypeName(typeId),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (free) FreeAccent else MaterialTheme.colorScheme.outline,
                         fontStyle = if (free) FontStyle.Italic else FontStyle.Normal,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(Modifier.size(3.dp))
+                    StatusRow(on = on, toggleable = toggleable)
                 }
+
+                if (toggleable) {
+                    Switch(
+                        checked = on,
+                        onCheckedChange = { onToggle() },
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Variante compacta y vertical de [DeviceCard], pensada para mostrarse en una
+ * grilla de dos (o más) columnas, de modo que entren más dispositivos en pantalla.
+ */
+@Composable
+fun DeviceGridCard(
+    device: DeviceDto,
+    modifier: Modifier = Modifier,
+    subtitle: String = "",
+    free: Boolean = false,
+    onToggle: () -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    val typeId = device.type.id
+    val on = isDeviceOn(typeId, device.state)
+    val toggleable = canToggle(typeId)
+
+    val iconBg by animateColorAsState(
+        targetValue = when {
+            free -> FreeAccent.copy(alpha = 0.14f)
+            on -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceVariant
+        },
+        label = "gridIconBg"
+    )
+    val iconTint by animateColorAsState(
+        targetValue = when {
+            free -> FreeAccent
+            on -> MaterialTheme.colorScheme.onPrimaryContainer
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        label = "gridIconTint"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (on) 3.dp else 1.dp,
+        label = "gridElevation"
+    )
+
+    Card(
+        onClick = onClick,
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 132.dp)
+            .then(
+                if (free) Modifier.dashedBorder(
+                    color = FreeAccent.copy(alpha = 0.6f),
+                    cornerRadius = 16.dp
+                ) else Modifier
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = iconBg,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = deviceIcon(typeId),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = iconTint
+                        )
+                    }
+                }
+                if (toggleable) {
+                    Switch(
+                        checked = on,
+                        onCheckedChange = { onToggle() },
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            }
+
+            Spacer(Modifier.size(12.dp))
+
+            Text(
+                text = truncateName(device.name, max = 16),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subtitle.isNotEmpty()) {
                 Text(
-                    text = if (on) "Encendido" else "Apagado",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (on) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outline
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (free) FreeAccent else MaterialTheme.colorScheme.outline,
+                    fontStyle = if (free) FontStyle.Italic else FontStyle.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            if (toggleable) {
-                Switch(checked = on, onCheckedChange = { onToggle() })
-            }
+            Spacer(Modifier.weight(1f))
+            StatusRow(on = on, toggleable = toggleable)
         }
+    }
+}
+
+/** Punto de color + texto que comunica el estado del dispositivo. */
+@Composable
+private fun StatusRow(on: Boolean, toggleable: Boolean) {
+    val dotColor by animateColorAsState(
+        targetValue = if (on) OnAccent else MaterialTheme.colorScheme.outline,
+        label = "dot"
+    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .size(8.dp)
+                .clip(RoundedCornerShape(50))
+                .drawBehind { drawCircle(dotColor) }
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = when {
+                !toggleable && on -> "Activo"
+                on -> "Encendido"
+                else -> "Apagado"
+            },
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
+            color = if (on) OnAccent else MaterialTheme.colorScheme.outline
+        )
     }
 }

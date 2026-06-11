@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
@@ -46,10 +49,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.domain.deviceConsumptionW
+import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.navigation.Routes
-import com.example.smarthome.ui.components.DeviceCard
+import com.example.smarthome.ui.components.DeviceGridCard
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -125,16 +129,20 @@ fun RoomScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
                 start = 16.dp, end = 16.dp, bottom = 24.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
+            val fullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
+
             // Subtítulo
-            item {
+            item(span = fullSpan) {
                 Column {
                     if (home != null) {
                         Text(
@@ -167,7 +175,7 @@ fun RoomScreen(
             }
 
             if (roomDevices.isEmpty()) {
-                item {
+                item(span = fullSpan) {
                     Box(
                         Modifier.fillMaxWidth().padding(top = 32.dp),
                         contentAlignment = Alignment.Center
@@ -180,15 +188,16 @@ fun RoomScreen(
                 }
             }
 
-            items(roomDevices) { device ->
-                DeviceCard(
+            items(roomDevices, key = { it.id }) { device ->
+                DeviceGridCard(
                     device = device,
+                    subtitle = deviceTypeName(device.type.id),
                     onToggle = { appViewModel.toggleDevice(device) },
                     onClick = { selectedDevice = device }
                 )
             }
 
-            item {
+            item(span = fullSpan) {
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = { showAddDialog = true },
@@ -200,7 +209,7 @@ fun RoomScreen(
                 }
             }
 
-            item {
+            item(span = fullSpan) {
                 Button(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.fillMaxWidth(),

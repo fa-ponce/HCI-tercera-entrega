@@ -82,6 +82,14 @@ class AppViewModel(
     val darkMode: StateFlow<Boolean> = userPreferences.darkMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    // Accesos directos del inicio (ver UserPreferences.shortcuts). null = sin personalizar.
+    val shortcuts: StateFlow<List<String>?> = userPreferences.shortcuts
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun setShortcuts(tokens: List<String>) = viewModelScope.launch {
+        userPreferences.saveShortcuts(tokens)
+    }
+
     fun setDarkMode(enabled: Boolean) = viewModelScope.launch {
         userPreferences.saveDarkMode(enabled)
     }

@@ -22,6 +22,7 @@ class UserPreferences(context: Context) {
         private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
         private val COSTO_KWH_KEY = floatPreferencesKey("costo_kwh")
         private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
+        private val SHORTCUTS_KEY = stringPreferencesKey("home_shortcuts")
     }
 
     val token: Flow<String?> = dataStore.data.map { it[TOKEN_KEY] }
@@ -29,6 +30,15 @@ class UserPreferences(context: Context) {
     val userEmail: Flow<String?> = dataStore.data.map { it[USER_EMAIL_KEY] }
     val costoKwh: Flow<Float?> = dataStore.data.map { it[COSTO_KWH_KEY] }
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE_KEY] ?: false }
+
+    // Accesos directos del inicio: lista ordenada de tokens ("r:<id>" rutina,
+    // "d:<id>" dispositivo). null = el usuario nunca personalizó (se muestran
+    // sugerencias por defecto); lista vacía = personalizó y dejó sin accesos.
+    val shortcuts: Flow<List<String>?> = dataStore.data.map { prefs ->
+        prefs[SHORTCUTS_KEY]?.let { raw ->
+            if (raw.isEmpty()) emptyList() else raw.split("|")
+        }
+    }
 
     suspend fun getTokenOnce(): String? = dataStore.data.first()[TOKEN_KEY]
 
@@ -50,6 +60,10 @@ class UserPreferences(context: Context) {
 
     suspend fun saveDarkMode(enabled: Boolean) {
         dataStore.edit { it[DARK_MODE_KEY] = enabled }
+    }
+
+    suspend fun saveShortcuts(tokens: List<String>) {
+        dataStore.edit { it[SHORTCUTS_KEY] = tokens.joinToString("|") }
     }
 
     suspend fun clear() {

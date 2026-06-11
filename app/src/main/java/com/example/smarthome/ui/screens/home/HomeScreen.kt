@@ -1,40 +1,58 @@
 package com.example.smarthome.ui.screens.home
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apartment
-import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,12 +62,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.ServiceLocator
+import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.LogEntryDto
+import com.example.smarthome.data.api.models.RoutineDto
+import com.example.smarthome.domain.canToggle
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
@@ -60,7 +90,15 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import androidx.compose.foundation.layout.WindowInsets
+
+/** Un acceso directo del inicio ya resuelto a su entidad real. */
+private sealed interface Shortcut {
+    data class DeviceShortcut(val device: DeviceDto) : Shortcut
+    data class RoutineShortcut(val routine: RoutineDto) : Shortcut
+}
+
+private fun deviceToken(id: String) = "d:$id"
+private fun routineToken(id: String) = "r:$id"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,17 +112,42 @@ fun HomeScreen(
     val routines by appViewModel.routines.collectAsState()
     val isLoading by appViewModel.isLoading.collectAsState()
     val userName by appViewModel.userName.collectAsState()
+    val savedShortcuts by appViewModel.shortcuts.collectAsState()
 
     val allDevices = remember(devices) { devices.values.flatten() }
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
     val offDevices = remember(allDevices) { allDevices.filter { !isDeviceOn(it.type.id, it.state) } }
     val totalW = remember(onDevices) { onDevices.sumOf { deviceConsumptionW(it.type.id) } }
     val deviceById = remember(allDevices) { allDevices.associateBy { it.id } }
+    val routineById = remember(routines) { routines.associateBy { it.id } }
 
     var recentLogs by remember { mutableStateOf<List<LogEntryDto>>(emptyList()) }
     LaunchedEffect(Unit) {
         ServiceLocator.historyRepository.getLogs(10, 0).onSuccess { recentLogs = it }
     }
+
+    // Tokens efectivos: lo guardado, o una sugerencia por defecto si nunca se personalizó.
+    val effectiveTokens = remember(savedShortcuts, routines, onDevices, offDevices) {
+        savedShortcuts ?: defaultShortcutTokens(routines, onDevices + offDevices)
+    }
+    val resolvedShortcuts = remember(effectiveTokens, routineById, deviceById) {
+        effectiveTokens.mapNotNull { token ->
+            when {
+                token.startsWith("r:") -> routineById[token.removePrefix("r:")]
+                    ?.let { Shortcut.RoutineShortcut(it) }
+                token.startsWith("d:") -> deviceById[token.removePrefix("d:")]
+                    ?.let { Shortcut.DeviceShortcut(it) }
+                else -> null
+            }
+        }
+    }
+    val toggleShortcut: (String) -> Unit = { token ->
+        val base = effectiveTokens.toMutableList()
+        if (token in base) base.remove(token) else base.add(token)
+        appViewModel.setShortcuts(base)
+    }
+
+    var showCustomize by remember { mutableStateOf(false) }
 
     val saludo = remember {
         when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
@@ -95,197 +158,87 @@ fun HomeScreen(
     }
     val nombre = userName?.split(" ")?.firstOrNull() ?: "Usuario"
     val fecha = remember {
-        SimpleDateFormat("EEEE, d 'de' MMMM 'de' yyyy", Locale("es", "AR"))
+        SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "AR"))
             .format(Date()).replaceFirstChar { it.uppercase() }
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "SmartHome",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
-                        Icon(
-                            Icons.Rounded.AccountCircle,
-                            contentDescription = "Perfil",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        },
-        contentWindowInsets = WindowInsets(0)
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         if (isLoading && homes.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
-            return@Scaffold
+            return@Box
         }
 
         LazyColumn(
-            contentPadding = PaddingValues(
-                top = innerPadding.calculateTopPadding() + 16.dp,
-                bottom = 24.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            // Saludo
+            // Encabezado con gradiente
             item {
-                Column(Modifier.padding(horizontal = 16.dp)) {
-                    Text(
-                        "$saludo, $nombre",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        fecha,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                HomeHeader(
+                    saludo = saludo,
+                    nombre = nombre,
+                    fecha = fecha,
+                    onProfile = { navController.navigate(Routes.PROFILE) }
+                )
             }
 
-            // Stats
+            // Tarjeta de estado (anillo animado + encendidos/apagados)
             item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+                DeviceStatusCard(
+                    onCount = onDevices.size,
+                    offCount = offDevices.size,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
+            // Resumen numérico navegable
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item {
-                        StatChip(
-                            value = "${homes.size}",
-                            label = "Casas",
-                            icon = Icons.Rounded.Apartment,
-                            onClick = {
-                                navController.navigate(Routes.HOMES) {
-                                    popUpTo(Routes.HOME) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
-                    item {
-                        StatChip(
-                            value = "${rooms.values.sumOf { it.size }}",
-                            label = "Habitaciones",
-                            icon = Icons.Rounded.MeetingRoom,
-                            onClick = {
-                                navController.navigate(Routes.HOMES) {
-                                    popUpTo(Routes.HOME) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
-                    item {
-                        StatChip(
-                            value = "${onDevices.size}",
-                            label = "Dispositivos",
-                            icon = Icons.Rounded.Devices,
-                            onClick = {
-                                navController.navigate(Routes.DEVICES) {
-                                    popUpTo(Routes.HOME) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
-                    item {
-                        StatChip(
-                            value = if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)} kW" else "$totalW W",
-                            label = "Consumo",
-                            icon = Icons.Rounded.BarChart,
-                            onClick = {
-                                navController.navigate(Routes.CONSUMPTION) {
-                                    popUpTo(Routes.HOME) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
+                    StatTile(
+                        modifier = Modifier.weight(1f),
+                        value = "${homes.size}",
+                        label = "Casas",
+                        icon = Icons.Rounded.Apartment,
+                        onClick = { navController.navigateTab(Routes.HOMES) }
+                    )
+                    StatTile(
+                        modifier = Modifier.weight(1f),
+                        value = "${rooms.values.sumOf { it.size }}",
+                        label = "Habitaciones",
+                        icon = Icons.Rounded.MeetingRoom,
+                        onClick = { navController.navigateTab(Routes.HOMES) }
+                    )
+                    StatTile(
+                        modifier = Modifier.weight(1f),
+                        value = "${allDevices.size}",
+                        label = "Dispositivos",
+                        icon = Icons.Rounded.Devices,
+                        onClick = { navController.navigateTab(Routes.DEVICES) }
+                    )
+                    StatTile(
+                        modifier = Modifier.weight(1f),
+                        value = formatPower(totalW),
+                        label = "Consumo",
+                        icon = Icons.Rounded.Bolt,
+                        onClick = { navController.navigateTab(Routes.CONSUMPTION) }
+                    )
                 }
             }
 
-            // Rutinas rápidas
-            if (routines.isNotEmpty()) {
-                item {
-                    Column(Modifier.padding(horizontal = 16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Rutinas rápidas",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.height(100.dp)
-                        ) {
-                            items(routines.take(6)) { routine ->
-                                val tipo = routine.metadata?.tipoTrigger ?: "manual"
-                                Card(
-                                    onClick = { appViewModel.executeRoutine(routine.id) },
-                                    modifier = Modifier
-                                        .width(110.dp)
-                                        .fillMaxHeight(),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(12.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = when (tipo) {
-                                                "hora" -> Icons.Rounded.Schedule
-                                                else -> Icons.Rounded.PlayArrow
-                                            },
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                        Spacer(Modifier.height(6.dp))
-                                        Text(
-                                            routine.name,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            maxLines = 2,
-                                            fontWeight = FontWeight.Medium,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Estado de dispositivos
+            // Accesos directos personalizables
             item {
                 Column(Modifier.padding(horizontal = 16.dp)) {
                     Row(
@@ -294,93 +247,36 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Estado de dispositivos",
+                            "Accesos directos",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
-                        if (allDevices.isNotEmpty()) {
-                            androidx.compose.material3.TextButton(
-                                onClick = { navController.navigate(Routes.DEVICES) }
-                            ) { Text("Ver todos") }
+                        TextButton(onClick = { showCustomize = true }) {
+                            Icon(
+                                Icons.Rounded.Tune,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Personalizar")
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                        ) {
-                            Column(Modifier.padding(16.dp)) {
-                                Text(
-                                    "${onDevices.size}",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    "Encendidos",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                if (onDevices.isNotEmpty()) {
-                                    Spacer(Modifier.height(6.dp))
-                                    onDevices.take(3).forEach { dev ->
-                                        Text(
-                                            "• ${truncateName(dev.name)}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                    Spacer(Modifier.height(12.dp))
+                    if (resolvedShortcuts.isEmpty()) {
+                        EmptyShortcuts(onAdd = { showCustomize = true })
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            resolvedShortcuts.chunked(2).forEach { rowItems ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    rowItems.forEach { shortcut ->
+                                        ShortcutTile(
+                                            shortcut = shortcut,
+                                            modifier = Modifier.weight(1f),
+                                            onDevice = { appViewModel.toggleDevice(it) },
+                                            onRoutine = { appViewModel.executeRoutine(it.id) }
                                         )
                                     }
-                                    if (onDevices.size > 3) {
-                                        Text(
-                                            "+ ${onDevices.size - 3} más",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                        ) {
-                            Column(Modifier.padding(16.dp)) {
-                                Text(
-                                    "${offDevices.size}",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    "Apagados",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                if (offDevices.isNotEmpty()) {
-                                    Spacer(Modifier.height(6.dp))
-                                    offDevices.take(3).forEach { dev ->
-                                        Text(
-                                            "• ${truncateName(dev.name)}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    if (offDevices.size > 3) {
-                                        Text(
-                                            "+ ${offDevices.size - 3} más",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                                    if (rowItems.size == 1) Spacer(Modifier.weight(1f))
                                 }
                             }
                         }
@@ -402,12 +298,15 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            androidx.compose.material3.TextButton(
-                                onClick = { navController.navigate(Routes.HISTORY) }
-                            ) { Text("Ver historial") }
+                            TextButton(onClick = { navController.navigate(Routes.HISTORY) }) {
+                                Text("Ver historial")
+                            }
                         }
                         Spacer(Modifier.height(8.dp))
-                        Card(elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
                             Column(Modifier.padding(vertical = 4.dp)) {
                                 recentLogs.take(5).forEach { log ->
                                     val (_, hora) = formatTimestamp(log.timestamp)
@@ -420,28 +319,36 @@ fun HomeScreen(
                                             .padding(horizontal = 16.dp, vertical = 10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(
-                                            imageVector = deviceIcon(typeId),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.secondaryContainer,
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = deviceIcon(typeId),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp),
+                                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                                )
+                                            }
+                                        }
                                         Spacer(Modifier.width(12.dp))
                                         Column(Modifier.weight(1f)) {
                                             Text(
                                                 deviceName,
-                                                style = MaterialTheme.typography.bodySmall,
+                                                style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Medium
                                             )
                                             Text(
                                                 translateAction(log.event),
-                                                style = MaterialTheme.typography.labelSmall,
+                                                style = MaterialTheme.typography.labelMedium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                         Text(
                                             hora,
-                                            style = MaterialTheme.typography.labelSmall,
+                                            style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.outline
                                         )
                                     }
@@ -453,24 +360,259 @@ fun HomeScreen(
             }
         }
     }
+
+    if (showCustomize) {
+        CustomizeShortcutsSheet(
+            routines = routines,
+            devices = allDevices,
+            selected = effectiveTokens,
+            onToggle = toggleShortcut,
+            onDismiss = { showCustomize = false }
+        )
+    }
+}
+
+/* ----------------------------- Header ----------------------------- */
+
+@Composable
+private fun HomeHeader(
+    saludo: String,
+    nombre: String,
+    fecha: String,
+    onProfile: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary
+                    )
+                )
+            )
+    ) {
+        Column(
+            Modifier
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "$saludo,",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                    )
+                    Text(
+                        nombre,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f),
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clickable(onClick = onProfile)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.AccountCircle,
+                            contentDescription = "Perfil",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Rounded.CalendarToday,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    fecha,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                )
+            }
+        }
+    }
+}
+
+/* ----------------------- Tarjeta de estado ----------------------- */
+
+@Composable
+private fun DeviceStatusCard(
+    onCount: Int,
+    offCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val total = onCount + offCount
+    var play by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { play = true }
+
+    val targetFraction = if (total > 0) onCount.toFloat() / total else 0f
+    val fraction by animateFloatAsState(
+        targetValue = if (play) targetFraction else 0f,
+        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+        label = "ringFraction"
+    )
+    val animOn by animateIntAsState(
+        targetValue = if (play) onCount else 0,
+        animationSpec = tween(durationMillis = 900),
+        label = "onCount"
+    )
+    val animOff by animateIntAsState(
+        targetValue = if (play) offCount else 0,
+        animationSpec = tween(durationMillis = 900),
+        label = "offCount"
+    )
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val ringColor = MaterialTheme.colorScheme.primary
+            val trackColor = MaterialTheme.colorScheme.surfaceVariant
+            Box(
+                modifier = Modifier.size(116.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val stroke = 14.dp.toPx()
+                    val inset = stroke / 2f
+                    val arcSize = Size(size.width - stroke, size.height - stroke)
+                    drawArc(
+                        color = trackColor,
+                        startAngle = 0f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        topLeft = Offset(inset, inset),
+                        size = arcSize,
+                        style = Stroke(width = stroke, cap = StrokeCap.Round)
+                    )
+                    if (fraction > 0f) {
+                        drawArc(
+                            color = ringColor,
+                            startAngle = -90f,
+                            sweepAngle = 360f * fraction,
+                            useCenter = false,
+                            topLeft = Offset(inset, inset),
+                            size = arcSize,
+                            style = Stroke(width = stroke, cap = StrokeCap.Round)
+                        )
+                    }
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "$total",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        if (total == 1) "dispositivo" else "dispositivos",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(20.dp))
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Estado del hogar",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(14.dp))
+                StatusLegend(
+                    color = MaterialTheme.colorScheme.primary,
+                    label = "Encendidos",
+                    value = animOn
+                )
+                Spacer(Modifier.height(10.dp))
+                StatusLegend(
+                    color = MaterialTheme.colorScheme.outline,
+                    label = "Apagados",
+                    value = animOff
+                )
+            }
+        }
+    }
 }
 
 @Composable
-private fun StatChip(
+private fun StatusLegend(
+    color: androidx.compose.ui.graphics.Color,
+    label: String,
+    value: Int
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            "$value",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/* -------------------------- Stat tiles --------------------------- */
+
+@Composable
+private fun StatTile(
     value: String,
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier.width(110.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(vertical = 14.dp, horizontal = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -480,15 +622,344 @@ private fun StatChip(
                 modifier = Modifier.size(24.dp)
             )
             Spacer(Modifier.height(6.dp))
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
             Text(
                 label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
+
+/* ------------------------ Shortcut tiles ------------------------- */
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShortcutTile(
+    shortcut: Shortcut,
+    modifier: Modifier = Modifier,
+    onDevice: (DeviceDto) -> Unit,
+    onRoutine: (RoutineDto) -> Unit
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 120),
+        label = "tileScale"
+    )
+
+    when (shortcut) {
+        is Shortcut.DeviceShortcut -> {
+            val device = shortcut.device
+            val on = isDeviceOn(device.type.id, device.state)
+            val container by animateColorAsState(
+                targetValue = if (on) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                animationSpec = tween(300),
+                label = "tileContainer"
+            )
+            val content = if (on) MaterialTheme.colorScheme.onPrimaryContainer
+            else MaterialTheme.colorScheme.onSurfaceVariant
+            ShortcutTileScaffold(
+                modifier = modifier.scale(scale),
+                interaction = interaction,
+                container = container,
+                icon = deviceIcon(device.type.id),
+                iconTint = if (on) MaterialTheme.colorScheme.primary else content,
+                iconBg = if (on) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f)
+                else MaterialTheme.colorScheme.surface,
+                badge = if (canToggle(device.type.id)) (if (on) "Encendido" else "Apagado") else "Activo",
+                badgeColor = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                title = device.name,
+                titleColor = content,
+                onClick = { onDevice(device) }
+            )
+        }
+        is Shortcut.RoutineShortcut -> {
+            val routine = shortcut.routine
+            val tipo = routine.metadata?.tipoTrigger ?: "manual"
+            ShortcutTileScaffold(
+                modifier = modifier.scale(scale),
+                interaction = interaction,
+                container = MaterialTheme.colorScheme.secondaryContainer,
+                icon = if (tipo == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
+                iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+                iconBg = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                badge = "Rutina",
+                badgeColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                title = routine.name,
+                titleColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                onClick = { onRoutine(routine) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShortcutTileScaffold(
+    modifier: Modifier,
+    interaction: MutableInteractionSource,
+    container: androidx.compose.ui.graphics.Color,
+    icon: ImageVector,
+    iconTint: androidx.compose.ui.graphics.Color,
+    iconBg: androidx.compose.ui.graphics.Color,
+    badge: String,
+    badgeColor: androidx.compose.ui.graphics.Color,
+    title: String,
+    titleColor: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        interactionSource = interaction,
+        modifier = modifier.height(116.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = container),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = iconBg,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+            Column {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = titleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    badge,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = badgeColor
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyShortcuts(onAdd: () -> Unit) {
+    Card(
+        onClick = onAdd,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Agregá accesos directos",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    "Tus rutinas y dispositivos favoritos, a un toque",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+/* --------------------- Hoja de personalización -------------------- */
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomizeShortcutsSheet(
+    routines: List<RoutineDto>,
+    devices: List<DeviceDto>,
+    selected: List<String>,
+    onToggle: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 560.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp)
+        ) {
+            Text(
+                "Personalizar accesos directos",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Elegí qué rutinas y dispositivos aparecen en el inicio.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(16.dp))
+
+            if (routines.isNotEmpty()) {
+                SheetSectionTitle("Rutinas")
+                routines.forEach { routine ->
+                    val token = routineToken(routine.id)
+                    val tipo = routine.metadata?.tipoTrigger ?: "manual"
+                    PickerRow(
+                        icon = if (tipo == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
+                        title = routine.name,
+                        checked = token in selected,
+                        onToggle = { onToggle(token) }
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            if (devices.isNotEmpty()) {
+                SheetSectionTitle("Dispositivos")
+                devices.forEach { device ->
+                    val token = deviceToken(device.id)
+                    PickerRow(
+                        icon = deviceIcon(device.type.id),
+                        title = device.name,
+                        checked = token in selected,
+                        onToggle = { onToggle(token) }
+                    )
+                }
+            }
+
+            if (routines.isEmpty() && devices.isEmpty()) {
+                Text(
+                    "Todavía no tenés rutinas ni dispositivos para agregar.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SheetSectionTitle(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+}
+
+@Composable
+private fun PickerRow(
+    icon: ImageVector,
+    title: String,
+    checked: Boolean,
+    onToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+        Spacer(Modifier.width(14.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Checkbox(checked = checked, onCheckedChange = { onToggle() })
+    }
+}
+
+/* ---------------------------- Helpers ---------------------------- */
+
+private fun NavHostController.navigateTab(route: String) {
+    navigate(route) {
+        popUpTo(Routes.HOME) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+private fun defaultShortcutTokens(
+    routines: List<RoutineDto>,
+    devices: List<DeviceDto>
+): List<String> {
+    val r = routines.take(2).map { routineToken(it.id) }
+    val d = devices.take(2).map { deviceToken(it.id) }
+    return r + d
+}
+
+private fun formatPower(w: Int): String =
+    if (w >= 1000) "${"%.1f".format(w / 1000f)} kW" else "$w W"
 
 private fun formatTimestamp(ts: String?): Pair<String, String> {
     if (ts == null) return Pair("—", "—")

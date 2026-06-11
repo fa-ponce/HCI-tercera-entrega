@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,10 +63,8 @@ import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
-import com.example.smarthome.ui.components.truncateName
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.layout.WindowInsets
@@ -361,15 +358,15 @@ private fun HomeSection(
     }
 }
 
-/** Lista vertical de tarjetas de habitación estilo web (una por fila). */
+/** Fila horizontal scrolleable de tarjetas cuadradas de habitación. */
 @Composable
 private fun RoomsGrid(
     roomList: List<RoomDto>,
     devices: Map<String, List<DeviceDto>>,
     onRoomClick: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        roomList.forEach { room ->
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(roomList, key = { it.id }) { room ->
             WebRoomCard(
                 room = room,
                 roomDevices = devices[room.id] ?: emptyList(),
@@ -379,8 +376,7 @@ private fun RoomsGrid(
     }
 }
 
-/** Tarjeta de habitación al estilo de la web: header con badges + burbujas de dispositivos. */
-@OptIn(ExperimentalLayoutApi::class)
+/** Tarjeta cuadrada de habitación: ícono, nombre y badges de estado (encendidos / apagados / total). */
 @Composable
 private fun WebRoomCard(
     room: RoomDto,
@@ -393,54 +389,45 @@ private fun WebRoomCard(
 
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp)
+        modifier = Modifier.size(160.dp),
+        shape = RoundedCornerShape(18.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            // Header: nombre + badges
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier.fillMaxSize().padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(40.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Rounded.MeetingRoom, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
-                    Text(
-                        room.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.MeetingRoom, null,
+                        Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            }
+
+            Text(
+                room.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            if (total > 0) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     DotBadge("$on", OnGreen)
                     DotBadge("$off", OffRed)
                     DotBadge("$total", MaterialTheme.colorScheme.primary)
                 }
-            }
-
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(Modifier.height(12.dp))
-
-            // Burbujas de dispositivos
-            if (total > 0) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    roomDevices.sortedBy { it.name.length }.forEach { dev ->
-                        DeviceBubble(dev)
-                    }
-                }
             } else {
                 Text(
                     "Sin dispositivos",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
                     fontStyle = FontStyle.Italic,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -475,30 +462,6 @@ private fun CountBadge(text: String) {
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
         )
-    }
-}
-
-/** "Burbuja" de un dispositivo: icono + nombre, verde si está encendido, gris si no. */
-@Composable
-private fun DeviceBubble(device: DeviceDto) {
-    val on = isDeviceOn(device.type.id, device.state)
-    val color = if (on) OnGreen else MaterialTheme.colorScheme.outline
-    Surface(
-        shape = RoundedCornerShape(999.dp),
-        color = if (on) OnGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(deviceIcon(device.type.id), null, Modifier.size(13.dp), tint = color)
-            Text(
-                truncateName(device.name, 16),
-                style = MaterialTheme.typography.labelSmall,
-                color = color
-            )
-        }
     }
 }
 
