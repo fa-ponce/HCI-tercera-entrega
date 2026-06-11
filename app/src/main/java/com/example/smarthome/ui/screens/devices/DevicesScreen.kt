@@ -67,7 +67,9 @@ import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.DeviceGridCard
+import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
 
@@ -80,6 +82,9 @@ fun DevicesScreen(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val standaloneRooms by appViewModel.standaloneRooms.collectAsState()
+    val isLoading by appViewModel.isLoading.collectAsState()
+    val error by appViewModel.error.collectAsState()
 
     var search by remember { mutableStateOf("") }
     var homeFilter by remember { mutableStateOf<String?>(null) }
@@ -97,7 +102,8 @@ fun DevicesScreen(
     )
 
     val freeLabel = stringResource(R.string.device_free_label)
-    val allItems = remember(homes, rooms, devices) {
+    val noHomeLabel = stringResource(R.string.homes_no_home)
+    val allItems = remember(homes, rooms, devices, standaloneRooms) {
         val roomItems = homes.flatMap { home ->
             (rooms[home.id] ?: emptyList()).flatMap { room ->
                 (devices[room.id] ?: emptyList()).map { device ->
@@ -105,10 +111,16 @@ fun DevicesScreen(
                 }
             }
         }
+        // Dispositivos en habitaciones sin casa.
+        val standaloneItems = standaloneRooms.flatMap { room ->
+            (devices[room.id] ?: emptyList()).map { device ->
+                DeviceItem(device, noHomeLabel, room.name, room.id)
+            }
+        }
         val freeItems = (devices["free"] ?: emptyList()).map { device ->
             DeviceItem(device, "", freeLabel, "free")
         }
-        roomItems + freeItems
+        roomItems + standaloneItems + freeItems
     }
 
     val filtered = remember(allItems, search, homeFilter, roomFilter) {
@@ -183,6 +195,18 @@ fun DevicesScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
+        if (!isLoading && allItems.isEmpty() && error != null) {
+            ConnectionErrorView(
+                message = error!!,
+                onRetry = { appViewModel.retryLoad() },
+                modifier = Modifier.padding(innerPadding)
+            )
+            return@Scaffold
+        }
+        if (isLoading && allItems.isEmpty()) {
+            FullScreenLoading(Modifier.padding(innerPadding))
+            return@Scaffold
+        }
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(

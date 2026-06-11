@@ -157,7 +157,11 @@ fun AlarmaSheet(
                             onCancel = onDismiss,
                             onAdd = {
                                 val actionName = actionStatusMap[status] ?: "armAway"
-                                onAddToRoutine?.invoke(listOf(DeviceAction(actionName)))
+                                // Las acciones de la alarma requieren el código de
+                                // seguridad; sin él la API rechaza la rutina.
+                                onAddToRoutine?.invoke(
+                                    listOf(DeviceAction(actionName, mapOf("securityCode" to DEFAULT_CODE)))
+                                )
                                 onDismiss()
                             }
                         )

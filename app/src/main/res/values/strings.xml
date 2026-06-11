@@ -41,6 +41,7 @@
     <string name="common_delete_confirm">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
     <string name="common_rooms_count_one">%1$d room</string>
     <string name="common_rooms_count_many">%1$d rooms</string>
+    <string name="common_required_field">Required field</string>
 
     <!-- Login -->
     <string name="login_title_login">Sign in</string>
@@ -48,10 +49,11 @@
     <string name="login_title_verify">Verify account</string>
     <string name="login_title_forgot">Recover password</string>
     <string name="login_title_reset">New password</string>
-    <string name="login_email">Email</string>
-    <string name="login_password">Password</string>
-    <string name="login_new_password">New password</string>
-    <string name="login_code">Code</string>
+    <string name="login_email">Email *</string>
+    <string name="login_password">Password *</string>
+    <string name="login_new_password">New password *</string>
+    <string name="login_code">Code *</string>
+    <string name="login_name_required">Name *</string>
     <string name="login_verify_hint">Enter the code we sent to %1$s</string>
     <string name="login_forgot_hint">Enter your email and we will send you a code to reset your password.</string>
     <string name="login_reset_hint">Enter the code we sent to %1$s and your new password.</string>
@@ -158,6 +160,8 @@
     <string name="routine_all_added">All devices are already in the routine.</string>
     <string name="routine_save_changes">Save changes</string>
     <string name="routine_create">Create routine</string>
+    <string name="routine_time_invalid">Enter a valid time (HH:mm)</string>
+    <string name="routine_need_device">Add at least one device to the routine</string>
     <string name="routine_duration">Duration:</string>
     <string name="routine_no_limit">no limit</string>
     <string name="routine_min">min</string>

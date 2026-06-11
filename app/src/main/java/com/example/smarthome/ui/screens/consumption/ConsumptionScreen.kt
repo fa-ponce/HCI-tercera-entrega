@@ -48,6 +48,8 @@ import com.example.smarthome.R
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.ConnectionErrorView
+import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
 
@@ -61,6 +63,8 @@ fun ConsumptionScreen(
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
     val costoKwh by appViewModel.costoKwh.collectAsState()
+    val isLoading by appViewModel.isLoading.collectAsState()
+    val error by appViewModel.error.collectAsState()
 
     val allDevices = remember(devices) { devices.values.flatten() }
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
@@ -108,6 +112,18 @@ fun ConsumptionScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
+        if (!isLoading && homes.isEmpty() && error != null) {
+            ConnectionErrorView(
+                message = error!!,
+                onRetry = { appViewModel.retryLoad() },
+                modifier = Modifier.padding(innerPadding)
+            )
+            return@Scaffold
+        }
+        if (isLoading && homes.isEmpty()) {
+            FullScreenLoading(Modifier.padding(innerPadding))
+            return@Scaffold
+        }
         LazyColumn(
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,

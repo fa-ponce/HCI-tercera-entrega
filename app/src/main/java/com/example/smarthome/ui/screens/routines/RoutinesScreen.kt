@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledIconButton
@@ -60,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.ConnectionErrorView
+import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -72,6 +75,8 @@ fun RoutinesScreen(
     navController: NavHostController
 ) {
     val routines by appViewModel.routines.collectAsState()
+    val isLoading by appViewModel.isLoading.collectAsState()
+    val error by appViewModel.error.collectAsState()
     val scope = rememberCoroutineScope()
 
     var running by remember { mutableStateOf(setOf<String>()) }
@@ -124,7 +129,15 @@ fun RoutinesScreen(
         }
         val onOpen: (RoutineDto) -> Unit = { routine -> builderRoutine = routine; showBuilder = true }
 
-        if (routines.isEmpty()) {
+        if (!isLoading && routines.isEmpty() && error != null) {
+            ConnectionErrorView(
+                message = error!!,
+                onRetry = { appViewModel.retryLoad() },
+                modifier = Modifier.padding(innerPadding)
+            )
+        } else if (isLoading && routines.isEmpty()) {
+            FullScreenLoading(Modifier.padding(innerPadding))
+        } else if (routines.isEmpty()) {
             Box(
                 Modifier.fillMaxSize().padding(innerPadding).padding(top = 48.dp),
                 contentAlignment = Alignment.TopCenter
@@ -256,11 +269,19 @@ private fun RoutineCard(
                 ),
                 modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    Icons.Rounded.PlayArrow,
-                    stringResource(R.string.routine_execute),
-                    modifier = Modifier.size(20.dp)
-                )
+                if (isRunning) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                } else {
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        stringResource(R.string.routine_execute),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

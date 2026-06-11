@@ -91,6 +91,7 @@ import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.logActionLabelRes
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.components.truncateName
 import com.example.smarthome.ui.navigation.Routes
@@ -119,6 +120,7 @@ fun HomeScreen(
     val devices by appViewModel.devices.collectAsState()
     val routines by appViewModel.routines.collectAsState()
     val isLoading by appViewModel.isLoading.collectAsState()
+    val loadError by appViewModel.error.collectAsState()
     val userName by appViewModel.userName.collectAsState()
     val savedShortcuts by appViewModel.shortcuts.collectAsState()
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
@@ -177,6 +179,14 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        if (!isLoading && homes.isEmpty() && loadError != null) {
+            ConnectionErrorView(
+                message = loadError!!,
+                onRetry = { appViewModel.retryLoad() }
+            )
+            return@Box
+        }
+
         if (isLoading && homes.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),

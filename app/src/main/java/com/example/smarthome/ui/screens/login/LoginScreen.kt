@@ -59,6 +59,13 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
 
+    // Validación local de campos obligatorios: se activa al intentar enviar.
+    var showErrors by remember { mutableStateOf(false) }
+    val requiredMsg = stringResource(R.string.common_required_field)
+    val requiredError: (String) -> (@Composable () -> Unit)? = { value ->
+        if (showErrors && value.isBlank()) { { Text(requiredMsg) } } else null
+    }
+
     LaunchedEffect(Unit) {
         viewModel.navigateToHome.collect { onNavigateToHome() }
     }
@@ -127,9 +134,11 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = state.name,
                             onValueChange = viewModel::setName,
-                            label = { Text(stringResource(R.string.common_name)) },
+                            label = { Text(stringResource(R.string.login_name_required)) },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            isError = showErrors && state.name.isBlank(),
+                            supportingText = requiredError(state.name)
                         )
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
@@ -138,7 +147,9 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            isError = showErrors && state.email.isBlank(),
+                            supportingText = requiredError(state.email)
                         )
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
@@ -147,6 +158,8 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
+                            isError = showErrors && state.password.isBlank(),
+                            supportingText = requiredError(state.password),
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
@@ -167,7 +180,9 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            isError = showErrors && state.email.isBlank(),
+                            supportingText = requiredError(state.email)
                         )
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
@@ -176,6 +191,8 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
+                            isError = showErrors && state.password.isBlank(),
+                            supportingText = requiredError(state.password),
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
@@ -203,7 +220,9 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_code)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            isError = showErrors && state.code.isBlank(),
+                            supportingText = requiredError(state.code)
                         )
                     }
 
@@ -221,7 +240,9 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_email)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            isError = showErrors && state.email.isBlank(),
+                            supportingText = requiredError(state.email)
                         )
                     }
 
@@ -239,7 +260,9 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_code)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            isError = showErrors && state.code.isBlank(),
+                            supportingText = requiredError(state.code)
                         )
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
@@ -248,6 +271,8 @@ fun LoginScreen(
                             label = { Text(stringResource(R.string.login_new_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
+                            isError = showErrors && state.newPassword.isBlank(),
+                            supportingText = requiredError(state.newPassword),
                             visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             trailingIcon = {
@@ -278,12 +303,22 @@ fun LoginScreen(
                 // ── Botón principal ───────────────────────────────────────────
                 Button(
                     onClick = {
-                        when (state.mode) {
-                            LoginMode.Login -> viewModel.login()
-                            LoginMode.Register -> viewModel.register()
-                            LoginMode.Verify -> viewModel.verifyAccount()
-                            LoginMode.ForgotPassword -> viewModel.forgotPassword()
-                            LoginMode.ResetPassword -> viewModel.resetPassword()
+                        val missingRequired = when (state.mode) {
+                            LoginMode.Login -> state.email.isBlank() || state.password.isBlank()
+                            LoginMode.Register -> state.name.isBlank() || state.email.isBlank() || state.password.isBlank()
+                            LoginMode.Verify -> state.code.isBlank()
+                            LoginMode.ForgotPassword -> state.email.isBlank()
+                            LoginMode.ResetPassword -> state.code.isBlank() || state.newPassword.isBlank()
+                        }
+                        showErrors = missingRequired
+                        if (!missingRequired) {
+                            when (state.mode) {
+                                LoginMode.Login -> viewModel.login()
+                                LoginMode.Register -> viewModel.register()
+                                LoginMode.Verify -> viewModel.verifyAccount()
+                                LoginMode.ForgotPassword -> viewModel.forgotPassword()
+                                LoginMode.ResetPassword -> viewModel.resetPassword()
+                            }
                         }
                     },
                     enabled = !state.isLoading,
@@ -313,14 +348,14 @@ fun LoginScreen(
                 // ── Acción secundaria ─────────────────────────────────────────
                 when (state.mode) {
                     LoginMode.Login -> {
-                        TextButton(onClick = { viewModel.setMode(LoginMode.Register) }) {
+                        TextButton(onClick = { showErrors = false; viewModel.setMode(LoginMode.Register) }) {
                             Text(stringResource(R.string.login_no_account))
                         }
-                        TextButton(onClick = { viewModel.setMode(LoginMode.ForgotPassword) }) {
+                        TextButton(onClick = { showErrors = false; viewModel.setMode(LoginMode.ForgotPassword) }) {
                             Text(stringResource(R.string.login_forgot_password))
                         }
                     }
-                    LoginMode.Register -> TextButton(onClick = { viewModel.setMode(LoginMode.Login) }) {
+                    LoginMode.Register -> TextButton(onClick = { showErrors = false; viewModel.setMode(LoginMode.Login) }) {
                         Text(stringResource(R.string.login_have_account))
                     }
                     LoginMode.Verify -> TextButton(onClick = { viewModel.sendVerification() }) {
@@ -333,7 +368,7 @@ fun LoginScreen(
             // ── Flecha de volver ──────────────────────────────────────────────
             if (showBackArrow) {
                 IconButton(
-                    onClick = { viewModel.setMode(backTarget) },
+                    onClick = { showErrors = false; viewModel.setMode(backTarget) },
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(8.dp)

@@ -41,6 +41,7 @@
     <string name="common_delete_confirm">¿Estás seguro que querés eliminar \"%1$s\"? Esta acción no se puede deshacer.</string>
     <string name="common_rooms_count_one">%1$d habitación</string>
     <string name="common_rooms_count_many">%1$d habitaciones</string>
+    <string name="common_required_field">Campo obligatorio</string>
 
     <!-- Login -->
     <string name="login_title_login">Iniciar sesión</string>
@@ -48,10 +49,11 @@
     <string name="login_title_verify">Verificar cuenta</string>
     <string name="login_title_forgot">Recuperar contraseña</string>
     <string name="login_title_reset">Nueva contraseña</string>
-    <string name="login_email">Email</string>
-    <string name="login_password">Contraseña</string>
-    <string name="login_new_password">Nueva contraseña</string>
-    <string name="login_code">Código</string>
+    <string name="login_email">Email *</string>
+    <string name="login_password">Contraseña *</string>
+    <string name="login_new_password">Nueva contraseña *</string>
+    <string name="login_code">Código *</string>
+    <string name="login_name_required">Nombre *</string>
     <string name="login_verify_hint">Ingresá el código que enviamos a %1$s</string>
     <string name="login_forgot_hint">Ingresá tu email y te enviaremos un código para restablecer tu contraseña.</string>
     <string name="login_reset_hint">Ingresá el código que enviamos a %1$s y tu nueva contraseña.</string>
@@ -158,6 +160,8 @@
     <string name="routine_all_added">Todos los dispositivos ya están en la rutina.</string>
     <string name="routine_save_changes">Guardar cambios</string>
     <string name="routine_create">Crear rutina</string>
+    <string name="routine_time_invalid">Ingresá una hora válida (HH:mm)</string>
+    <string name="routine_need_device">Agregá al menos un dispositivo a la rutina</string>
     <string name="routine_duration">Duración:</string>
     <string name="routine_no_limit">sin límite</string>
     <string name="routine_min">min</string>

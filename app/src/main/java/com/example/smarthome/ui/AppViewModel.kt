@@ -403,23 +403,21 @@ class AppViewModel(
         name: String,
         type: String,
         floor: Int,
-        onResult: ((success: Boolean) -> Unit)? = null
+        onResult: ((success: Boolean, error: String?) -> Unit)? = null
     ) = viewModelScope.launch {
         ensureFreeRoomId() // asegura freeHomeId
         val fhId = freeHomeId
         if (fhId == null) {
-            _errorEvent.tryEmit("No se pudo preparar el espacio para habitaciones sin casa")
-            onResult?.invoke(false)
+            onResult?.invoke(false, appContext.getString(R.string.sheet_free_room_error))
             return@launch
         }
         homeRepository.createRoom(name, type, floor, fhId)
             .onSuccess { room ->
                 _standaloneRooms.update { it + room }
-                onResult?.invoke(true)
+                onResult?.invoke(true, null)
             }
             .onFailure {
-                _errorEvent.tryEmit(it.message ?: "Error al crear la habitación")
-                onResult?.invoke(false)
+                onResult?.invoke(false, it.message)
             }
     }
 

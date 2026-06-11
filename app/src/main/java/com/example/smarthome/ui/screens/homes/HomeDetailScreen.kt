@@ -404,6 +404,7 @@ private fun AddRoomDialog(
     var typeExpanded by remember { mutableStateOf(false) }
     var floor by remember { mutableStateOf(1) }
     var isSaving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     AlertDialog(
@@ -474,6 +475,10 @@ private fun AddRoomDialog(
                         Text("+", style = MaterialTheme.typography.titleLarge)
                     }
                 }
+
+                if (saveError != null) {
+                    Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
             }
         },
         confirmButton = {
@@ -488,12 +493,14 @@ private fun AddRoomDialog(
                     }
                     if (!isSaving) {
                         isSaving = true
+                        saveError = null
                         scope.launch {
                             ServiceLocator.homeRepository.createRoom(trimmed, selectedType, floor, homeId)
                                 .onSuccess { room ->
                                     appViewModel.addRoom(homeId, room)
                                     onDismiss()
                                 }
+                                .onFailure { saveError = it.message }
                             isSaving = false
                         }
                     }

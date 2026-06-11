@@ -75,6 +75,7 @@ private fun labelActions(actions: List<DeviceAction>): String {
         val base = ACTION_LABEL_RES[a.actionName]?.let { context.getString(it) } ?: a.actionName
         when {
             a.params.isEmpty() -> base
+            "securityCode" in a.params -> base
             "temperature" in a.params -> "$base ${a.params["temperature"]}°C"
             "brightness" in a.params -> "$base ${a.params["brightness"]}%"
             "level" in a.params -> "$base ${a.params["level"]}%"
@@ -102,6 +103,7 @@ fun RoutineBuilderSheet(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val standaloneRooms by appViewModel.standaloneRooms.collectAsState()
 
     // Flat device lookup: deviceId → DeviceDto
     val deviceById = remember(devices) {
@@ -112,7 +114,8 @@ fun RoutineBuilderSheet(
     data class DeviceItem(val device: DeviceDto, val homeName: String, val roomName: String)
 
     val noRoomLabel = stringResource(R.string.device_no_room)
-    val allDevices = remember(homes, rooms, devices) {
+    val noHomeLabel = stringResource(R.string.homes_no_home)
+    val allDevices = remember(homes, rooms, devices, standaloneRooms) {
         val inRooms = homes.flatMap { home ->
             (rooms[home.id] ?: emptyList()).flatMap { room ->
                 (devices[room.id] ?: emptyList()).map { device ->
@@ -120,10 +123,17 @@ fun RoutineBuilderSheet(
                 }
             }
         }
+        // Habitaciones sin casa: sus dispositivos también pueden usarse en rutinas.
+        val standalone = standaloneRooms.flatMap { room ->
+            (devices[room.id] ?: emptyList()).map { device ->
+                DeviceItem(device, noHomeLabel, room.name)
+            }
+        }
+        // Dispositivos libres (sin habitación).
         val free = (devices["free"] ?: emptyList()).map { device ->
             DeviceItem(device, "", noRoomLabel)
         }
-        inRooms + free
+        inRooms + standalone + free
     }
 
     // ── Form state ────────────────────────────────────────────────────────────
@@ -136,6 +146,8 @@ fun RoutineBuilderSheet(
         if (routine?.metadata?.tipoTrigger == "hora") (routine.metadata?.trigger ?: "08:00") else "08:00"
     )}
     var nameError by remember { mutableStateOf(false) }
+    var horaError by remember { mutableStateOf(false) }
+    var deviceError by remember { mutableStateOf(false) }
 
     // ── Selected devices ──────────────────────────────────────────────────────
     val seleccionados = remember {
@@ -226,7 +238,11 @@ fun RoutineBuilderSheet(
     }
 
     fun submit() {
-        if (name.isBlank()) { nameError = true; return }
+        nameError = name.isBlank()
+        horaError = tipoTrigger == "hora" &&
+            !hora.trim().matches(Regex("^([01]?\\d|2[0-3]):[0-5]\\d$"))
+        deviceError = seleccionados.isEmpty()
+        if (nameError || horaError || deviceError) return
         scope.launch {
             isSaving = true
             saveError = null
@@ -308,9 +324,11 @@ fun RoutineBuilderSheet(
                 item {
                     OutlinedTextField(
                         value = hora,
-                        onValueChange = { hora = it },
+                        onValueChange = { hora = it; horaError = false },
                         label = { Text(stringResource(R.string.routine_time_label)) },
                         placeholder = { Text("08:00") },
+                        isError = horaError,
+                        supportingText = if (horaError) { { Text(stringResource(R.string.routine_time_invalid)) } } else null,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         leadingIcon = { Icon(Icons.Rounded.Schedule, null) },
@@ -321,13 +339,14 @@ fun RoutineBuilderSheet(
 
             // Devices section header
             item {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(Icons.Rounded.DevicesOther, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        stringResource(R.string.routine_devices_involved),
+                        stringResource(R.string.routine_devices_involved) + " *",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -346,6 +365,14 @@ fun RoutineBuilderSheet(
                             )
                         }
                     }
+                }
+                if (deviceError) {
+                    Text(
+                        stringResource(R.string.routine_need_device),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
                 }
             }
 
@@ -417,7 +444,10 @@ fun RoutineBuilderSheet(
                         }
                         Column(Modifier.weight(1f)) {
                             Text(item.device.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${item.homeName} › ${item.roomName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                listOf(item.homeName, item.roomName).filter { it.isNotEmpty() }.joinToString(" › "),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
                         }
                         Icon(Icons.Rounded.ChevronRight, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.outline)
                     }
@@ -499,6 +529,7 @@ fun RoutineBuilderSheet(
             routineMode = true,
             onDismiss = { subSheetEntry = null },
             onAddToRoutine = { actions ->
+                deviceError = false
                 val existing = seleccionados.indexOfFirst { it.device.id == item.device.id }
                 if (existing == -1) {
                     seleccionados.add(

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -69,6 +70,8 @@ import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.ConnectionErrorView
+import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.layout.WindowInsets
@@ -126,11 +129,15 @@ fun HomesScreen(
     if (showDialog) {
         NewHomeDialog(
             onDismiss = { showDialog = false },
-            onCreate = { name, type, address, city ->
-                showDialog = false
+            onCreate = { name, type, address, city, onResult ->
                 scope.launch {
                     ServiceLocator.homeRepository.createHome(name, type, address, city)
-                        .onSuccess { appViewModel.addHome(it) }
+                        .onSuccess {
+                            appViewModel.addHome(it)
+                            showDialog = false
+                            onResult(true, null)
+                        }
+                        .onFailure { onResult(false, it.message) }
                 }
             }
         )
@@ -140,15 +147,21 @@ fun HomesScreen(
         NewRoomDialog(
             homes = homes,
             onDismiss = { showRoomDialog = false },
-            onCreate = { name, type, floor, homeId ->
+            onCreate = { name, type, floor, homeId, onResult ->
                 if (homeId == null) {
-                    appViewModel.createStandaloneRoom(name, type, floor) { ok ->
+                    appViewModel.createStandaloneRoom(name, type, floor) { ok, err ->
                         if (ok) showRoomDialog = false
+                        onResult(ok, err)
                     }
                 } else {
                     scope.launch {
                         ServiceLocator.homeRepository.createRoom(name, type, floor, homeId)
-                            .onSuccess { appViewModel.addRoom(homeId, it); showRoomDialog = false }
+                            .onSuccess {
+                                appViewModel.addRoom(homeId, it)
+                                showRoomDialog = false
+                                onResult(true, null)
+                            }
+                            .onFailure { onResult(false, it.message) }
                     }
                 }
             }
@@ -186,45 +199,16 @@ fun HomesScreen(
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         if (!isLoading && homes.isEmpty() && error != null) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.WifiOff, null,
-                        modifier = Modifier.size(56.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        error!!,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    Button(onClick = { appViewModel.retryLoad() }) {
-                        Text(stringResource(R.string.common_retry))
-                    }
-                }
-            }
+            ConnectionErrorView(
+                message = error!!,
+                onRetry = { appViewModel.retryLoad() },
+                modifier = Modifier.padding(innerPadding)
+            )
             return@Scaffold
         }
 
         if (isLoading && homes.isEmpty()) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                androidx.compose.material3.CircularProgressIndicator()
-            }
+            FullScreenLoading(Modifier.padding(innerPadding))
             return@Scaffold
         }
 
@@ -547,7 +531,7 @@ private val ROOM_TYPES = listOf(
 private fun NewRoomDialog(
     homes: List<HomeDto>,
     onDismiss: () -> Unit,
-    onCreate: (name: String, type: String, floor: Int, homeId: String?) -> Unit
+    onCreate: (name: String, type: String, floor: Int, homeId: String?, onResult: (Boolean, String?) -> Unit) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -556,9 +540,11 @@ private fun NewRoomDialog(
     var floor by remember { mutableStateOf(1) }
     var selectedHome by remember { mutableStateOf<HomeDto?>(null) }
     var homeExpanded by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isSaving) onDismiss() },
         title = { Text(stringResource(R.string.homes_new_room), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -622,6 +608,10 @@ private fun NewRoomDialog(
                         Text("+", style = MaterialTheme.typography.titleLarge)
                     }
                 }
+
+                if (saveError != null) {
+                    Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
             }
         },
         confirmButton = {
@@ -633,15 +623,27 @@ private fun NewRoomDialog(
                     when {
                         trimmed.length < 3 -> nameError = errMin
                         trimmed.length > 100 -> nameError = errMax
-                        else -> onCreate(trimmed, selectedType, floor, selectedHome?.id)
+                        !isSaving -> {
+                            isSaving = true
+                            saveError = null
+                            onCreate(trimmed, selectedType, floor, selectedHome?.id) { ok, err ->
+                                isSaving = false
+                                if (!ok) saveError = err
+                            }
+                        }
                     }
-                }
+                },
+                enabled = !isSaving
             ) {
-                Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                if (isSaving) {
+                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
+                } else {
+                    Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+            TextButton(onClick = onDismiss, enabled = !isSaving) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
@@ -652,7 +654,7 @@ private val PROPERTY_TYPES = listOf("Casa", "Departamento", "Oficina", "Local Co
 @Composable
 private fun NewHomeDialog(
     onDismiss: () -> Unit,
-    onCreate: (name: String, type: String, address: String, city: String) -> Unit
+    onCreate: (name: String, type: String, address: String, city: String, onResult: (Boolean, String?) -> Unit) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -660,9 +662,11 @@ private fun NewHomeDialog(
     var city by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(PROPERTY_TYPES[0]) }
     var typeExpanded by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isSaving) onDismiss() },
         title = { Text(stringResource(R.string.homes_new_home), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -723,6 +727,10 @@ private fun NewHomeDialog(
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (saveError != null) {
+                    Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
             }
         },
         confirmButton = {
@@ -734,15 +742,27 @@ private fun NewHomeDialog(
                     when {
                         trimmed.length < 3 -> nameError = errMin
                         trimmed.length > 100 -> nameError = errMax
-                        else -> onCreate(trimmed, selectedType, address.trim(), city.trim())
+                        !isSaving -> {
+                            isSaving = true
+                            saveError = null
+                            onCreate(trimmed, selectedType, address.trim(), city.trim()) { ok, err ->
+                                isSaving = false
+                                if (!ok) saveError = err
+                            }
+                        }
                     }
-                }
+                },
+                enabled = !isSaving
             ) {
-                Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                if (isSaving) {
+                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
+                } else {
+                    Text(stringResource(R.string.common_create), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+            TextButton(onClick = onDismiss, enabled = !isSaving) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
