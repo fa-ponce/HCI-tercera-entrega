@@ -353,6 +353,64 @@ class AppViewModel(
         _devices.update { it - roomId }
     }
 
+    /**
+     * Guarda nombre/tipo/casa de una habitación. Si homeId es null la habitación
+     * queda "sin casa": igual que la web, se mueve a la casa oculta.
+     */
+    fun saveRoom(
+        room: RoomDto,
+        name: String,
+        type: String,
+        homeId: String?,
+        onResult: ((success: Boolean, error: String?) -> Unit)? = null
+    ) = viewModelScope.launch {
+        val targetHomeId = homeId ?: run { ensureFreeRoomId(); freeHomeId }
+        if (targetHomeId == null) {
+            onResult?.invoke(false, appContext.getString(R.string.sheet_free_room_error))
+            return@launch
+        }
+        homeRepository.updateRoom(room.id, name, type, targetHomeId, room.metadata?.floor)
+            .onSuccess { updated ->
+                _rooms.update { map -> map.mapValues { (_, list) -> list.filter { it.id != room.id } } }
+                _standaloneRooms.update { list -> list.filter { it.id != room.id } }
+                if (homeId != null) {
+                    _rooms.update { map -> map + (homeId to (map[homeId].orEmpty() + updated)) }
+                } else {
+                    _standaloneRooms.update { it + updated }
+                }
+                onResult?.invoke(true, null)
+            }
+            .onFailure { onResult?.invoke(false, it.message) }
+    }
+
+    /**
+     * Elimina una habitación moviendo antes sus dispositivos a la habitación
+     * oculta para que queden libres y reasignables, como hace la web.
+     */
+    fun deleteRoomFreeingDevices(
+        room: RoomDto,
+        onResult: ((success: Boolean, error: String?) -> Unit)? = null
+    ) = viewModelScope.launch {
+        val roomDevices = _devices.value[room.id].orEmpty()
+        if (roomDevices.isNotEmpty()) {
+            ensureFreeRoomId()?.let { frId ->
+                roomDevices.map { dev ->
+                    async { deviceRepository.addDeviceToRoom(frId, dev.id) }
+                }.awaitAll()
+            }
+        }
+        homeRepository.deleteRoom(room.id)
+            .onSuccess {
+                val freed = roomDevices.map { it.copy(room = null) }
+                removeRoom(room.home?.id ?: "", room.id)
+                if (freed.isNotEmpty()) {
+                    _devices.update { map -> map + ("free" to (map["free"].orEmpty() + freed)) }
+                }
+                onResult?.invoke(true, null)
+            }
+            .onFailure { onResult?.invoke(false, it.message) }
+    }
+
     /** Crea una habitación "sin casa" (dentro de la casa oculta) y la agrega al apartado. */
     fun createStandaloneRoom(
         name: String,

@@ -91,14 +91,16 @@ fun DeviceCard(
         else -> MaterialTheme.colorScheme.outlineVariant
     }
 
-    // El contenedor del ícono cambia de color al encender, con una transición suave.
+    // El contenedor del ícono cambia de color al encender, con una transición
+    // suave. Encendido: ícono en color primario sobre fondo apenas tintado,
+    // igual que la web (#3a5a90 sobre #eef4ff).
     val iconBg by animateColorAsState(
-        targetValue = if (on) MaterialTheme.colorScheme.primaryContainer
+        targetValue = if (on) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                       else MaterialTheme.colorScheme.surfaceVariant,
         label = "iconBg"
     )
     val iconTint by animateColorAsState(
-        targetValue = if (on) MaterialTheme.colorScheme.onPrimaryContainer
+        targetValue = if (on) MaterialTheme.colorScheme.primary
                       else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "iconTint"
     )
@@ -208,7 +210,7 @@ fun DeviceGridCard(
     val iconBg by animateColorAsState(
         targetValue = when {
             free -> FreeAccent.copy(alpha = 0.14f)
-            on -> MaterialTheme.colorScheme.primaryContainer
+            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
             else -> MaterialTheme.colorScheme.surfaceVariant
         },
         label = "gridIconBg"
@@ -216,7 +218,7 @@ fun DeviceGridCard(
     val iconTint by animateColorAsState(
         targetValue = when {
             free -> FreeAccent
-            on -> MaterialTheme.colorScheme.onPrimaryContainer
+            on -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.onSurfaceVariant
         },
         label = "gridIconTint"

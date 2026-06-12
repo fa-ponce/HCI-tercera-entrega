@@ -172,6 +172,7 @@ fun NavGraph(
                 RoomScreen(
                     roomId = backStack.arguments?.getString("roomId") ?: "",
                     appViewModel = appViewModel,
+                    prefsViewModel = prefsViewModel,
                     navController = navController
                 )
             }

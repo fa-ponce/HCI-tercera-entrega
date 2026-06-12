@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.screens.room
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,107 +18,98 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.AttachMoney
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Devices
+import androidx.compose.material.icons.rounded.DoNotDisturbOn
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.CenterAlignedTopAppBar
-import com.example.smarthome.ui.components.appBarGradient
-import com.example.smarthome.ui.components.gradientTopBarColors
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
+import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
-import com.example.smarthome.ui.navigation.Routes
+import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.components.DeviceGridCard
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import com.example.smarthome.ServiceLocator
-import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.ui.components.appBarGradient
+import com.example.smarthome.ui.components.gradientTopBarColors
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
+import com.example.smarthome.ui.navigation.Routes
 import com.example.smarthome.ui.screens.devices.AddDeviceDialog
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.WindowInsets
+
+// Acentos de las stat cards, mismos colores que la web (HabitacionView.vue)
+private val StatGreen = Color(0xFF16A34A)
+private val StatRed = Color(0xFFC0392B)
+private val StatNeutral = Color(0xFF666666)
+private val StatWarm = Color(0xFFC9A227)
+private val StatInfo = Color(0xFF3A5A90)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomScreen(
     roomId: String,
     appViewModel: AppViewModel,
+    prefsViewModel: UserPreferencesViewModel,
     navController: NavHostController
 ) {
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
     val standaloneRooms by appViewModel.standaloneRooms.collectAsState()
+    val costoKwh by prefsViewModel.costoKwh.collectAsState()
 
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
-    var showRenameDialog by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var renameText by remember { mutableStateOf("") }
-    var isRenameSaving by remember { mutableStateOf(false) }
-    var isDeleteSaving by remember { mutableStateOf(false) }
-    var renameError by remember { mutableStateOf<String?>(null) }
-    var deleteError by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    var showEditDialog by remember { mutableStateOf(false) }
 
     val room = (rooms.values.flatten() + standaloneRooms).find { it.id == roomId }
     val home = room?.home?.id?.let { hid -> homes.find { it.id == hid } }
     val roomDevices = devices[roomId] ?: emptyList()
 
     val totalOn = roomDevices.count { isDeviceOn(it.type.id, it.state) }
+    val totalOff = roomDevices.size - totalOn
     val totalW = roomDevices.filter { isDeviceOn(it.type.id, it.state) }
         .sumOf { deviceConsumptionW(it.type.id) }
+    val costoHora = costoKwh?.let { (totalW / 1000f) * it }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 modifier = Modifier.appBarGradient(),
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            room?.name ?: stringResource(R.string.common_room),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        IconButton(onClick = { renameText = room?.name ?: ""; showRenameDialog = true }) {
-                            Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.common_edit_name), tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), modifier = Modifier.size(20.dp))
-                        }
-                    }
-                },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Rounded.ArrowBack, stringResource(R.string.common_back), tint = MaterialTheme.colorScheme.onPrimary)
@@ -145,41 +137,80 @@ fun RoomScreen(
         ) {
             val fullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
 
-            // Subtítulo
+            // Header como la web: nombre + subtítulo y botones Agregar/Editar
             item(span = fullSpan) {
                 Column {
+                    // Como la web: casa chica arriba (breadcrumb), nombre de la
+                    // habitación grande (h1) y subtítulo debajo.
                     if (home != null) {
                         Text(
                             home.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(Icons.Rounded.Devices, null, Modifier, tint = MaterialTheme.colorScheme.primary)
-                            Text(
-                                stringResource(R.string.room_devices_count, roomDevices.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        Text(
-                            stringResource(
-                                R.string.room_status_fmt,
-                                totalOn,
-                                if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)} kW" else "$totalW W"
-                            ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.primary
                         )
+                        Spacer(Modifier.height(2.dp))
                     }
-                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        room?.name ?: stringResource(R.string.common_room),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        stringResource(R.string.room_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = { showAddDialog = true },
+                            shape = RoundedCornerShape(11.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.room_add_device), fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        }
+                        OutlinedButton(
+                            onClick = { showEditDialog = true },
+                            shape = RoundedCornerShape(11.dp)
+                        ) {
+                            Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.common_edit), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
                 }
+            }
+
+            // Stats como la web: Encendidos / Apagados / Dispositivos / Consumo / Costo
+            item(span = fullSpan) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        RoomStatCard(Icons.Rounded.Lightbulb, StatGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
+                        RoomStatCard(Icons.Rounded.DoNotDisturbOn, StatRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        RoomStatCard(Icons.Rounded.Devices, StatNeutral, "${roomDevices.size}", stringResource(R.string.nav_devices), Modifier.weight(1f))
+                        RoomStatCard(Icons.Rounded.Bolt, StatWarm, "$totalW W", stringResource(R.string.room_consumption_hour), Modifier.weight(1f))
+                    }
+                    RoomStatCard(
+                        Icons.Rounded.AttachMoney, StatInfo,
+                        costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
+                        stringResource(R.string.room_cost_hour),
+                        Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Sección de dispositivos
+            item(span = fullSpan) {
+                Text(
+                    stringResource(R.string.nav_devices),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             if (roomDevices.isEmpty()) {
@@ -204,28 +235,6 @@ fun RoomScreen(
                     onClick = { selectedDevice = device }
                 )
             }
-
-            item(span = fullSpan) {
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = { showAddDialog = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.room_add_device), fontWeight = FontWeight.SemiBold)
-                }
-            }
-
-            item(span = fullSpan) {
-                Button(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(stringResource(R.string.room_delete), color = Color.White, fontWeight = FontWeight.SemiBold)
-                }
-            }
         }
     }
 
@@ -244,103 +253,26 @@ fun RoomScreen(
         )
     }
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text(stringResource(R.string.room_delete), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.common_delete_confirm, room?.name ?: ""))
-                    if (deleteError != null) {
-                        Text(deleteError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
+    if (showEditDialog && room != null) {
+        EditRoomDialog(
+            room = room,
+            homes = homes,
+            currentHomeId = home?.id,
+            onDismiss = { showEditDialog = false },
+            onSave = { name, type, homeId, onResult ->
+                appViewModel.saveRoom(room, name, type, homeId) { ok, err ->
+                    if (ok) showEditDialog = false
+                    onResult(ok, err)
                 }
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (!isDeleteSaving) {
-                            isDeleteSaving = true
-                            deleteError = null
-                            scope.launch {
-                                ServiceLocator.homeRepository.deleteRoom(roomId)
-                                    .onSuccess {
-                                        appViewModel.removeRoom(home?.id ?: "", roomId)
-                                        navController.popBackStack()
-                                    }
-                                    .onFailure { deleteError = it.message }
-                                isDeleteSaving = false
-                            }
-                        }
-                    },
-                    enabled = !isDeleteSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    if (isDeleteSaving) {
-                        CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                        Spacer(Modifier.width(8.dp))
+            onDelete = { onResult ->
+                appViewModel.deleteRoomFreeingDevices(room) { ok, err ->
+                    if (ok) {
+                        showEditDialog = false
+                        navController.popBackStack()
                     }
-                    Text(stringResource(R.string.common_delete), color = Color.White)
+                    onResult(ok, err)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleteSaving) { Text(stringResource(R.string.common_cancel)) }
-            }
-        )
-    }
-
-    if (showRenameDialog) {
-        AlertDialog(
-            onDismissRequest = { showRenameDialog = false },
-            title = { Text(stringResource(R.string.room_rename), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = renameText,
-                        onValueChange = { renameText = it; renameError = null },
-                        label = { Text(stringResource(R.string.common_name)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (renameError != null) {
-                        Text(renameError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val newName = renameText.trim()
-                        if (newName.isNotEmpty() && room != null && !isRenameSaving) {
-                            isRenameSaving = true
-                            renameError = null
-                            scope.launch {
-                                ServiceLocator.homeRepository.updateRoom(
-                                    id = roomId,
-                                    name = newName,
-                                    type = room.metadata?.type ?: "",
-                                    homeId = home?.id ?: room.home?.id,
-                                    floor = room.metadata?.floor
-                                ).onSuccess { updated ->
-                                    appViewModel.updateRoom(updated)
-                                    showRenameDialog = false
-                                }.onFailure { renameError = it.message }
-                                isRenameSaving = false
-                            }
-                        }
-                    },
-                    enabled = !isRenameSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    if (isRenameSaving) {
-                        CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text(stringResource(R.string.common_save), color = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }, enabled = !isRenameSaving) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -360,5 +292,41 @@ fun RoomScreen(
             homes = homes,
             rooms = rooms
         )
+    }
+}
+
+/** Stat card al estilo de la web: ícono en cuadrado redondeado tintado + valor grande + etiqueta. */
+@Composable
+private fun RoomStatCard(
+    icon: ImageVector,
+    accent: Color,
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(46.dp)
+                    .background(accent.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+            ) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(22.dp))
+            }
+            Column {
+                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
 }

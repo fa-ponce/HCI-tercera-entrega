@@ -217,6 +217,13 @@
     <string name="room_add_device">Agregar dispositivo</string>
     <string name="room_delete">Eliminar habitación</string>
     <string name="room_rename">Renombrar habitación</string>
+    <string name="room_subtitle">Dispositivos en esta habitación</string>
+    <string name="room_consumption_hour">Consumo/Hora</string>
+    <string name="room_cost_hour">Costo/Hora</string>
+    <string name="room_type_label">Tipo de habitación</string>
+    <string name="room_linked_home">Casa vinculada</string>
+    <string name="room_no_home_standalone">Sin casa (habitación independiente)</string>
+    <string name="room_delete_warn">Sus dispositivos quedarán libres y podrán ser reasignados.</string>
 
     <!-- Profile -->
     <string name="profile_title">Perfil</string>

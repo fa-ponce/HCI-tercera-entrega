@@ -218,6 +218,13 @@
     <string name="room_add_device">Add device</string>
     <string name="room_delete">Delete room</string>
     <string name="room_rename">Rename room</string>
+    <string name="room_subtitle">Devices in this room</string>
+    <string name="room_consumption_hour">Consumption/Hour</string>
+    <string name="room_cost_hour">Cost/Hour</string>
+    <string name="room_type_label">Room type</string>
+    <string name="room_linked_home">Linked home</string>
+    <string name="room_no_home_standalone">No home (standalone room)</string>
+    <string name="room_delete_warn">Its devices will be freed and can be reassigned.</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
