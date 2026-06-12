@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.navigation.NavGraph
 import com.example.smarthome.ui.navigation.Routes
 import com.example.smarthome.ui.theme.SmarthomeTheme
@@ -57,7 +58,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val appViewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)
-            val darkMode by appViewModel.darkMode.collectAsState()
+            val prefsViewModel: UserPreferencesViewModel = viewModel(factory = UserPreferencesViewModel.Factory)
+            val darkMode by prefsViewModel.darkMode.collectAsState()
             SmarthomeTheme(darkTheme = darkMode) {
                 val navController = rememberNavController()
                 var startDestination by remember { mutableStateOf<String?>(null) }
@@ -87,6 +89,7 @@ class MainActivity : ComponentActivity() {
                     NavGraph(
                         navController = navController,
                         appViewModel = appViewModel,
+                        prefsViewModel = prefsViewModel,
                         startDestination = dest
                     )
                 }

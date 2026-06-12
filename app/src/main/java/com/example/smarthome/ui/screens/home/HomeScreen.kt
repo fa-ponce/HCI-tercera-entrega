@@ -91,6 +91,7 @@ import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.logActionLabelRes
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
@@ -114,6 +115,7 @@ private fun routineToken(id: String) = "r:$id"
 @Composable
 fun HomeScreen(
     appViewModel: AppViewModel,
+    prefsViewModel: UserPreferencesViewModel,
     navController: NavHostController
 ) {
     val homes by appViewModel.homes.collectAsState()
@@ -122,8 +124,8 @@ fun HomeScreen(
     val routines by appViewModel.routines.collectAsState()
     val isLoading by appViewModel.isLoading.collectAsState()
     val loadError by appViewModel.error.collectAsState()
-    val userName by appViewModel.userName.collectAsState()
-    val savedShortcuts by appViewModel.shortcuts.collectAsState()
+    val userName by prefsViewModel.userName.collectAsState()
+    val savedShortcuts by prefsViewModel.shortcuts.collectAsState()
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
 
     val allDevices = remember(devices) { devices.values.flatten() }
@@ -156,7 +158,7 @@ fun HomeScreen(
     val toggleShortcut: (String) -> Unit = { token ->
         val base = effectiveTokens.toMutableList()
         if (token in base) base.remove(token) else base.add(token)
-        appViewModel.setShortcuts(base)
+        prefsViewModel.setShortcuts(base)
     }
 
     var showCustomize by remember { mutableStateOf(false) }

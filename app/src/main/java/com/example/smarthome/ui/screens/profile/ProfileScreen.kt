@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
 
@@ -119,13 +120,14 @@ private val tutorialSteps = listOf(
 @Composable
 fun ProfileScreen(
     appViewModel: AppViewModel,
+    prefsViewModel: UserPreferencesViewModel,
     navController: NavHostController
 ) {
-    val userName by appViewModel.userName.collectAsState()
-    val userEmail by appViewModel.userEmail.collectAsState()
-    val costoKwh by appViewModel.costoKwh.collectAsState()
-    val darkMode by appViewModel.darkMode.collectAsState()
-    val appLanguage by appViewModel.appLanguage.collectAsState()
+    val userName by prefsViewModel.userName.collectAsState()
+    val userEmail by prefsViewModel.userEmail.collectAsState()
+    val costoKwh by prefsViewModel.costoKwh.collectAsState()
+    val darkMode by prefsViewModel.darkMode.collectAsState()
+    val appLanguage by prefsViewModel.appLanguage.collectAsState()
 
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -232,7 +234,7 @@ fun ProfileScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             trailingIcon = {
                                 TextButton(onClick = {
-                                    costoInput.toFloatOrNull()?.let { appViewModel.updateCostoKwh(it) }
+                                    costoInput.toFloatOrNull()?.let { prefsViewModel.updateCostoKwh(it) }
                                 }) {
                                     Text(stringResource(R.string.common_save), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                                 }
@@ -259,7 +261,7 @@ fun ProfileScreen(
                     }
                     Switch(
                         checked = darkMode,
-                        onCheckedChange = { appViewModel.setDarkMode(it) },
+                        onCheckedChange = { prefsViewModel.setDarkMode(it) },
                         colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = MaterialTheme.colorScheme.primary)
                     )
                 }
@@ -352,7 +354,7 @@ fun ProfileScreen(
     // Modal cambiar contraseña
     if (showPasswordDialog) {
         ChangePasswordDialog(
-            appViewModel = appViewModel,
+            prefsViewModel = prefsViewModel,
             onDismiss = { showPasswordDialog = false }
         )
     }
@@ -374,7 +376,7 @@ fun ProfileScreen(
                             showLanguageDialog = false
                             // El idioma se aplica en attachBaseContext, así que
                             // recreamos la Activity una vez guardada la elección.
-                            appViewModel.setAppLanguage(code) { activity?.recreate() }
+                            prefsViewModel.setAppLanguage(code) { activity?.recreate() }
                             Unit
                         }
                         Row(
@@ -434,7 +436,7 @@ private fun ProfileCard(onClick: (() -> Unit)? = null, content: @Composable () -
 }
 
 @Composable
-private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Unit) {
+private fun ChangePasswordDialog(prefsViewModel: UserPreferencesViewModel, onDismiss: () -> Unit) {
     var oldPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
@@ -514,7 +516,7 @@ private fun ChangePasswordDialog(appViewModel: AppViewModel, onDismiss: () -> Un
                                 errorMsg = errMin
                             else -> {
                                 loading = true
-                                appViewModel.changePassword(oldPass, newPass) { ok, err ->
+                                prefsViewModel.changePassword(oldPass, newPass) { ok, err ->
                                     loading = false
                                     if (ok) success = true
                                     else errorMsg = err ?: errGeneric

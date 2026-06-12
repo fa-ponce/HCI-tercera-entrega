@@ -32,11 +32,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -86,58 +84,6 @@ class AppViewModel(
 
     private fun notify(title: String, body: String) {
         NotificationHelper.notify(appContext, title, body)
-    }
-
-    val userName: StateFlow<String?> = userPreferences.userName
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val userEmail: StateFlow<String?> = userPreferences.userEmail
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val costoKwh: StateFlow<Float?> = userPreferences.costoKwh
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val darkMode: StateFlow<Boolean> = userPreferences.darkMode
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    // Idioma elegido manualmente ("es"/"en") o null = idioma del teléfono.
-    val appLanguage: StateFlow<String?> = userPreferences.appLanguage
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    fun setAppLanguage(language: String?, onSaved: (() -> Unit)? = null) = viewModelScope.launch {
-        userPreferences.saveAppLanguage(language)
-        onSaved?.invoke()
-    }
-
-    // Accesos directos del inicio (ver UserPreferences.shortcuts). null = sin personalizar.
-    val shortcuts: StateFlow<List<String>?> = userPreferences.shortcuts
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    fun setShortcuts(tokens: List<String>) = viewModelScope.launch {
-        userPreferences.saveShortcuts(tokens)
-    }
-
-    fun setDarkMode(enabled: Boolean) = viewModelScope.launch {
-        userPreferences.saveDarkMode(enabled)
-    }
-
-    fun updateCostoKwh(costo: Float) = viewModelScope.launch {
-        userPreferences.saveCostoKwh(costo)
-    }
-
-    fun changePassword(
-        oldPassword: String,
-        newPassword: String,
-        onResult: (success: Boolean, error: String?) -> Unit
-    ) = viewModelScope.launch {
-        val email = userEmail.value
-        if (email == null) {
-            onResult(false, "No se pudo obtener el email del usuario")
-            return@launch
-        }
-        ServiceLocator.authRepository.changePassword(email, oldPassword, newPassword)
-            .onSuccess { onResult(true, null) }
-            .onFailure { onResult(false, it.message) }
     }
 
     fun logout() = viewModelScope.launch {

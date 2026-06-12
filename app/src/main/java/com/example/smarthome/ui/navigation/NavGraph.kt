@@ -34,6 +34,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.screens.consumption.ConsumptionScreen
 import com.example.smarthome.ui.screens.devices.DevicesScreen
 import com.example.smarthome.ui.screens.history.HistoryScreen
@@ -77,6 +78,7 @@ private val bottomNavRoutes = bottomNavItems.map { it.route }.toSet()
 fun NavGraph(
     navController: NavHostController,
     appViewModel: AppViewModel,
+    prefsViewModel: UserPreferencesViewModel,
     startDestination: String = Routes.LOGIN
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -145,7 +147,7 @@ fun NavGraph(
             }
 
             composable(Routes.HOME) {
-                HomeScreen(appViewModel = appViewModel, navController = navController)
+                HomeScreen(appViewModel = appViewModel, prefsViewModel = prefsViewModel, navController = navController)
             }
 
             composable(Routes.HOMES) {
@@ -183,7 +185,7 @@ fun NavGraph(
             }
 
             composable(Routes.CONSUMPTION) {
-                ConsumptionScreen(appViewModel = appViewModel, navController = navController)
+                ConsumptionScreen(appViewModel = appViewModel, prefsViewModel = prefsViewModel, navController = navController)
             }
 
             composable(Routes.HISTORY) {
@@ -191,7 +193,7 @@ fun NavGraph(
             }
 
             composable(Routes.PROFILE) {
-                ProfileScreen(appViewModel = appViewModel, navController = navController)
+                ProfileScreen(appViewModel = appViewModel, prefsViewModel = prefsViewModel, navController = navController)
             }
             }
 

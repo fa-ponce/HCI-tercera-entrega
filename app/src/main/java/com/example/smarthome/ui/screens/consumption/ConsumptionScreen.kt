@@ -48,6 +48,7 @@ import com.example.smarthome.R
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
@@ -57,12 +58,13 @@ import androidx.compose.foundation.layout.WindowInsets
 @Composable
 fun ConsumptionScreen(
     appViewModel: AppViewModel,
+    prefsViewModel: UserPreferencesViewModel,
     navController: NavHostController
 ) {
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
-    val costoKwh by appViewModel.costoKwh.collectAsState()
+    val costoKwh by prefsViewModel.costoKwh.collectAsState()
     val isLoading by appViewModel.isLoading.collectAsState()
     val error by appViewModel.error.collectAsState()
 
