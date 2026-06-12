@@ -142,11 +142,11 @@ fun RoutineBuilderSheet(
     var tipoTrigger by remember { mutableStateOf(
         if (routine?.metadata?.tipoTrigger == "hora") "hora" else "manual"
     )}
-    var hora by remember { mutableStateOf(
+    var time by remember { mutableStateOf(
         if (routine?.metadata?.tipoTrigger == "hora") (routine.metadata?.trigger ?: "08:00") else "08:00"
     )}
     var nameError by remember { mutableStateOf(false) }
-    var horaError by remember { mutableStateOf(false) }
+    var timeError by remember { mutableStateOf(false) }
     var deviceError by remember { mutableStateOf(false) }
 
     // ── Selected devices ──────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ fun RoutineBuilderSheet(
     var deleteError by remember { mutableStateOf<String?>(null) }
 
     fun buildRequest(): RoutineRequest {
-        val trigger = if (tipoTrigger == "hora") hora else "Manual"
+        val trigger = if (tipoTrigger == "hora") time else "Manual"
         val actions = seleccionados.flatMap { entry ->
             entry.actions.map { action ->
                 val params: List<Any?> = if (action.params.isEmpty()) emptyList() else listOf(action.params)
@@ -239,10 +239,10 @@ fun RoutineBuilderSheet(
 
     fun submit() {
         nameError = name.isBlank()
-        horaError = tipoTrigger == "hora" &&
-            !hora.trim().matches(Regex("^([01]?\\d|2[0-3]):[0-5]\\d$"))
+        timeError = tipoTrigger == "hora" &&
+            !time.trim().matches(Regex("^([01]?\\d|2[0-3]):[0-5]\\d$"))
         deviceError = seleccionados.isEmpty()
-        if (nameError || horaError || deviceError) return
+        if (nameError || timeError || deviceError) return
         scope.launch {
             isSaving = true
             saveError = null
@@ -323,12 +323,12 @@ fun RoutineBuilderSheet(
             if (tipoTrigger == "hora") {
                 item {
                     OutlinedTextField(
-                        value = hora,
-                        onValueChange = { hora = it; horaError = false },
+                        value = time,
+                        onValueChange = { time = it; timeError = false },
                         label = { Text(stringResource(R.string.routine_time_label)) },
-                        placeholder = { Text("08:00") },
-                        isError = horaError,
-                        supportingText = if (horaError) { { Text(stringResource(R.string.routine_time_invalid)) } } else null,
+                        placeholder = { Text(stringResource(R.string.routine_time_placeholder)) },
+                        isError = timeError,
+                        supportingText = if (timeError) { { Text(stringResource(R.string.routine_time_invalid)) } } else null,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         leadingIcon = { Icon(Icons.Rounded.Schedule, null) },

@@ -152,6 +152,7 @@
     <string name="routine_trigger_type">Trigger type</string>
     <string name="routine_trigger_time">Specific time</string>
     <string name="routine_time_label">Time (HH:mm)</string>
+    <string name="routine_time_placeholder">08:00</string>
     <string name="routine_devices_involved">Devices involved</string>
     <string name="routine_search_device">Search device…</string>
     <string name="routine_no_devices">No devices available.</string>
@@ -299,6 +300,8 @@
     <string name="sheet_hue">Hue</string>
     <string name="sheet_saturation">Saturation</string>
     <string name="sheet_brightness">Brightness</string>
+    <string name="sheet_brightness_min">0%</string>
+    <string name="sheet_brightness_max">100%</string>
 
     <!-- AC sheet -->
     <string name="sheet_temperature">Temperature</string>
@@ -310,6 +313,8 @@
     <string name="sheet_horizontal_blades">Horizontal blades</string>
     <string name="sheet_fan_speed">Fan speed</string>
     <string name="sheet_auto">Auto</string>
+    <string name="sheet_ac_temp_min">18°C</string>
+    <string name="sheet_ac_temp_max">38°C</string>
 
     <!-- Door sheet -->
     <string name="sheet_door_open_f">Open</string>
@@ -344,6 +349,8 @@
     <string name="sheet_eco">Eco</string>
     <string name="sheet_grill_full">Full</string>
     <string name="sheet_convection_mode">Convection mode</string>
+    <string name="sheet_oven_temp_min">90°C</string>
+    <string name="sheet_oven_temp_max">230°C</string>
 
     <!-- Faucet sheet -->
     <string name="sheet_open_m">Open</string>
@@ -396,6 +403,10 @@
     <string name="sheet_mode_party_desc">Lowers freezer temp.</string>
     <string name="sheet_mode_vacation">Vacation</string>
     <string name="sheet_mode_vacation_desc">Saves energy</string>
+    <string name="sheet_fridge_temp_min">2°C</string>
+    <string name="sheet_fridge_temp_max">8°C</string>
+    <string name="sheet_freezer_temp_min">-20°C</string>
+    <string name="sheet_freezer_temp_max">-8°C</string>
 
     <!-- Notifications (RF20) -->
     <string name="notif_channel_name">Smarthome</string>

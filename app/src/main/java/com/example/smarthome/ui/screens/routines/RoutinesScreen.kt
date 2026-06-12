@@ -191,7 +191,7 @@ private fun RoutineCard(
     onOpen: (RoutineDto) -> Unit,
     onExecute: (RoutineDto) -> Unit
 ) {
-    val tipo = routine.metadata?.tipoTrigger ?: "manual"
+    val triggerType = routine.metadata?.tipoTrigger ?: "manual"
     Card(
         onClick = { onOpen(routine) },
         modifier = Modifier.fillMaxWidth()
@@ -202,7 +202,7 @@ private fun RoutineCard(
         ) {
             Surface(
                 shape = MaterialTheme.shapes.medium,
-                color = when (tipo) {
+                color = when (triggerType) {
                     "hora" -> MaterialTheme.colorScheme.tertiaryContainer
                     "evento" -> MaterialTheme.colorScheme.secondaryContainer
                     else -> MaterialTheme.colorScheme.surfaceVariant
@@ -211,14 +211,14 @@ private fun RoutineCard(
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = when (tipo) {
+                        imageVector = when (triggerType) {
                             "hora" -> Icons.Rounded.Schedule
                             "evento" -> Icons.Rounded.Home
                             else -> Icons.Rounded.Bolt
                         },
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
-                        tint = when (tipo) {
+                        tint = when (triggerType) {
                             "hora" -> MaterialTheme.colorScheme.onTertiaryContainer
                             "evento" -> MaterialTheme.colorScheme.onSecondaryContainer
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -250,7 +250,7 @@ private fun RoutineCard(
                     )
                 }
                 Text(
-                    when (tipo) {
+                    when (triggerType) {
                         "hora" -> stringResource(R.string.routine_scheduled)
                         "evento" -> stringResource(R.string.routine_by_event)
                         else -> stringResource(R.string.routine_manual)

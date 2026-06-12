@@ -170,8 +170,8 @@ fun HomeScreen(
             else -> R.string.home_greeting_evening
         }
     }
-    val saludo = stringResource(saludoRes)
-    val nombre = userName?.split(" ")?.firstOrNull() ?: stringResource(R.string.common_user)
+    val greeting = stringResource(saludoRes)
+    val firstName = userName?.split(" ")?.firstOrNull() ?: stringResource(R.string.common_user)
     val fecha = remember {
         SimpleDateFormat("EEEE, d MMMM", Locale.getDefault())
             .format(Date()).replaceFirstChar { it.uppercase() }
@@ -205,8 +205,8 @@ fun HomeScreen(
         val headerItem: LazyListScope.() -> Unit = {
             item {
                 HomeHeader(
-                    saludo = saludo,
-                    nombre = nombre,
+                    saludo = greeting,
+                    firstName = firstName,
                     fecha = fecha,
                     onProfile = { navController.navigate(Routes.PROFILE) }
                 )
@@ -462,7 +462,7 @@ fun HomeScreen(
 @Composable
 private fun HomeHeader(
     saludo: String,
-    nombre: String,
+    firstName: String,
     fecha: String,
     onProfile: () -> Unit
 ) {
@@ -496,7 +496,7 @@ private fun HomeHeader(
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                     )
                     Text(
-                        nombre,
+                        firstName,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -772,12 +772,12 @@ private fun ShortcutTile(
         }
         is Shortcut.RoutineShortcut -> {
             val routine = shortcut.routine
-            val tipo = routine.metadata?.tipoTrigger ?: "manual"
+            val triggerType = routine.metadata?.tipoTrigger ?: "manual"
             ShortcutTileScaffold(
                 modifier = modifier.scale(scale),
                 interaction = interaction,
                 container = MaterialTheme.colorScheme.secondaryContainer,
-                icon = if (tipo == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
+                icon = if (triggerType == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
                 iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                 iconBg = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                 badge = stringResource(R.string.home_routine_badge),
@@ -936,9 +936,9 @@ private fun CustomizeShortcutsSheet(
                 SheetSectionTitle(stringResource(R.string.nav_routines))
                 routines.forEach { routine ->
                     val token = routineToken(routine.id)
-                    val tipo = routine.metadata?.tipoTrigger ?: "manual"
+                    val triggerType = routine.metadata?.tipoTrigger ?: "manual"
                     PickerRow(
-                        icon = if (tipo == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
+                        icon = if (triggerType == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
                         title = routine.name,
                         checked = token in selected,
                         onToggle = { onToggle(token) }
