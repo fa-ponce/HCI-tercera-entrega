@@ -30,7 +30,7 @@ fun GenericSheet(
         ) {
             SheetHeader(
                 title = device.name,
-                subtitle = device.type.name ?: stringResource(R.string.device_type_generic),
+                subtitle = device.type.name?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.device_type_generic),
                 onRename = { newName, cb -> actions.onRename(newName, cb) }
             )
             Text(

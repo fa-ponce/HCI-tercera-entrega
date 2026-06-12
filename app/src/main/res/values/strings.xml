@@ -121,6 +121,7 @@
     <string name="device_name_placeholder">e.g. LED lamp</string>
     <string name="device_type_label">Device type *</string>
     <string name="device_type_placeholder">Select type</string>
+    <string name="device_type_required_err">You must select a device type</string>
     <string name="device_no_room_free">No room (free device)</string>
     <string name="device_brand">Brand/Model</string>
     <string name="device_brand_placeholder">e.g. Phillips Hue</string>

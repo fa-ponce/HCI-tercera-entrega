@@ -36,6 +36,7 @@ import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceTypeDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
+import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.ui.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +66,7 @@ fun AddDeviceDialog(
 
     var typeExpanded by remember { mutableStateOf(false) }
     var selectedType by remember { mutableStateOf<DeviceTypeDto?>(null) }
+    var typeError by remember { mutableStateOf<String?>(null) }
 
     var homeExpanded by remember { mutableStateOf(false) }
     var selectedHome by remember { mutableStateOf(lockedHome) }
@@ -105,12 +107,14 @@ fun AddDeviceDialog(
                     onExpandedChange = { typeExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedType?.name ?: "",
+                        value = selectedType?.let { stringResource(deviceTypeName(it.id)) } ?: "",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.device_type_label)) },
                         placeholder = { Text(stringResource(R.string.device_type_placeholder)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
+                        isError = typeError != null,
+                        supportingText = typeError?.let { msg -> { Text(msg) } },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -122,9 +126,10 @@ fun AddDeviceDialog(
                     ) {
                         deviceTypes.forEach { type ->
                             DropdownMenuItem(
-                                text = { Text(type.name) },
+                                text = { Text(stringResource(deviceTypeName(type.id))) },
                                 onClick = {
                                     selectedType = type
+                                    typeError = null
                                     typeExpanded = false
                                 }
                             )
@@ -232,14 +237,17 @@ fun AddDeviceDialog(
         confirmButton = {
             val errMin = stringResource(R.string.common_name_min_chars)
             val errMax = stringResource(R.string.common_name_max_chars)
+            val errType = stringResource(R.string.device_type_required_err)
             TextButton(
                 onClick = {
                     val trimmed = name.trim()
-                    when {
-                        trimmed.length < 3 -> { nameError = errMin; return@TextButton }
-                        trimmed.length > 100 -> { nameError = errMax; return@TextButton }
-                        selectedType == null -> return@TextButton
+                    nameError = when {
+                        trimmed.length < 3 -> errMin
+                        trimmed.length > 100 -> errMax
+                        else -> null
                     }
+                    typeError = if (selectedType == null) errType else null
+                    if (nameError != null || typeError != null) return@TextButton
                     if (!isSaving) {
                         isSaving = true
                         onCreate(trimmed, selectedType?.id ?: return@TextButton, selectedRoom?.id, marca.trim()) { success ->
@@ -247,7 +255,7 @@ fun AddDeviceDialog(
                         }
                     }
                 },
-                enabled = selectedType != null && !isSaving
+                enabled = !isSaving
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(
