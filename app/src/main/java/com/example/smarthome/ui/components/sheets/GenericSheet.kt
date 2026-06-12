@@ -16,9 +16,7 @@ import com.example.smarthome.data.api.models.RoomDto
 fun GenericSheet(
     device: DeviceDto,
     onDismiss: () -> Unit,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
@@ -30,7 +28,11 @@ fun GenericSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = device.type.name ?: stringResource(R.string.device_type_generic), deviceId = device.id, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = device.type.name ?: stringResource(R.string.device_type_generic),
+                onRename = { newName, cb -> actions.onRename(newName, cb) }
+            )
             Text(
                 stringResource(R.string.sheet_unsupported),
                 style = MaterialTheme.typography.bodyMedium,
@@ -40,8 +42,8 @@ fun GenericSheet(
                 Text(stringResource(R.string.common_close))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
             }
         }
     }

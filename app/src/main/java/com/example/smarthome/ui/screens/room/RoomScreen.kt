@@ -65,6 +65,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.screens.devices.AddDeviceDialog
 import kotlinx.coroutines.launch
@@ -348,9 +349,14 @@ fun RoomScreen(
         DeviceSheetRouter(
             device = device,
             onDismiss = { selectedDevice = null },
-            onDeviceRenamed = { appViewModel.updateDevice(it) },
-            onDeviceDeleted = { appViewModel.removeDevice(it) },
-            onDeviceRoomChanged = { appViewModel.relocateDevice(it) },
+            actions = DeviceSheetActions(
+                onExecuteAction = { action, params, cb -> appViewModel.executeDeviceAction(device.id, action, params, cb) },
+                onRename = { newName, cb -> appViewModel.renameDevice(device.id, newName, cb) },
+                onDelete = { cb -> appViewModel.deleteDevice(device.id, cb) },
+                onLink = { roomId, cb -> appViewModel.linkDeviceToRoom(device.id, roomId, cb) },
+                onUnlink = { cb -> appViewModel.linkDeviceToRoom(device.id, null, cb) },
+                onLoad = { id -> appViewModel.loadDevice(id) }
+            ),
             homes = homes,
             rooms = rooms
         )

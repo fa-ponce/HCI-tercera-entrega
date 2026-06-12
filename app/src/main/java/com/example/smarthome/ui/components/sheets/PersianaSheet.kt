@@ -14,11 +14,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,15 +25,10 @@ fun PersianaSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var level by remember { mutableFloatStateOf(if (routineMode) 100f else 0f) }
     var selectedAction by remember { mutableStateOf("up") }
@@ -43,7 +36,7 @@ fun PersianaSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 level = ((d.state["level"] as? Double)?.toFloat() ?: 0f)
                 movementStatus = d.state["status"] as? String
                 selectedAction = if (level > 0) "up" else "down"
@@ -61,7 +54,11 @@ fun PersianaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_blinds), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_blinds),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -92,10 +89,8 @@ fun PersianaSheet(
                                 if (routineMode) {
                                     selectedAction = "up"; level = 100f
                                 } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "up")
-                                        level = 100f; selectedAction = "up"
-                                    }
+                                    actions.onExecuteAction("up", emptyMap(), null)
+                                    level = 100f; selectedAction = "up"
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -114,10 +109,8 @@ fun PersianaSheet(
                                 if (routineMode) {
                                     selectedAction = "down"; level = 0f
                                 } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "down")
-                                        level = 0f; selectedAction = "down"
-                                    }
+                                    actions.onExecuteAction("down", emptyMap(), null)
+                                    level = 0f; selectedAction = "down"
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -144,11 +137,7 @@ fun PersianaSheet(
                             value = level,
                             onValueChange = { level = it; selectedAction = "setLevel" },
                             onValueChangeFinished = {
-                                if (!routineMode) {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "setLevel", mapOf("level" to level.toInt()))
-                                    }
-                                }
+                                if (!routineMode) actions.onExecuteAction("setLevel", mapOf("level" to level.toInt()), null)
                             },
                             valueRange = 0f..100f
                         )
@@ -163,18 +152,18 @@ fun PersianaSheet(
                     SheetRoutineFooter(
                         onCancel = onDismiss,
                         onAdd = {
-                            val actions = if (selectedAction == "setLevel")
+                            val routineActions = if (selectedAction == "setLevel")
                                 listOf(DeviceAction("setLevel", mapOf("level" to level.toInt())))
                             else
                                 listOf(DeviceAction(selectedAction))
-                            onAddToRoutine?.invoke(actions)
+                            onAddToRoutine?.invoke(routineActions)
                             onDismiss()
                         }
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

@@ -14,11 +14,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 private const val DEFAULT_CODE = "1234"
 
@@ -29,15 +27,10 @@ fun AlarmaSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var status by remember { mutableStateOf(if (routineMode) "armedAway" else "disarmed") }
     var codeInput by remember { mutableStateOf("") }
@@ -47,14 +40,13 @@ fun AlarmaSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 status = (d.state["status"] as? String) ?: "disarmed"
             }
             isLoading = false
         }
     }
 
-    val statusActionMap = mapOf("armStay" to "armedStay", "armAway" to "armedAway", "disarm" to "disarmed")
     val actionStatusMap = mapOf("armedStay" to "armStay", "armedAway" to "armAway", "disarmed" to "disarm")
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -66,7 +58,11 @@ fun AlarmaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_alarm), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_alarm),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -122,9 +118,8 @@ fun AlarmaSheet(
                                             if (routineMode) {
                                                 status = targetStatus
                                             } else if (!active && !isSaving) {
-                                                scope.launch {
-                                                    isSaving = true
-                                                    repo.executeAction(device.id, action, mapOf("securityCode" to codeInput))
+                                                isSaving = true
+                                                actions.onExecuteAction(action, mapOf("securityCode" to codeInput)) { _ ->
                                                     status = targetStatus
                                                     isSaving = false
                                                 }
@@ -157,8 +152,6 @@ fun AlarmaSheet(
                             onCancel = onDismiss,
                             onAdd = {
                                 val actionName = actionStatusMap[status] ?: "armAway"
-                                // Las acciones de la alarma requieren el código de
-                                // seguridad; sin él la API rechaza la rutina.
                                 onAddToRoutine?.invoke(
                                     listOf(DeviceAction(actionName, mapOf("securityCode" to DEFAULT_CODE)))
                                 )
@@ -167,8 +160,8 @@ fun AlarmaSheet(
                         )
                     } else {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                            SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                            SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                            SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                         }
                     }
                 }

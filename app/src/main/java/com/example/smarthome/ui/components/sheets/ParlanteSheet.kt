@@ -13,11 +13,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,15 +24,10 @@ fun ParlanteSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var status by remember { mutableStateOf("stopped") }
     var volume by remember { mutableIntStateOf(5) }
@@ -56,7 +49,7 @@ fun ParlanteSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 val s = d.state
                 status = (s["status"] as? String) ?: "stopped"
                 volume = ((s["volume"] as? Double)?.toInt() ?: 5).coerceIn(0, 10)
@@ -78,7 +71,11 @@ fun ParlanteSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_speaker), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_speaker),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -117,7 +114,7 @@ fun ParlanteSheet(
                             // Previous
                             IconButton(
                                 onClick = {
-                                    if (!routineMode) scope.launch { repo.executeAction(device.id, "previousSong") }
+                                    if (!routineMode) actions.onExecuteAction("previousSong", emptyMap(), null)
                                 },
                                 enabled = routineMode || isPlaying
                             ) { Icon(Icons.Rounded.SkipPrevious, stringResource(R.string.sheet_previous), Modifier.size(28.dp)) }
@@ -126,7 +123,8 @@ fun ParlanteSheet(
                             IconButton(
                                 onClick = {
                                     if (routineMode) { status = "stopped" } else {
-                                        scope.launch { repo.executeAction(device.id, "stop"); status = "stopped" }
+                                        actions.onExecuteAction("stop", emptyMap(), null)
+                                        status = "stopped"
                                     }
                                 },
                                 enabled = routineMode || !isStopped
@@ -137,7 +135,8 @@ fun ParlanteSheet(
                                 onClick = {
                                     val action = if (isPaused) "resume" else "play"
                                     if (routineMode) { status = "playing" } else {
-                                        scope.launch { repo.executeAction(device.id, action); status = "playing" }
+                                        actions.onExecuteAction(action, emptyMap(), null)
+                                        status = "playing"
                                     }
                                 },
                                 modifier = Modifier.size(52.dp),
@@ -148,7 +147,8 @@ fun ParlanteSheet(
                             IconButton(
                                 onClick = {
                                     if (routineMode) { status = "paused" } else {
-                                        scope.launch { repo.executeAction(device.id, "pause"); status = "paused" }
+                                        actions.onExecuteAction("pause", emptyMap(), null)
+                                        status = "paused"
                                     }
                                 },
                                 enabled = routineMode || isPlaying
@@ -157,7 +157,7 @@ fun ParlanteSheet(
                             // Next
                             IconButton(
                                 onClick = {
-                                    if (!routineMode) scope.launch { repo.executeAction(device.id, "nextSong") }
+                                    if (!routineMode) actions.onExecuteAction("nextSong", emptyMap(), null)
                                 },
                                 enabled = routineMode || isPlaying
                             ) { Icon(Icons.Rounded.SkipNext, stringResource(R.string.sheet_next), Modifier.size(28.dp)) }
@@ -177,7 +177,7 @@ fun ParlanteSheet(
                                 onClick = {
                                     if (volume > 0) {
                                         volume--
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "volumeDown") }
+                                        if (!routineMode) actions.onExecuteAction("volumeDown", emptyMap(), null)
                                     }
                                 },
                                 enabled = volume > 0
@@ -186,7 +186,7 @@ fun ParlanteSheet(
                                 value = volume.toFloat(),
                                 onValueChange = { volume = it.toInt() },
                                 onValueChangeFinished = {
-                                    if (!routineMode) scope.launch { repo.executeAction(device.id, "setVolume", mapOf("volume" to volume)) }
+                                    if (!routineMode) actions.onExecuteAction("setVolume", mapOf("volume" to volume), null)
                                 },
                                 valueRange = 0f..10f,
                                 steps = 9,
@@ -196,7 +196,7 @@ fun ParlanteSheet(
                                 onClick = {
                                     if (volume < 10) {
                                         volume++
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "volumeUp") }
+                                        if (!routineMode) actions.onExecuteAction("volumeUp", emptyMap(), null)
                                     }
                                 },
                                 enabled = volume < 10
@@ -215,7 +215,7 @@ fun ParlanteSheet(
                                     selected = genre == value,
                                     onClick = {
                                         genre = value
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "setGenre", mapOf("genre" to value)) }
+                                        if (!routineMode) actions.onExecuteAction("setGenre", mapOf("genre" to value), null)
                                     },
                                     label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                                 )
@@ -239,8 +239,8 @@ fun ParlanteSheet(
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

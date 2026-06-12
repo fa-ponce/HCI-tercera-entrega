@@ -17,11 +17,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,15 +28,10 @@ fun LamparaSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var isOn by remember { mutableStateOf(false) }
     var brightness by remember { mutableFloatStateOf(100f) }
@@ -51,7 +44,7 @@ fun LamparaSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 val state = d.state
                 isOn = state["status"] == "on"
                 brightness = ((state["brightness"] as? Double)?.toFloat()
@@ -75,7 +68,11 @@ fun LamparaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_lamp), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_lamp),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -98,11 +95,7 @@ fun LamparaSheet(
                             checked = isOn,
                             onCheckedChange = { value ->
                                 isOn = value
-                                if (!routineMode) {
-                                    scope.launch {
-                                        repo.executeAction(device.id, if (value) "turnOn" else "turnOff")
-                                    }
-                                }
+                                if (!routineMode) actions.onExecuteAction(if (value) "turnOn" else "turnOff", emptyMap(), null)
                             }
                         )
                     }
@@ -131,35 +124,25 @@ fun LamparaSheet(
                             }
                         }
 
-                        // Hue slider
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(stringResource(R.string.sheet_hue), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             Slider(
                                 value = hue,
                                 onValueChange = { hue = it },
                                 onValueChangeFinished = {
-                                    if (!routineMode) {
-                                        scope.launch {
-                                            repo.executeAction(device.id, "setColor", mapOf("color" to colorToHex(color)))
-                                        }
-                                    }
+                                    if (!routineMode) actions.onExecuteAction("setColor", mapOf("color" to colorToHex(color)), null)
                                 },
                                 valueRange = 0f..360f
                             )
                         }
 
-                        // Saturation slider
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(stringResource(R.string.sheet_saturation), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             Slider(
                                 value = saturation,
                                 onValueChange = { saturation = it },
                                 onValueChangeFinished = {
-                                    if (!routineMode) {
-                                        scope.launch {
-                                            repo.executeAction(device.id, "setColor", mapOf("color" to colorToHex(color)))
-                                        }
-                                    }
+                                    if (!routineMode) actions.onExecuteAction("setColor", mapOf("color" to colorToHex(color)), null)
                                 },
                                 valueRange = 0f..100f
                             )
@@ -178,11 +161,7 @@ fun LamparaSheet(
                             value = brightness,
                             onValueChange = { brightness = it },
                             onValueChangeFinished = {
-                                if (!routineMode) {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "setBrightness", mapOf("brightness" to brightness.toInt()))
-                                    }
-                                }
+                                if (!routineMode) actions.onExecuteAction("setBrightness", mapOf("brightness" to brightness.toInt()), null)
                             },
                             valueRange = 0f..100f
                         )
@@ -209,8 +188,8 @@ fun LamparaSheet(
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

@@ -12,11 +12,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,15 +23,10 @@ fun AcSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var isOn by remember { mutableStateOf(false) }
     var temperature by remember { mutableFloatStateOf(24f) }
@@ -49,7 +42,7 @@ fun AcSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 val s = d.state
                 isOn = s["status"] == "on"
                 temperature = ((s["temperature"] as? Double)?.toFloat() ?: 24f)
@@ -71,7 +64,11 @@ fun AcSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_ac), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_ac),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -88,7 +85,7 @@ fun AcSheet(
                         Text(if (isOn) stringResource(R.string.common_on) else stringResource(R.string.common_off), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         Switch(checked = isOn, onCheckedChange = { v ->
                             isOn = v
-                            if (!routineMode) scope.launch { repo.executeAction(device.id, if (v) "turnOn" else "turnOff") }
+                            if (!routineMode) actions.onExecuteAction(if (v) "turnOn" else "turnOff", emptyMap(), null)
                         })
                     }
                 }
@@ -104,7 +101,7 @@ fun AcSheet(
                             value = temperature,
                             onValueChange = { temperature = it },
                             onValueChangeFinished = {
-                                if (!routineMode) scope.launch { repo.executeAction(device.id, "setTemperature", mapOf("temperature" to temperature.toInt())) }
+                                if (!routineMode) actions.onExecuteAction("setTemperature", mapOf("temperature" to temperature.toInt()), null)
                             },
                             valueRange = 18f..38f
                         )
@@ -125,7 +122,7 @@ fun AcSheet(
                                     selected = mode == m,
                                     onClick = {
                                         mode = m
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "setMode", mapOf("mode" to m)) }
+                                        if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to m), null)
                                     },
                                     label = {
                                         Text(when (m) {
@@ -151,7 +148,7 @@ fun AcSheet(
                                     selected = verticalSwing == v,
                                     onClick = {
                                         verticalSwing = v
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "setVerticalSwing", mapOf("verticalSwing" to v)) }
+                                        if (!routineMode) actions.onExecuteAction("setVerticalSwing", mapOf("verticalSwing" to v), null)
                                     },
                                     label = { Text(if (v == "auto") stringResource(R.string.sheet_auto) else "$v°", style = MaterialTheme.typography.labelSmall) }
                                 )
@@ -170,7 +167,7 @@ fun AcSheet(
                                     selected = horizontalSwing == h,
                                     onClick = {
                                         horizontalSwing = h
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "setHorizontalSwing", mapOf("horizontalSwing" to h)) }
+                                        if (!routineMode) actions.onExecuteAction("setHorizontalSwing", mapOf("horizontalSwing" to h), null)
                                     },
                                     label = { Text(if (h == "auto") stringResource(R.string.sheet_auto) else "$h°", style = MaterialTheme.typography.labelSmall) }
                                 )
@@ -189,7 +186,7 @@ fun AcSheet(
                                     selected = fanSpeed == f,
                                     onClick = {
                                         fanSpeed = f
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "setFanSpeed", mapOf("fanSpeed" to f)) }
+                                        if (!routineMode) actions.onExecuteAction("setFanSpeed", mapOf("fanSpeed" to f), null)
                                     },
                                     label = { Text(if (f == "auto") stringResource(R.string.sheet_auto) else "$f%", style = MaterialTheme.typography.labelSmall) }
                                 )
@@ -215,8 +212,8 @@ fun AcSheet(
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

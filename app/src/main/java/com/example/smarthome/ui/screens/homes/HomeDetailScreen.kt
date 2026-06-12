@@ -69,6 +69,7 @@ import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.components.DeviceGridCard
+import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.foundation.layout.WindowInsets
@@ -269,9 +270,14 @@ fun HomeDetailContent(
         DeviceSheetRouter(
             device = device,
             onDismiss = { selectedDevice = null },
-            onDeviceRenamed = { appViewModel.updateDevice(it) },
-            onDeviceDeleted = { appViewModel.removeDevice(it) },
-            onDeviceRoomChanged = { appViewModel.relocateDevice(it) },
+            actions = DeviceSheetActions(
+                onExecuteAction = { action, params, cb -> appViewModel.executeDeviceAction(device.id, action, params, cb) },
+                onRename = { newName, cb -> appViewModel.renameDevice(device.id, newName, cb) },
+                onDelete = { cb -> appViewModel.deleteDevice(device.id, cb) },
+                onLink = { roomId, cb -> appViewModel.linkDeviceToRoom(device.id, roomId, cb) },
+                onUnlink = { cb -> appViewModel.linkDeviceToRoom(device.id, null, cb) },
+                onLoad = { id -> appViewModel.loadDevice(id) }
+            ),
             homes = homes,
             rooms = rooms
         )

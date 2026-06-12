@@ -468,6 +468,56 @@ class AppViewModel(
         freeHomeId = null
     }
 
+    fun executeDeviceAction(
+        deviceId: String,
+        action: String,
+        params: Map<String, Any> = emptyMap(),
+        onResult: ((Result<Map<String, Any?>>) -> Unit)? = null
+    ) = viewModelScope.launch {
+        val result = deviceRepository.executeAction(deviceId, action, params)
+        result.onFailure { _errorEvent.tryEmit(it.message ?: "Error ejecutando acción") }
+        onResult?.invoke(result)
+    }
+
+    fun renameDevice(
+        deviceId: String,
+        newName: String,
+        onResult: (Result<DeviceDto>) -> Unit
+    ) = viewModelScope.launch {
+        val result = deviceRepository.updateDevice(deviceId, newName)
+        result.onSuccess { updateDevice(it) }
+        onResult(result)
+    }
+
+    fun deleteDevice(
+        deviceId: String,
+        onResult: (Result<Unit>) -> Unit
+    ) = viewModelScope.launch {
+        val result = deviceRepository.deleteDevice(deviceId)
+        result.onSuccess { removeDevice(deviceId) }
+        onResult(result)
+    }
+
+    fun linkDeviceToRoom(
+        deviceId: String,
+        roomId: String?,
+        onResult: (Result<Unit>) -> Unit
+    ) = viewModelScope.launch {
+        val targetRoomId = roomId ?: ensureFreeRoomId() ?: run {
+            onResult(Result.failure(Exception(appContext.getString(R.string.sheet_free_room_error))))
+            return@launch
+        }
+        val result = deviceRepository.addDeviceToRoom(targetRoomId, deviceId)
+        result.onSuccess { _ ->
+            val current = _devices.value.values.flatten().find { d -> d.id == deviceId }
+            if (current != null) relocateDevice(current.copy(room = roomId?.let { RoomRef(it) }))
+        }
+        onResult(result)
+    }
+
+    suspend fun loadDevice(deviceId: String): DeviceDto? =
+        deviceRepository.getDevice(deviceId).getOrNull()
+
     override fun onCleared() {
         super.onCleared()
         SocketManager.disconnect()

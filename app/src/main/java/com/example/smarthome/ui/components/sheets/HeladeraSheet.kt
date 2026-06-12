@@ -11,11 +11,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,15 +22,10 @@ fun HeladeraSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var fridgeTemp by remember { mutableFloatStateOf(4f) }
     var freezerTemp by remember { mutableFloatStateOf(-8f) }
@@ -46,7 +39,7 @@ fun HeladeraSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 val s = d.state
                 fridgeTemp = ((s["temperature"] as? Double)?.toFloat() ?: 4f)
                 freezerTemp = ((s["freezerTemperature"] as? Double)?.toFloat() ?: -8f)
@@ -65,7 +58,11 @@ fun HeladeraSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_fridge), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_fridge),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -83,7 +80,7 @@ fun HeladeraSheet(
                             value = fridgeTemp,
                             onValueChange = { fridgeTemp = it },
                             onValueChangeFinished = {
-                                if (!routineMode) scope.launch { repo.executeAction(device.id, "setTemperature", mapOf("temperature" to fridgeTemp.toInt())) }
+                                if (!routineMode) actions.onExecuteAction("setTemperature", mapOf("temperature" to fridgeTemp.toInt()), null)
                             },
                             valueRange = 2f..8f
                         )
@@ -105,7 +102,7 @@ fun HeladeraSheet(
                             value = freezerTemp,
                             onValueChange = { freezerTemp = it },
                             onValueChangeFinished = {
-                                if (!routineMode) scope.launch { repo.executeAction(device.id, "setFreezerTemperature", mapOf("temperature" to freezerTemp.toInt())) }
+                                if (!routineMode) actions.onExecuteAction("setFreezerTemperature", mapOf("temperature" to freezerTemp.toInt()), null)
                             },
                             valueRange = -20f..-8f,
                             colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.secondary, activeTrackColor = MaterialTheme.colorScheme.secondary)
@@ -128,7 +125,7 @@ fun HeladeraSheet(
                                     onClick = {
                                         if (modo != value) {
                                             modo = value
-                                            if (!routineMode) scope.launch { repo.executeAction(device.id, "setMode", mapOf("mode" to value)) }
+                                            if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
                                         }
                                     },
                                     modifier = Modifier.weight(1f),
@@ -164,8 +161,8 @@ fun HeladeraSheet(
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

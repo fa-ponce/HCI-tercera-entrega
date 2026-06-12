@@ -2,7 +2,6 @@ package com.example.smarthome.ui.components.sheets
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,14 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,15 +22,10 @@ fun GrifoSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var isOpen by remember { mutableStateOf(false) }
     var quantity by remember { mutableIntStateOf(1) }
@@ -52,7 +43,7 @@ fun GrifoSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 isOpen = d.state["status"] == "opened"
                 selectedAction = if (isOpen) "open" else "close"
             }
@@ -69,7 +60,11 @@ fun GrifoSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_faucet), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_faucet),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -98,11 +93,11 @@ fun GrifoSheet(
                         val openActive = if (routineMode) selectedAction == "open" else isOpen
                         OutlinedButton(
                             onClick = {
-                                if (routineMode) { selectedAction = "open" } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "open")
-                                        isOpen = true; selectedAction = "open"
-                                    }
+                                if (routineMode) {
+                                    selectedAction = "open"
+                                } else {
+                                    actions.onExecuteAction("open", emptyMap(), null)
+                                    isOpen = true; selectedAction = "open"
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -115,11 +110,11 @@ fun GrifoSheet(
                         val closeActive = if (routineMode) selectedAction == "close" else !isOpen
                         OutlinedButton(
                             onClick = {
-                                if (routineMode) { selectedAction = "close" } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "close")
-                                        isOpen = false; selectedAction = "close"
-                                    }
+                                if (routineMode) {
+                                    selectedAction = "close"
+                                } else {
+                                    actions.onExecuteAction("close", emptyMap(), null)
+                                    isOpen = false; selectedAction = "close"
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -182,11 +177,10 @@ fun GrifoSheet(
                                 if (routineMode) {
                                     selectedAction = "dispense"
                                 } else {
-                                    scope.launch {
-                                        isDispensing = true
-                                        dispensedMsg = null
-                                        repo.executeAction(device.id, "dispense", mapOf("quantity" to quantity, "unit" to unit))
-                                            .onSuccess { dispensedMsg = dispensedFmt }
+                                    isDispensing = true
+                                    dispensedMsg = null
+                                    actions.onExecuteAction("dispense", mapOf("quantity" to quantity, "unit" to unit)) { result ->
+                                        result.onSuccess { dispensedMsg = dispensedFmt }
                                         isDispensing = false
                                     }
                                 }
@@ -207,18 +201,18 @@ fun GrifoSheet(
                     SheetRoutineFooter(
                         onCancel = onDismiss,
                         onAdd = {
-                            val actions = if (selectedAction == "dispense")
+                            val routineActions = if (selectedAction == "dispense")
                                 listOf(DeviceAction("dispense", mapOf("quantity" to quantity, "unit" to unit)))
                             else
                                 listOf(DeviceAction(selectedAction))
-                            onAddToRoutine?.invoke(actions)
+                            onAddToRoutine?.invoke(routineActions)
                             onDismiss()
                         }
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

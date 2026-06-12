@@ -11,11 +11,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,15 +22,10 @@ fun PuertaSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var isOpen by remember { mutableStateOf(false) }
     var isLocked by remember { mutableStateOf(false) }
@@ -41,7 +34,7 @@ fun PuertaSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 isOpen = d.state["status"] == "opened"
                 isLocked = d.state["lock"] == "locked"
                 selectedDoor = if (isOpen) "open" else "close"
@@ -59,7 +52,11 @@ fun PuertaSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_door), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_door),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -97,11 +94,11 @@ fun PuertaSheet(
                                 enabled = routineMode || !isOpen,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                if (routineMode) { selectedDoor = "open" } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "open")
-                                        isOpen = true; isLocked = false; selectedDoor = "open"
-                                    }
+                                if (routineMode) {
+                                    selectedDoor = "open"
+                                } else {
+                                    actions.onExecuteAction("open", emptyMap(), null)
+                                    isOpen = true; isLocked = false; selectedDoor = "open"
                                 }
                             }
                             DoorActionButton(
@@ -110,11 +107,11 @@ fun PuertaSheet(
                                 enabled = routineMode || isOpen,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                if (routineMode) { selectedDoor = "close" } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "close")
-                                        isOpen = false; selectedDoor = "close"
-                                    }
+                                if (routineMode) {
+                                    selectedDoor = "close"
+                                } else {
+                                    actions.onExecuteAction("close", emptyMap(), null)
+                                    isOpen = false; selectedDoor = "close"
                                 }
                             }
                         }
@@ -125,11 +122,11 @@ fun PuertaSheet(
                                 enabled = routineMode || (!isLocked && !isOpen),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                if (routineMode) { selectedLock = if (selectedLock == "lock") null else "lock" } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "lock")
-                                        isLocked = true
-                                    }
+                                if (routineMode) {
+                                    selectedLock = if (selectedLock == "lock") null else "lock"
+                                } else {
+                                    actions.onExecuteAction("lock", emptyMap(), null)
+                                    isLocked = true
                                 }
                             }
                             DoorActionButton(
@@ -138,11 +135,11 @@ fun PuertaSheet(
                                 enabled = routineMode || isLocked,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                if (routineMode) { selectedLock = if (selectedLock == "unlock") null else "unlock" } else {
-                                    scope.launch {
-                                        repo.executeAction(device.id, "unlock")
-                                        isLocked = false
-                                    }
+                                if (routineMode) {
+                                    selectedLock = if (selectedLock == "unlock") null else "unlock"
+                                } else {
+                                    actions.onExecuteAction("unlock", emptyMap(), null)
+                                    isLocked = false
                                 }
                             }
                         }
@@ -153,16 +150,16 @@ fun PuertaSheet(
                     SheetRoutineFooter(
                         onCancel = onDismiss,
                         onAdd = {
-                            val actions = mutableListOf(DeviceAction(selectedDoor))
-                            selectedLock?.let { actions.add(DeviceAction(it)) }
-                            onAddToRoutine?.invoke(actions)
+                            val routineActions = mutableListOf(DeviceAction(selectedDoor))
+                            selectedLock?.let { routineActions.add(DeviceAction(it)) }
+                            onAddToRoutine?.invoke(routineActions)
                             onDismiss()
                         }
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

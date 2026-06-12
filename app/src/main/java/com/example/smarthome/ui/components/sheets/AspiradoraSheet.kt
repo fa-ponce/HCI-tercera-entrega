@@ -11,11 +11,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,15 +22,10 @@ fun AspiradoraSheet(
     routineMode: Boolean = false,
     onDismiss: () -> Unit,
     onAddToRoutine: ((List<DeviceAction>) -> Unit)? = null,
-    onDeviceRenamed: ((DeviceDto) -> Unit)? = null,
-    onDeviceDeleted: ((String) -> Unit)? = null,
-    onDeviceRoomChanged: ((DeviceDto) -> Unit)? = null,
+    actions: DeviceSheetActions = DeviceSheetActions(),
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    val scope = rememberCoroutineScope()
-    val repo = remember { ServiceLocator.deviceRepository }
-
     var isLoading by remember { mutableStateOf(!routineMode) }
     var status by remember { mutableStateOf("docked") }
     var mode by remember { mutableStateOf("vacuum") }
@@ -47,7 +40,7 @@ fun AspiradoraSheet(
 
     LaunchedEffect(device.id) {
         if (!routineMode) {
-            repo.getDevice(device.id).onSuccess { d ->
+            actions.onLoad?.invoke(device.id)?.let { d ->
                 status = (d.state["status"] as? String) ?: "docked"
                 mode = (d.state["mode"] as? String) ?: "vacuum"
                 selectedAction = if (status == "docked" || status == "inactive") "start" else "dock"
@@ -65,7 +58,11 @@ fun AspiradoraSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SheetHeader(title = device.name, subtitle = stringResource(R.string.device_type_vacuum), deviceId = if (!routineMode) device.id else null, onRenamed = { name -> onDeviceRenamed?.invoke(device.copy(name = name)) })
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(R.string.device_type_vacuum),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
 
             if (isLoading) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -99,10 +96,11 @@ fun AspiradoraSheet(
                             val startActive = if (routineMode) selectedAction == "start" else status == "active"
                             Surface(
                                 onClick = {
-                                    if (routineMode) { selectedAction = "start" } else if (!isSaving && status != "active") {
-                                        scope.launch {
-                                            isSaving = true
-                                            repo.executeAction(device.id, "start")
+                                    if (routineMode) {
+                                        selectedAction = "start"
+                                    } else if (!isSaving && status != "active") {
+                                        isSaving = true
+                                        actions.onExecuteAction("start", emptyMap()) { _ ->
                                             status = "active"; selectedAction = "start"; isSaving = false
                                         }
                                     }
@@ -122,9 +120,8 @@ fun AspiradoraSheet(
                                 Surface(
                                     onClick = {
                                         if (!isSaving && status == "active") {
-                                            scope.launch {
-                                                isSaving = true
-                                                repo.executeAction(device.id, "pause")
+                                            isSaving = true
+                                            actions.onExecuteAction("pause", emptyMap()) { _ ->
                                                 status = "paused"; isSaving = false
                                             }
                                         }
@@ -144,10 +141,11 @@ fun AspiradoraSheet(
                             val dockActive = if (routineMode) selectedAction == "dock" else status == "docked"
                             Surface(
                                 onClick = {
-                                    if (routineMode) { selectedAction = "dock" } else if (!isSaving && status != "docked") {
-                                        scope.launch {
-                                            isSaving = true
-                                            repo.executeAction(device.id, "dock")
+                                    if (routineMode) {
+                                        selectedAction = "dock"
+                                    } else if (!isSaving && status != "docked") {
+                                        isSaving = true
+                                        actions.onExecuteAction("dock", emptyMap()) { _ ->
                                             status = "docked"; selectedAction = "dock"; isSaving = false
                                         }
                                     }
@@ -175,7 +173,7 @@ fun AspiradoraSheet(
                                     selected = mode == value,
                                     onClick = {
                                         mode = value
-                                        if (!routineMode) scope.launch { repo.executeAction(device.id, "setMode", mapOf("mode" to value)) }
+                                        if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
                                     },
                                     label = { Text(stringResource(labelRes)) },
                                     modifier = Modifier.weight(1f)
@@ -198,8 +196,8 @@ fun AspiradoraSheet(
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onDeviceUpdated = onDeviceRoomChanged)
-                        SheetDeleteButton(deviceId = device.id, onDismiss = onDismiss, modifier = Modifier.weight(1f), onDeleted = onDeviceDeleted)
+                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
+                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

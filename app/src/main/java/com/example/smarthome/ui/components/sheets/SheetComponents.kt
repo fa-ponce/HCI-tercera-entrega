@@ -15,27 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
-import com.example.smarthome.data.api.models.RoomRef
-import kotlinx.coroutines.launch
-
-private const val FREE_TYPE = "__libre__"
-
-private suspend fun ensureFreeRoomId(): String? {
-    val homeRepository = ServiceLocator.homeRepository
-    val homes = homeRepository.getHomes().getOrNull() ?: return null
-    val freeHome = homes.find { it.metadata?.type == FREE_TYPE }
-        ?: homeRepository.createHome(FREE_TYPE, FREE_TYPE, "", "").getOrNull()
-        ?: return null
-    val rooms = homeRepository.getHomeRooms(freeHome.id).getOrNull().orEmpty()
-    val freeRoom = rooms.find { it.metadata?.type == FREE_TYPE }
-        ?: homeRepository.createRoom(FREE_TYPE, FREE_TYPE, 0, freeHome.id).getOrNull()
-        ?: return null
-    return freeRoom.id
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +25,8 @@ fun SheetHeader(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
-    deviceId: String? = null,
-    onRenamed: ((String) -> Unit)? = null
+    onRename: ((newName: String, onResult: (Result<DeviceDto>) -> Unit) -> Unit)? = null
 ) {
-    val scope = rememberCoroutineScope()
     var displayTitle by remember(title) { mutableStateOf(title) }
     var showDialog by remember { mutableStateOf(false) }
     var editText by remember { mutableStateOf("") }
@@ -64,7 +44,7 @@ fun SheetHeader(
                 color = MaterialTheme.colorScheme.outline
             )
         }
-        if (deviceId != null) {
+        if (onRename != null) {
             IconButton(onClick = { editText = displayTitle; showDialog = true }) {
                 Icon(
                     Icons.Rounded.Edit,
@@ -103,14 +83,11 @@ fun SheetHeader(
                         if (newName.isNotEmpty() && !isSaving) {
                             isSaving = true
                             saveError = null
-                            scope.launch {
-                                ServiceLocator.deviceRepository.updateDevice(deviceId!!, newName)
-                                    .onSuccess {
-                                        displayTitle = newName
-                                        onRenamed?.invoke(newName)
-                                        showDialog = false
-                                    }
-                                    .onFailure { saveError = it.message }
+                            onRename?.invoke(newName) { result ->
+                                result.onSuccess {
+                                    displayTitle = newName
+                                    showDialog = false
+                                }.onFailure { saveError = it.message }
                                 isSaving = false
                             }
                         }
@@ -155,12 +132,10 @@ fun SheetSectionLabel(text: String) {
 
 @Composable
 fun SheetDeleteButton(
-    deviceId: String,
+    onDelete: (onResult: (Result<Unit>) -> Unit) -> Unit,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-    onDeleted: ((String) -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
-    val scope = rememberCoroutineScope()
     var showConfirm by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
@@ -191,12 +166,8 @@ fun SheetDeleteButton(
                         if (!isDeleting) {
                             isDeleting = true
                             deleteError = null
-                            scope.launch {
-                                ServiceLocator.deviceRepository.deleteDevice(deviceId)
-                                    .onSuccess {
-                                        onDeleted?.invoke(deviceId)
-                                        onDismiss()
-                                    }
+                            onDelete { result ->
+                                result.onSuccess { onDismiss() }
                                     .onFailure { deleteError = it.message }
                                 isDeleting = false
                             }
@@ -226,9 +197,9 @@ fun SheetRoomLinkButton(
     homes: List<HomeDto>,
     rooms: Map<String, List<RoomDto>>,
     modifier: Modifier = Modifier,
-    onDeviceUpdated: ((DeviceDto) -> Unit)? = null
+    onUnlink: (onResult: (Result<Unit>) -> Unit) -> Unit = { _ -> },
+    onLink: (roomId: String, onResult: (Result<Unit>) -> Unit) -> Unit = { _, _ -> }
 ) {
-    val scope = rememberCoroutineScope()
     val isLinked = device.room != null
     var showUnlinkConfirm by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf(false) }
@@ -268,24 +239,14 @@ fun SheetRoomLinkButton(
                 }
             },
             confirmButton = {
-                val freeRoomErr = stringResource(R.string.sheet_free_room_error)
                 Button(
                     onClick = {
                         if (!isUnlinking) {
                             isUnlinking = true
                             unlinkError = null
-                            scope.launch {
-                                val freeRoomId = ensureFreeRoomId()
-                                if (freeRoomId == null) {
-                                    unlinkError = freeRoomErr
-                                } else {
-                                    ServiceLocator.deviceRepository.addDeviceToRoom(freeRoomId, device.id)
-                                        .onSuccess {
-                                            onDeviceUpdated?.invoke(device.copy(room = null))
-                                            showUnlinkConfirm = false
-                                        }
-                                        .onFailure { unlinkError = it.message }
-                                }
+                            onUnlink { result ->
+                                result.onSuccess { showUnlinkConfirm = false }
+                                    .onFailure { unlinkError = it.message }
                                 isUnlinking = false
                             }
                         }
@@ -382,15 +343,12 @@ fun SheetRoomLinkButton(
                         if (!isLinking) {
                             isLinking = true
                             linkError = null
-                            scope.launch {
-                                ServiceLocator.deviceRepository.addDeviceToRoom(room.id, device.id)
-                                    .onSuccess {
-                                        onDeviceUpdated?.invoke(device.copy(room = RoomRef(room.id)))
-                                        selectedHome = null
-                                        selectedRoom = null
-                                        showLinkDialog = false
-                                    }
-                                    .onFailure { linkError = it.message }
+                            onLink(room.id) { result ->
+                                result.onSuccess {
+                                    selectedHome = null
+                                    selectedRoom = null
+                                    showLinkDialog = false
+                                }.onFailure { linkError = it.message }
                                 isLinking = false
                             }
                         }
