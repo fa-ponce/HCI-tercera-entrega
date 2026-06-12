@@ -3,9 +3,9 @@ package com.example.smarthome.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Devices
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Icon
@@ -65,8 +65,8 @@ object Routes {
 private data class BottomNavItem(val route: String, @StringRes val labelRes: Int, val icon: ImageVector)
 
 private val bottomNavItems = listOf(
-    BottomNavItem(Routes.HOME, R.string.nav_home, Icons.Rounded.Home),
-    BottomNavItem(Routes.HOMES, R.string.nav_homes, Icons.Rounded.Apartment),
+    BottomNavItem(Routes.HOME, R.string.nav_home, Icons.Rounded.GridView),
+    BottomNavItem(Routes.HOMES, R.string.nav_homes, Icons.Rounded.Home),
     BottomNavItem(Routes.DEVICES, R.string.nav_devices, Icons.Rounded.Devices),
     BottomNavItem(Routes.ROUTINES, R.string.nav_routines, Icons.Rounded.Schedule),
     BottomNavItem(Routes.CONSUMPTION, R.string.nav_consumption, Icons.Rounded.BarChart),

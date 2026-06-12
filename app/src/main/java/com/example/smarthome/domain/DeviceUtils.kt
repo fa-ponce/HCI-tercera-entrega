@@ -49,17 +49,29 @@ fun toggleAction(typeId: String, isCurrentlyOn: Boolean): String {
 }
 
 fun deviceIcon(typeId: String): ImageVector = when (typeId) {
-    DeviceTypes.LAMPARA    -> Icons.Rounded.LightMode
-    DeviceTypes.AC         -> Icons.Rounded.AcUnit
-    DeviceTypes.ALARMA     -> Icons.Rounded.Security
+    DeviceTypes.LAMPARA    -> Icons.Rounded.Lightbulb
+    DeviceTypes.AC         -> Icons.Rounded.Hvac
+    DeviceTypes.ALARMA     -> Icons.Rounded.Notifications
     DeviceTypes.PERSIANA   -> Icons.Rounded.Blinds
     DeviceTypes.PUERTA     -> Icons.Rounded.MeetingRoom
     DeviceTypes.GRIFO      -> Icons.Rounded.WaterDrop
     DeviceTypes.HORNO      -> Icons.Rounded.Microwave
     DeviceTypes.PARLANTE   -> Icons.Rounded.Speaker
-    DeviceTypes.ASPIRADORA -> Icons.Rounded.CleaningServices
+    DeviceTypes.ASPIRADORA -> Icons.Rounded.Radar
     DeviceTypes.HELADERA   -> Icons.Rounded.Kitchen
     else                   -> Icons.Rounded.DevicesOther
+}
+
+fun roomTypeIcon(type: String?): ImageVector = when (type) {
+    "Living"    -> Icons.Rounded.Tv
+    "Dormitorio"-> Icons.Rounded.Hotel
+    "Cocina"    -> Icons.Rounded.Kitchen
+    "Baño"      -> Icons.Rounded.Bathtub
+    "Garaje"    -> Icons.Rounded.DirectionsCar
+    "Estudio"   -> Icons.Rounded.Work
+    "Comedor"   -> Icons.Rounded.TableRestaurant
+    "Lavadero"  -> Icons.Rounded.LocalLaundryService
+    else        -> Icons.Rounded.MeetingRoom
 }
 
 /** Recurso de string del nombre amigable del tipo de dispositivo, para subtítulos y etiquetas. */

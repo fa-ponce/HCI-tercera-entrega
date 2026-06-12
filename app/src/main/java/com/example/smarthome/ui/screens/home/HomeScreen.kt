@@ -33,11 +33,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Apartment
+import androidx.compose.material.icons.rounded.SpaceDashboard
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Devices
-import androidx.compose.material.icons.rounded.MeetingRoom
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Tune
@@ -245,7 +245,7 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f),
                         value = "${homes.size}",
                         label = stringResource(R.string.nav_homes),
-                        icon = Icons.Rounded.Apartment,
+                        icon = Icons.Rounded.Home,
                         tint = MaterialTheme.colorScheme.primary,
                         onClick = { navController.navigateTab(Routes.HOMES) }
                     )
@@ -253,7 +253,7 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f),
                         value = "${rooms.values.sumOf { it.size }}",
                         label = stringResource(R.string.common_rooms),
-                        icon = Icons.Rounded.MeetingRoom,
+                        icon = Icons.Rounded.SpaceDashboard,
                         tint = StatCyan,
                         onClick = { navController.navigateTab(Routes.HOMES) }
                     )

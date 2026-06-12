@@ -23,10 +23,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apartment
+import androidx.compose.material.icons.rounded.BusinessCenter
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Devices
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Storefront
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -64,6 +68,7 @@ import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.domain.isDeviceOn
+import com.example.smarthome.domain.roomTypeIcon
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.FullScreenLoading
@@ -244,6 +249,7 @@ fun HomesScreen(
                 HomeSection(
                     homeName = home.name,
                     subtitle = listOfNotNull(home.metadata?.city, home.metadata?.address).joinToString(" · "),
+                    homeType = home.metadata?.type,
                     homeRooms = rooms[home.id] ?: emptyList(),
                     devices = devices,
                     selected = isExpanded && selectedHomeId == home.id,
@@ -348,11 +354,20 @@ fun HomesScreen(
 private val OnGreen = Color(0xFF16A34A)
 private val OffRed = Color(0xFFC0392B)
 
+private fun homeTypeIcon(type: String?): ImageVector = when (type) {
+    "Casa"            -> Icons.Rounded.Home
+    "Departamento"    -> Icons.Rounded.Apartment
+    "Oficina"         -> Icons.Rounded.BusinessCenter
+    "Local Comercial" -> Icons.Rounded.Storefront
+    else              -> Icons.Rounded.Home
+}
+
 /** Una casa: cabecera (nombre azul + badge + divisor) y sus habitaciones debajo. */
 @Composable
 private fun HomeSection(
     homeName: String,
     subtitle: String,
+    homeType: String?,
     homeRooms: List<RoomDto>,
     devices: Map<String, List<DeviceDto>>,
     selected: Boolean = false,
@@ -375,7 +390,7 @@ private fun HomeSection(
                     .clickable(onClick = onHomeClick)
                     .padding(vertical = 4.dp)
             ) {
-                Icon(Icons.Rounded.Apartment, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                Icon(homeTypeIcon(homeType), null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 Text(
                     homeName,
                     style = MaterialTheme.typography.titleMedium,
@@ -454,7 +469,7 @@ private fun WebRoomCard(
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Rounded.MeetingRoom, null,
+                        roomTypeIcon(room.metadata?.type), null,
                         Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
