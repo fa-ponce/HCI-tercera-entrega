@@ -184,6 +184,11 @@ fun RoutinesScreen(
     }
 }
 
+// Acentos por tipo de trigger, iguales a los de la web (RutinasView):
+// hora naranja #e07a3c, evento rosa #c0568a, manual gris.
+private val HoraOrange = Color(0xFFE07A3C)
+private val EventoPink = Color(0xFFC0568A)
+
 @Composable
 private fun RoutineCard(
     routine: RoutineDto,
@@ -192,6 +197,11 @@ private fun RoutineCard(
     onExecute: (RoutineDto) -> Unit
 ) {
     val triggerType = routine.metadata?.tipoTrigger ?: "manual"
+    val triggerTint = when (triggerType) {
+        "hora" -> HoraOrange
+        "evento" -> EventoPink
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Card(
         onClick = { onOpen(routine) },
         modifier = Modifier.fillMaxWidth()
@@ -203,8 +213,7 @@ private fun RoutineCard(
             Surface(
                 shape = MaterialTheme.shapes.medium,
                 color = when (triggerType) {
-                    "hora" -> MaterialTheme.colorScheme.tertiaryContainer
-                    "evento" -> MaterialTheme.colorScheme.secondaryContainer
+                    "hora", "evento" -> triggerTint.copy(alpha = 0.14f)
                     else -> MaterialTheme.colorScheme.surfaceVariant
                 },
                 modifier = Modifier.size(44.dp)
@@ -218,11 +227,7 @@ private fun RoutineCard(
                         },
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
-                        tint = when (triggerType) {
-                            "hora" -> MaterialTheme.colorScheme.onTertiaryContainer
-                            "evento" -> MaterialTheme.colorScheme.onSecondaryContainer
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        tint = triggerTint
                     )
                 }
             }

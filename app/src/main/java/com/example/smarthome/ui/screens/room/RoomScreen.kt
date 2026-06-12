@@ -75,7 +75,6 @@ private val StatGreen = Color(0xFF16A34A)
 private val StatRed = Color(0xFFC0392B)
 private val StatNeutral = Color(0xFF666666)
 private val StatWarm = Color(0xFFC9A227)
-private val StatInfo = Color(0xFF3A5A90)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,7 +195,7 @@ fun RoomScreen(
                         RoomStatCard(Icons.Rounded.Bolt, StatWarm, "$totalW W", stringResource(R.string.room_consumption_hour), Modifier.weight(1f))
                     }
                     RoomStatCard(
-                        Icons.Rounded.AttachMoney, StatInfo,
+                        Icons.Rounded.AttachMoney, MaterialTheme.colorScheme.primary,
                         costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
                         stringResource(R.string.room_cost_hour),
                         Modifier.fillMaxWidth()

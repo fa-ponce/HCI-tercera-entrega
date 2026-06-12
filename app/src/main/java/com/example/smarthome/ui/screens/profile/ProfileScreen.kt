@@ -452,7 +452,7 @@ private fun ChangePasswordDialog(prefsViewModel: UserPreferencesViewModel, onDis
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (success) {
-                    Text(stringResource(R.string.profile_password_updated), color = Color(0xFF2E7D32))
+                    Text(stringResource(R.string.profile_password_updated), color = Color(0xFF16A34A))
                 } else {
                     OutlinedTextField(
                         value = oldPass,

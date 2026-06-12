@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.screens.devices
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -220,12 +223,13 @@ fun DevicesScreen(
         ) {
             val fullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
 
-            // Resumen general (ancho completo)
+            // Resumen general (ancho completo), con los acentos de la web:
+            // total azul, encendidos verde, apagados rojo.
             item(span = fullSpan) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatPill("${allItems.size}", stringResource(R.string.device_total), Icons.Rounded.DevicesOther, Modifier.weight(1f))
-                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.Bolt, Modifier.weight(1f), highlight = true)
-                    StatPill("$totalOff", stringResource(R.string.common_off_plural), Icons.Rounded.PowerSettingsNew, Modifier.weight(1f))
+                    StatPill("${allItems.size}", stringResource(R.string.device_total), Icons.Rounded.DevicesOther, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.Bolt, OnGreen, Modifier.weight(1f))
+                    StatPill("$totalOff", stringResource(R.string.common_off_plural), Icons.Rounded.PowerSettingsNew, MaterialTheme.colorScheme.error, Modifier.weight(1f))
                 }
             }
 
@@ -330,44 +334,53 @@ fun DevicesScreen(
     }
 }
 
+/** Verde "encendido" compartido con la web (#16a34a). */
+private val OnGreen = Color(0xFF16A34A)
+
 @Composable
 private fun StatPill(
     value: String,
     label: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier,
-    highlight: Boolean = false
+    accent: Color,
+    modifier: Modifier = Modifier
 ) {
+    // Tarjeta blanca con ícono sobre fondo tintado, como las stat-cards de la web.
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
-        color = if (highlight) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 1.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (highlight) MaterialTheme.colorScheme.onPrimary
-                       else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(accent.copy(alpha = 0.12f))
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = accent
+                )
+            }
             Spacer(Modifier.size(6.dp))
             Text(
                 value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (highlight) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (highlight) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

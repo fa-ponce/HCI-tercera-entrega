@@ -69,6 +69,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -107,6 +108,13 @@ private sealed interface Shortcut {
     data class DeviceShortcut(val device: DeviceDto) : Shortcut
     data class RoutineShortcut(val routine: RoutineDto) : Shortcut
 }
+
+// Acentos de los íconos, iguales a los de la web (InicioView / RutinasView).
+private val StatCyan = Color(0xFF1FB6C1)   // habitaciones
+private val StatGreen = Color(0xFF16A34A)  // dispositivos
+private val StatWarm = Color(0xFFC9A227)   // consumo
+private val HoraOrange = Color(0xFFE07A3C) // rutinas por hora
+private val EventoPink = Color(0xFFC0568A) // rutinas por evento
 
 private fun deviceToken(id: String) = "d:$id"
 private fun routineToken(id: String) = "r:$id"
@@ -238,6 +246,7 @@ fun HomeScreen(
                         value = "${homes.size}",
                         label = stringResource(R.string.nav_homes),
                         icon = Icons.Rounded.Apartment,
+                        tint = MaterialTheme.colorScheme.primary,
                         onClick = { navController.navigateTab(Routes.HOMES) }
                     )
                     StatTile(
@@ -245,6 +254,7 @@ fun HomeScreen(
                         value = "${rooms.values.sumOf { it.size }}",
                         label = stringResource(R.string.common_rooms),
                         icon = Icons.Rounded.MeetingRoom,
+                        tint = StatCyan,
                         onClick = { navController.navigateTab(Routes.HOMES) }
                     )
                     StatTile(
@@ -252,6 +262,7 @@ fun HomeScreen(
                         value = "${allDevices.size}",
                         label = stringResource(R.string.nav_devices),
                         icon = Icons.Rounded.Devices,
+                        tint = StatGreen,
                         onClick = { navController.navigateTab(Routes.DEVICES) }
                     )
                     StatTile(
@@ -259,6 +270,7 @@ fun HomeScreen(
                         value = formatPower(totalW),
                         label = stringResource(R.string.nav_consumption),
                         icon = Icons.Rounded.Bolt,
+                        tint = StatWarm,
                         onClick = { navController.navigateTab(Routes.CONSUMPTION) }
                     )
                 }
@@ -474,7 +486,7 @@ private fun HomeHeader(
                 Brush.verticalGradient(
                     listOf(
                         MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.tertiary
+                        MaterialTheme.colorScheme.secondary
                     )
                 )
             )
@@ -682,17 +694,19 @@ private fun StatTile(
     value: String,
     label: String,
     icon: ImageVector,
+    tint: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Tarjeta blanca con ícono sobre fondo tintado, como las stat-cards de la web.
     Card(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
             modifier = Modifier
@@ -700,12 +714,20 @@ private fun StatTile(
                 .padding(vertical = 14.dp, horizontal = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(tint.copy(alpha = 0.12f))
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
             Spacer(Modifier.height(6.dp))
             Text(
                 value,
@@ -743,47 +765,55 @@ private fun ShortcutTile(
         label = "tileScale"
     )
 
+    // Tarjetas blancas con el ícono sobre fondo tintado, como las acciones
+    // rápidas de la web: solo cambia el tinte según el estado o el trigger.
     when (shortcut) {
         is Shortcut.DeviceShortcut -> {
             val device = shortcut.device
             val on = isDeviceOn(device.type.id, device.state)
-            val container by animateColorAsState(
+            val iconBg by animateColorAsState(
                 targetValue = if (on) MaterialTheme.colorScheme.primaryContainer
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                else MaterialTheme.colorScheme.surfaceVariant,
                 animationSpec = tween(300),
-                label = "tileContainer"
+                label = "tileIconBg"
             )
-            val content = if (on) MaterialTheme.colorScheme.onPrimaryContainer
-            else MaterialTheme.colorScheme.onSurfaceVariant
             ShortcutTileScaffold(
                 modifier = modifier.scale(scale),
                 interaction = interaction,
-                container = container,
+                container = MaterialTheme.colorScheme.surface,
                 icon = deviceIcon(device.type.id),
-                iconTint = if (on) MaterialTheme.colorScheme.primary else content,
-                iconBg = if (on) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f)
-                else MaterialTheme.colorScheme.surface,
+                iconTint = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                iconBg = iconBg,
                 badge = if (canToggle(device.type.id)) (if (on) stringResource(R.string.common_on) else stringResource(R.string.common_off)) else stringResource(R.string.common_active),
                 badgeColor = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 title = device.name,
-                titleColor = content,
+                titleColor = MaterialTheme.colorScheme.onSurface,
                 onClick = { onDevice(device) }
             )
         }
         is Shortcut.RoutineShortcut -> {
             val routine = shortcut.routine
             val triggerType = routine.metadata?.tipoTrigger ?: "manual"
+            val iconTint = when (triggerType) {
+                "hora" -> HoraOrange
+                "evento" -> EventoPink
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val iconBg = when (triggerType) {
+                "hora", "evento" -> iconTint.copy(alpha = 0.14f)
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
             ShortcutTileScaffold(
                 modifier = modifier.scale(scale),
                 interaction = interaction,
-                container = MaterialTheme.colorScheme.secondaryContainer,
+                container = MaterialTheme.colorScheme.surface,
                 icon = if (triggerType == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
-                iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
-                iconBg = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                iconTint = iconTint,
+                iconBg = iconBg,
                 badge = stringResource(R.string.home_routine_badge),
-                badgeColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                badgeColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = routine.name,
-                titleColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                titleColor = MaterialTheme.colorScheme.onSurface,
                 onClick = { onRoutine(routine) }
             )
         }
@@ -820,7 +850,7 @@ private fun ShortcutTileScaffold(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(13.dp),
                 color = iconBg,
                 modifier = Modifier.size(40.dp)
             ) {

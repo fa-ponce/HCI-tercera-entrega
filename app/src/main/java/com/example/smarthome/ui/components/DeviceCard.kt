@@ -56,8 +56,8 @@ fun truncateName(name: String, max: Int = 18): String =
 /** Color naranja para señalar dispositivos sin habitación (igual que la web). */
 private val FreeAccent = Color(0xFFE67E22)
 
-/** Verde para el indicador de estado "encendido". */
-private val OnAccent = Color(0xFF2E9E5B)
+/** Verde para el indicador de estado "encendido" (igual que la web: #16a34a). */
+private val OnAccent = Color(0xFF16A34A)
 
 /** Dibuja un borde punteado (dashed) redondeado, para las tarjetas de dispositivos libres. */
 private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 1.5.dp) =

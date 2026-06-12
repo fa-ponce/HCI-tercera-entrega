@@ -15,16 +15,17 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Lenguaje visual compartido de la app: el mismo gradiente de marca
- * (primario → terciario) y las esquinas redondeadas del encabezado del inicio,
- * reutilizados en las barras superiores de todas las pantallas.
+ * (primario → secundario, como el logo de la web: --primary → --primary-2)
+ * y las esquinas redondeadas del encabezado del inicio, reutilizados en las
+ * barras superiores de todas las pantallas.
  */
 
-/** Pincel de marca: gradiente horizontal primario → terciario. */
+/** Pincel de marca: gradiente horizontal primario → secundario. */
 @Composable
 fun appBarBrush(): Brush = Brush.horizontalGradient(
     listOf(
         MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.tertiary
+        MaterialTheme.colorScheme.secondary
     )
 )
 
