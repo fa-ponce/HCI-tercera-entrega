@@ -20,6 +20,7 @@
     <string name="common_profile">Perfil</string>
     <string name="common_close">Cerrar</string>
     <string name="common_retry">Reintentar</string>
+    <string name="common_no_connection">Sin conexión a internet</string>
     <string name="common_clear">Limpiar</string>
     <string name="common_no_results">Sin resultados</string>
     <string name="common_edit_name">Editar nombre</string>

@@ -198,7 +198,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.Lock, contentDescription = stringResource(R.string.login_password), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.login_password), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -221,7 +221,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.BarChart, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.BarChart, contentDescription = stringResource(R.string.profile_energy_cost), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.profile_energy_cost), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -253,7 +253,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.DarkMode, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.DarkMode, contentDescription = stringResource(R.string.profile_dark_mode), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.profile_dark_mode), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
@@ -280,7 +280,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Language, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.Language, contentDescription = stringResource(R.string.profile_language), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.profile_language), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)

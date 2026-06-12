@@ -144,7 +144,7 @@ fun DeviceCard(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             imageVector = deviceIcon(typeId),
-                            contentDescription = null,
+                            contentDescription = stringResource(deviceTypeName(typeId)),
                             modifier = Modifier.size(26.dp),
                             tint = iconTint
                         )
@@ -257,7 +257,7 @@ fun DeviceGridCard(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             imageVector = deviceIcon(typeId),
-                            contentDescription = null,
+                            contentDescription = stringResource(deviceTypeName(typeId)),
                             modifier = Modifier.size(24.dp),
                             tint = iconTint
                         )

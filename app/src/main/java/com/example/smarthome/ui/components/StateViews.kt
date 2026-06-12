@@ -48,7 +48,8 @@ fun ConnectionErrorView(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
-                Icons.Rounded.WifiOff, null,
+                Icons.Rounded.WifiOff,
+                contentDescription = stringResource(R.string.common_no_connection),
                 modifier = Modifier.size(56.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

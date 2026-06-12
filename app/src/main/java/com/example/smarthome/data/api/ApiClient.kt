@@ -11,6 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 private const val BASE_URL = "https://hci.it.itba.edu.ar/api/"
+private const val NETWORK_TIMEOUT_SECONDS = 15L
 
 private val API_KEY get() = BuildConfig.API_KEY
 
@@ -48,9 +49,9 @@ class ApiClient(private val userPreferences: UserPreferences) {
         .addInterceptor(apiKeyInterceptor)
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .readTimeout(NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .writeTimeout(NETWORK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .build()
 
     val api: SmarthomeApi = Retrofit.Builder()
