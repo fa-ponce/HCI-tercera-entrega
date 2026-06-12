@@ -297,7 +297,7 @@ fun HomeDetailContent(
                         modifier = Modifier.fillMaxWidth()
                     )
                     if (renameError != null) {
-                        Text(renameError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(renameError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -347,7 +347,7 @@ fun HomeDetailContent(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.common_delete_confirm, home?.name ?: ""))
                     if (deleteError != null) {
-                        Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(deleteError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -483,7 +483,7 @@ private fun AddRoomDialog(
                 }
 
                 if (saveError != null) {
-                    Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(saveError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
         },

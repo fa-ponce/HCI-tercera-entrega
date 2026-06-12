@@ -242,7 +242,7 @@ fun AddDeviceDialog(
                     }
                     if (!isSaving) {
                         isSaving = true
-                        onCreate(trimmed, selectedType!!.id, selectedRoom?.id, marca.trim()) { success ->
+                        onCreate(trimmed, selectedType?.id ?: return@TextButton, selectedRoom?.id, marca.trim()) { success ->
                             if (!success) isSaving = false
                         }
                     }

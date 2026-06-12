@@ -248,7 +248,7 @@ fun RoutineBuilderSheet(
             saveError = null
             val request = buildRequest()
             if (isEditing) {
-                routineRepo.updateRoutine(routine!!.id, request)
+                routineRepo.updateRoutine(routine?.id ?: return@launch, request)
                     .onSuccess { updated -> appViewModel.updateRoutine(updated); onDismiss() }
                     .onFailure { saveError = it.message }
             } else {
@@ -478,7 +478,7 @@ fun RoutineBuilderSheet(
                                     isDeleting = true
                                     deleteError = null
                                     scope.launch {
-                                        routineRepo.deleteRoutine(routine!!.id)
+                                        routineRepo.deleteRoutine(routine?.id ?: return@launch)
                                             .onSuccess { appViewModel.removeRoutine(routine.id); onDismiss() }
                                             .onFailure { deleteError = it.message }
                                         isDeleting = false

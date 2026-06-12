@@ -198,7 +198,7 @@ fun DevicesScreen(
     ) { innerPadding ->
         if (!isLoading && allItems.isEmpty() && error != null) {
             ConnectionErrorView(
-                message = error!!,
+                message = error.orEmpty(),
                 onRetry = { appViewModel.retryLoad() },
                 modifier = Modifier.padding(innerPadding)
             )

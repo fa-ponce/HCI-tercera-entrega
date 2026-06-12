@@ -72,7 +72,7 @@ fun SheetHeader(
                         modifier = Modifier.fillMaxWidth()
                     )
                     if (saveError != null) {
-                        Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(saveError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -156,7 +156,7 @@ fun SheetDeleteButton(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sheet_delete_confirm))
                     if (deleteError != null) {
-                        Text(deleteError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(deleteError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -234,7 +234,7 @@ fun SheetRoomLinkButton(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sheet_unlink_msg))
                     if (unlinkError != null) {
-                        Text(unlinkError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(unlinkError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -274,7 +274,7 @@ fun SheetRoomLinkButton(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (linkError != null) {
-                        Text(linkError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        Text(linkError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
                     ExposedDropdownMenuBox(
                         expanded = homeExpanded,
@@ -307,7 +307,7 @@ fun SheetRoomLinkButton(
                     }
 
                     if (selectedHome != null) {
-                        val availableRooms = rooms[selectedHome!!.id] ?: emptyList()
+                        val availableRooms = rooms[selectedHome?.id] ?: emptyList()
                         ExposedDropdownMenuBox(
                             expanded = roomExpanded,
                             onExpandedChange = { roomExpanded = it }

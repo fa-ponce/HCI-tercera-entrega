@@ -182,7 +182,7 @@ fun ProfileScreen(
             )
             if (!userEmail.isNullOrEmpty()) {
                 Text(
-                    userEmail!!,
+                    userEmail.orEmpty(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

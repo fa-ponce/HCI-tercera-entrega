@@ -200,7 +200,7 @@ fun HomesScreen(
     ) { innerPadding ->
         if (!isLoading && homes.isEmpty() && error != null) {
             ConnectionErrorView(
-                message = error!!,
+                message = error.orEmpty(),
                 onRetry = { appViewModel.retryLoad() },
                 modifier = Modifier.padding(innerPadding)
             )
@@ -610,7 +610,7 @@ private fun NewRoomDialog(
                 }
 
                 if (saveError != null) {
-                    Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(saveError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
         },
@@ -729,7 +729,7 @@ private fun NewHomeDialog(
                 )
 
                 if (saveError != null) {
-                    Text(saveError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(saveError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
         },

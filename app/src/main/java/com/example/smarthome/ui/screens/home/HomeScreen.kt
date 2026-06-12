@@ -182,7 +182,7 @@ fun HomeScreen(
     ) {
         if (!isLoading && homes.isEmpty() && loadError != null) {
             ConnectionErrorView(
-                message = loadError!!,
+                message = loadError.orEmpty(),
                 onRetry = { appViewModel.retryLoad() }
             )
             return@Box
