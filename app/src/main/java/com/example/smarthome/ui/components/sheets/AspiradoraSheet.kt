@@ -1,8 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,155 +47,133 @@ fun AspiradoraSheet(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SheetHeader(
-                title = device.name,
-                subtitle = stringResource(R.string.device_type_vacuum),
-                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
-            )
+    BaseDeviceSheet(
+        device = device,
+        routineMode = routineMode,
+        onDismiss = onDismiss,
+        actions = actions,
+        homes = homes,
+        rooms = rooms,
+        isLoading = isLoading,
+        onAddToRoutine = if (routineMode) {
+            {
+                onAddToRoutine?.invoke(listOf(
+                    DeviceAction(selectedAction),
+                    DeviceAction("setMode", mapOf("mode" to mode))
+                ))
+                onDismiss()
+            }
+        } else null
+    ) {
+        // Status badge
+        if (!routineMode) {
+            val statusColor = when (status) {
+                "active" -> MaterialTheme.colorScheme.primaryContainer
+                "paused" -> MaterialTheme.colorScheme.tertiaryContainer
+                "docked" -> MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
+            Surface(color = statusColor, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    statusLabels[status]?.let { stringResource(it) } ?: status,
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
 
-            if (isLoading) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                }
-            } else {
-                // Status badge
-                if (!routineMode) {
-                    val statusColor = when (status) {
-                        "active" -> MaterialTheme.colorScheme.primaryContainer
-                        "paused" -> MaterialTheme.colorScheme.tertiaryContainer
-                        "docked" -> MaterialTheme.colorScheme.secondaryContainer
-                        else -> MaterialTheme.colorScheme.surfaceVariant
+        // Control buttons
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_controls))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    // Start
+                    val startActive = if (routineMode) selectedAction == "start" else status == "active"
+                    Surface(
+                        onClick = {
+                            if (routineMode) {
+                                selectedAction = "start"
+                            } else if (!isSaving && status != "active") {
+                                isSaving = true
+                                actions.onExecuteAction("start", emptyMap()) { _ ->
+                                    status = "active"; selectedAction = "start"; isSaving = false
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.medium,
+                        color = if (startActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        enabled = !isSaving
+                    ) {
+                        Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.sheet_start), style = MaterialTheme.typography.labelLarge, fontWeight = if (startActive) FontWeight.Bold else FontWeight.Normal)
+                        }
                     }
-                    Surface(color = statusColor, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            statusLabels[status]?.let { stringResource(it) } ?: status,
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold
+
+                    // Pause (only in normal mode)
+                    if (!routineMode) {
+                        Surface(
+                            onClick = {
+                                if (!isSaving && status == "active") {
+                                    isSaving = true
+                                    actions.onExecuteAction("pause", emptyMap()) { _ ->
+                                        status = "paused"; isSaving = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = MaterialTheme.shapes.medium,
+                            color = if (status == "paused") MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            enabled = !isSaving && status == "active"
+                        ) {
+                            Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
+                                Text(stringResource(R.string.sheet_pause), style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                    }
+
+                    // Dock
+                    val dockActive = if (routineMode) selectedAction == "dock" else status == "docked"
+                    Surface(
+                        onClick = {
+                            if (routineMode) {
+                                selectedAction = "dock"
+                            } else if (!isSaving && status != "docked") {
+                                isSaving = true
+                                actions.onExecuteAction("dock", emptyMap()) { _ ->
+                                    status = "docked"; selectedAction = "dock"; isSaving = false
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.medium,
+                        color = if (dockActive) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        enabled = !isSaving
+                    ) {
+                        Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.sheet_dock), style = MaterialTheme.typography.labelMedium, fontWeight = if (dockActive) FontWeight.Bold else FontWeight.Normal)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Mode
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_mode))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    modoOpts.forEach { (value, labelRes) ->
+                        FilterChip(
+                            selected = mode == value,
+                            onClick = {
+                                mode = value
+                                if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
+                            },
+                            label = { Text(stringResource(labelRes)) },
+                            modifier = Modifier.weight(1f)
                         )
-                    }
-                }
-
-                // Control buttons
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_controls))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                            // Start
-                            val startActive = if (routineMode) selectedAction == "start" else status == "active"
-                            Surface(
-                                onClick = {
-                                    if (routineMode) {
-                                        selectedAction = "start"
-                                    } else if (!isSaving && status != "active") {
-                                        isSaving = true
-                                        actions.onExecuteAction("start", emptyMap()) { _ ->
-                                            status = "active"; selectedAction = "start"; isSaving = false
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = MaterialTheme.shapes.medium,
-                                color = if (startActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                enabled = !isSaving
-                            ) {
-                                Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
-                                    Text(stringResource(R.string.sheet_start), style = MaterialTheme.typography.labelLarge, fontWeight = if (startActive) FontWeight.Bold else FontWeight.Normal)
-                                }
-                            }
-
-                            // Pause (only in normal mode)
-                            if (!routineMode) {
-                                Surface(
-                                    onClick = {
-                                        if (!isSaving && status == "active") {
-                                            isSaving = true
-                                            actions.onExecuteAction("pause", emptyMap()) { _ ->
-                                                status = "paused"; isSaving = false
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    shape = MaterialTheme.shapes.medium,
-                                    color = if (status == "paused") MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                    enabled = !isSaving && status == "active"
-                                ) {
-                                    Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
-                                        Text(stringResource(R.string.sheet_pause), style = MaterialTheme.typography.labelLarge)
-                                    }
-                                }
-                            }
-
-                            // Dock
-                            val dockActive = if (routineMode) selectedAction == "dock" else status == "docked"
-                            Surface(
-                                onClick = {
-                                    if (routineMode) {
-                                        selectedAction = "dock"
-                                    } else if (!isSaving && status != "docked") {
-                                        isSaving = true
-                                        actions.onExecuteAction("dock", emptyMap()) { _ ->
-                                            status = "docked"; selectedAction = "dock"; isSaving = false
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = MaterialTheme.shapes.medium,
-                                color = if (dockActive) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                enabled = !isSaving
-                            ) {
-                                Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
-                                    Text(stringResource(R.string.sheet_dock), style = MaterialTheme.typography.labelMedium, fontWeight = if (dockActive) FontWeight.Bold else FontWeight.Normal)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Mode
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_mode))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            modoOpts.forEach { (value, labelRes) ->
-                                FilterChip(
-                                    selected = mode == value,
-                                    onClick = {
-                                        mode = value
-                                        if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
-                                    },
-                                    label = { Text(stringResource(labelRes)) },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (routineMode) {
-                    SheetRoutineFooter(
-                        onCancel = onDismiss,
-                        onAdd = {
-                            onAddToRoutine?.invoke(listOf(
-                                DeviceAction(selectedAction),
-                                DeviceAction("setMode", mapOf("mode" to mode))
-                            ))
-                            onDismiss()
-                        }
-                    )
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
-                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

@@ -3,7 +3,9 @@ package com.example.smarthome.ui.components.sheets
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
@@ -13,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
+import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
@@ -383,6 +387,67 @@ fun SheetRoutineFooter(onCancel: () -> Unit, onAdd: () -> Unit) {
         }
         Button(onClick = onAdd, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.sheet_add_to_routine))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BaseDeviceSheet(
+    device: DeviceDto,
+    routineMode: Boolean,
+    onDismiss: () -> Unit,
+    actions: DeviceSheetActions,
+    homes: List<HomeDto>,
+    rooms: Map<String, List<RoomDto>>,
+    isLoading: Boolean,
+    onAddToRoutine: (() -> Unit)? = null,
+    showFooter: Boolean = true,
+    spacing: Dp = 16.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(spacing)
+        ) {
+            SheetHeader(
+                title = device.name,
+                subtitle = stringResource(deviceTypeName(device.type.id)),
+                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
+            )
+            if (isLoading) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                }
+            } else {
+                content()
+                if (showFooter) {
+                    if (routineMode && onAddToRoutine != null) {
+                        SheetRoutineFooter(onCancel = onDismiss, onAdd = onAddToRoutine)
+                    } else if (!routineMode) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SheetRoomLinkButton(
+                                device = device,
+                                homes = homes,
+                                rooms = rooms,
+                                modifier = Modifier.weight(1f),
+                                onUnlink = actions.onUnlink,
+                                onLink = actions.onLink
+                            )
+                            SheetDeleteButton(
+                                onDelete = actions.onDelete,
+                                onDismiss = onDismiss,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

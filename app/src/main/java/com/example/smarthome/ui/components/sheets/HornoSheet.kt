@@ -1,8 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,134 +64,112 @@ fun HornoSheet(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SheetHeader(
-                title = device.name,
-                subtitle = stringResource(R.string.device_type_oven),
-                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
-            )
+    BaseDeviceSheet(
+        device = device,
+        routineMode = routineMode,
+        onDismiss = onDismiss,
+        actions = actions,
+        homes = homes,
+        rooms = rooms,
+        isLoading = isLoading,
+        onAddToRoutine = if (routineMode) {
+            {
+                onAddToRoutine?.invoke(listOf(
+                    DeviceAction(if (isOn) "turnOn" else "turnOff"),
+                    DeviceAction("setTemperature", mapOf("temperature" to temperature.toInt())),
+                    DeviceAction("setHeat", mapOf("heat" to heat)),
+                    DeviceAction("setGrill", mapOf("grill" to grill)),
+                    DeviceAction("setConvection", mapOf("convection" to convection))
+                ))
+                onDismiss()
+            }
+        } else null
+    ) {
+        // Power
+        SheetSectionCard {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(if (isOn) stringResource(R.string.common_on) else stringResource(R.string.common_off), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                Switch(checked = isOn, onCheckedChange = { v ->
+                    isOn = v
+                    if (!routineMode) actions.onExecuteAction(if (v) "turnOn" else "turnOff", emptyMap(), null)
+                })
+            }
+        }
 
-            if (isLoading) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+        // Temperature
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SheetSectionLabel(stringResource(R.string.sheet_temperature))
+                    Text("${temperature.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
-            } else {
-                // Power
-                SheetSectionCard {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (isOn) stringResource(R.string.common_on) else stringResource(R.string.common_off), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                        Switch(checked = isOn, onCheckedChange = { v ->
-                            isOn = v
-                            if (!routineMode) actions.onExecuteAction(if (v) "turnOn" else "turnOff", emptyMap(), null)
-                        })
-                    }
+                Slider(
+                    value = temperature,
+                    onValueChange = { temperature = it },
+                    onValueChangeFinished = {
+                        if (!routineMode) actions.onExecuteAction("setTemperature", mapOf("temperature" to temperature.toInt()), null)
+                    },
+                    valueRange = 90f..230f
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(stringResource(R.string.sheet_oven_temp_min), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.sheet_oven_temp_max), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                 }
+            }
+        }
 
-                // Temperature
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel(stringResource(R.string.sheet_temperature))
-                            Text("${temperature.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                        Slider(
-                            value = temperature,
-                            onValueChange = { temperature = it },
-                            onValueChangeFinished = {
-                                if (!routineMode) actions.onExecuteAction("setTemperature", mapOf("temperature" to temperature.toInt()), null)
+        // Heat source
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_heat_source))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    heatOpts.forEach { (value, labelRes) ->
+                        FilterChip(
+                            selected = heat == value,
+                            onClick = {
+                                heat = value
+                                if (!routineMode) actions.onExecuteAction("setHeat", mapOf("heat" to value), null)
                             },
-                            valueRange = 90f..230f
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
                         )
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stringResource(R.string.sheet_oven_temp_min), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                            Text(stringResource(R.string.sheet_oven_temp_max), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                        }
                     }
                 }
+            }
+        }
 
-                // Heat source
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_heat_source))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            heatOpts.forEach { (value, labelRes) ->
-                                FilterChip(
-                                    selected = heat == value,
-                                    onClick = {
-                                        heat = value
-                                        if (!routineMode) actions.onExecuteAction("setHeat", mapOf("heat" to value), null)
-                                    },
-                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
-                                )
-                            }
-                        }
+        // Grill
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_grill_mode))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    grillOpts.forEach { (value, labelRes) ->
+                        FilterChip(
+                            selected = grill == value,
+                            onClick = {
+                                grill = value
+                                if (!routineMode) actions.onExecuteAction("setGrill", mapOf("grill" to value), null)
+                            },
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
+                        )
                     }
                 }
+            }
+        }
 
-                // Grill
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_grill_mode))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            grillOpts.forEach { (value, labelRes) ->
-                                FilterChip(
-                                    selected = grill == value,
-                                    onClick = {
-                                        grill = value
-                                        if (!routineMode) actions.onExecuteAction("setGrill", mapOf("grill" to value), null)
-                                    },
-                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Convection
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_convection_mode))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            convectionOpts.forEach { (value, labelRes) ->
-                                FilterChip(
-                                    selected = convection == value,
-                                    onClick = {
-                                        convection = value
-                                        if (!routineMode) actions.onExecuteAction("setConvection", mapOf("convection" to value), null)
-                                    },
-                                    label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (routineMode) {
-                    SheetRoutineFooter(
-                        onCancel = onDismiss,
-                        onAdd = {
-                            onAddToRoutine?.invoke(listOf(
-                                DeviceAction(if (isOn) "turnOn" else "turnOff"),
-                                DeviceAction("setTemperature", mapOf("temperature" to temperature.toInt())),
-                                DeviceAction("setHeat", mapOf("heat" to heat)),
-                                DeviceAction("setGrill", mapOf("grill" to grill)),
-                                DeviceAction("setConvection", mapOf("convection" to convection))
-                            ))
-                            onDismiss()
-                        }
-                    )
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
-                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
+        // Convection
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_convection_mode))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    convectionOpts.forEach { (value, labelRes) ->
+                        FilterChip(
+                            selected = convection == value,
+                            onClick = {
+                                convection = value
+                                if (!routineMode) actions.onExecuteAction("setConvection", mapOf("convection" to value), null)
+                            },
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
+                        )
                     }
                 }
             }

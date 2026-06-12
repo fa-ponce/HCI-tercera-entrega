@@ -1,8 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,123 +41,101 @@ fun PuertaSheet(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SheetHeader(
-                title = device.name,
-                subtitle = stringResource(R.string.device_type_door),
-                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
-            )
-
-            if (isLoading) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+    BaseDeviceSheet(
+        device = device,
+        routineMode = routineMode,
+        onDismiss = onDismiss,
+        actions = actions,
+        homes = homes,
+        rooms = rooms,
+        isLoading = isLoading,
+        onAddToRoutine = if (routineMode) {
+            {
+                val routineActions = mutableListOf(DeviceAction(selectedDoor))
+                selectedLock?.let { routineActions.add(DeviceAction(it)) }
+                onAddToRoutine?.invoke(routineActions)
+                onDismiss()
+            }
+        } else null
+    ) {
+        // Status badges (only in normal mode)
+        if (!routineMode) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                val openColor = if (isOpen) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer
+                val openText = if (isOpen) stringResource(R.string.sheet_door_open_f) else stringResource(R.string.sheet_door_closed_f)
+                Surface(color = openColor, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) {
+                    Box(Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
+                        Text(openText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                    }
                 }
-            } else {
-                // Status badges (only in normal mode)
-                if (!routineMode) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        val openColor = if (isOpen) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer
-                        val openText = if (isOpen) stringResource(R.string.sheet_door_open_f) else stringResource(R.string.sheet_door_closed_f)
-                        Surface(color = openColor, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) {
-                            Box(Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
-                                Text(openText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            }
+                val lockColor = if (isLocked) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant
+                val lockText = if (isLocked) stringResource(R.string.sheet_locked_f) else stringResource(R.string.sheet_unlocked_f)
+                Surface(color = lockColor, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) {
+                    Box(Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
+                        Text(lockText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+
+        // Actions
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_actions))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    DoorActionButton(
+                        label = stringResource(R.string.sheet_open_action),
+                        active = if (routineMode) selectedDoor == "open" else isOpen,
+                        enabled = routineMode || !isOpen,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (routineMode) {
+                            selectedDoor = "open"
+                        } else {
+                            actions.onExecuteAction("open", emptyMap(), null)
+                            isOpen = true; isLocked = false; selectedDoor = "open"
                         }
-                        val lockColor = if (isLocked) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant
-                        val lockText = if (isLocked) stringResource(R.string.sheet_locked_f) else stringResource(R.string.sheet_unlocked_f)
-                        Surface(color = lockColor, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) {
-                            Box(Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
-                                Text(lockText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            }
+                    }
+                    DoorActionButton(
+                        label = stringResource(R.string.sheet_close_action),
+                        active = if (routineMode) selectedDoor == "close" else !isOpen,
+                        enabled = routineMode || isOpen,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (routineMode) {
+                            selectedDoor = "close"
+                        } else {
+                            actions.onExecuteAction("close", emptyMap(), null)
+                            isOpen = false; selectedDoor = "close"
                         }
                     }
                 }
-
-                // Actions
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_actions))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                            DoorActionButton(
-                                label = stringResource(R.string.sheet_open_action),
-                                active = if (routineMode) selectedDoor == "open" else isOpen,
-                                enabled = routineMode || !isOpen,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (routineMode) {
-                                    selectedDoor = "open"
-                                } else {
-                                    actions.onExecuteAction("open", emptyMap(), null)
-                                    isOpen = true; isLocked = false; selectedDoor = "open"
-                                }
-                            }
-                            DoorActionButton(
-                                label = stringResource(R.string.sheet_close_action),
-                                active = if (routineMode) selectedDoor == "close" else !isOpen,
-                                enabled = routineMode || isOpen,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (routineMode) {
-                                    selectedDoor = "close"
-                                } else {
-                                    actions.onExecuteAction("close", emptyMap(), null)
-                                    isOpen = false; selectedDoor = "close"
-                                }
-                            }
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                            DoorActionButton(
-                                label = stringResource(R.string.sheet_lock_action),
-                                active = if (routineMode) selectedLock == "lock" else isLocked,
-                                enabled = routineMode || (!isLocked && !isOpen),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (routineMode) {
-                                    selectedLock = if (selectedLock == "lock") null else "lock"
-                                } else {
-                                    actions.onExecuteAction("lock", emptyMap(), null)
-                                    isLocked = true
-                                }
-                            }
-                            DoorActionButton(
-                                label = stringResource(R.string.sheet_unlock_action),
-                                active = if (routineMode) selectedLock == "unlock" else !isLocked,
-                                enabled = routineMode || isLocked,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (routineMode) {
-                                    selectedLock = if (selectedLock == "unlock") null else "unlock"
-                                } else {
-                                    actions.onExecuteAction("unlock", emptyMap(), null)
-                                    isLocked = false
-                                }
-                            }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    DoorActionButton(
+                        label = stringResource(R.string.sheet_lock_action),
+                        active = if (routineMode) selectedLock == "lock" else isLocked,
+                        enabled = routineMode || (!isLocked && !isOpen),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (routineMode) {
+                            selectedLock = if (selectedLock == "lock") null else "lock"
+                        } else {
+                            actions.onExecuteAction("lock", emptyMap(), null)
+                            isLocked = true
                         }
                     }
-                }
-
-                if (routineMode) {
-                    SheetRoutineFooter(
-                        onCancel = onDismiss,
-                        onAdd = {
-                            val routineActions = mutableListOf(DeviceAction(selectedDoor))
-                            selectedLock?.let { routineActions.add(DeviceAction(it)) }
-                            onAddToRoutine?.invoke(routineActions)
-                            onDismiss()
+                    DoorActionButton(
+                        label = stringResource(R.string.sheet_unlock_action),
+                        active = if (routineMode) selectedLock == "unlock" else !isLocked,
+                        enabled = routineMode || isLocked,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (routineMode) {
+                            selectedLock = if (selectedLock == "unlock") null else "unlock"
+                        } else {
+                            actions.onExecuteAction("unlock", emptyMap(), null)
+                            isLocked = false
                         }
-                    )
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
-                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }

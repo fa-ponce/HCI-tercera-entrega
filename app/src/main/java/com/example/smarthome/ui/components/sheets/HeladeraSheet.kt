@@ -1,8 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,120 +47,98 @@ fun HeladeraSheet(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SheetHeader(
-                title = device.name,
-                subtitle = stringResource(R.string.device_type_fridge),
-                onRename = if (!routineMode) { newName, cb -> actions.onRename(newName, cb) } else null
-            )
-
-            if (isLoading) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+    BaseDeviceSheet(
+        device = device,
+        routineMode = routineMode,
+        onDismiss = onDismiss,
+        actions = actions,
+        homes = homes,
+        rooms = rooms,
+        isLoading = isLoading,
+        onAddToRoutine = if (routineMode) {
+            {
+                onAddToRoutine?.invoke(listOf(
+                    DeviceAction("setTemperature", mapOf("temperature" to fridgeTemp.toInt())),
+                    DeviceAction("setFreezerTemperature", mapOf("temperature" to freezerTemp.toInt())),
+                    DeviceAction("setMode", mapOf("mode" to modo))
+                ))
+                onDismiss()
+            }
+        } else null
+    ) {
+        // Fridge temperature
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SheetSectionLabel(stringResource(R.string.sheet_fridge_temp))
+                    Text("${fridgeTemp.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
-            } else {
-                // Fridge temperature
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel(stringResource(R.string.sheet_fridge_temp))
-                            Text("${fridgeTemp.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                        Slider(
-                            value = fridgeTemp,
-                            onValueChange = { fridgeTemp = it },
-                            onValueChangeFinished = {
-                                if (!routineMode) actions.onExecuteAction("setTemperature", mapOf("temperature" to fridgeTemp.toInt()), null)
-                            },
-                            valueRange = 2f..8f
-                        )
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stringResource(R.string.sheet_fridge_temp_min), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                            Text(stringResource(R.string.sheet_fridge_temp_max), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                        }
-                    }
+                Slider(
+                    value = fridgeTemp,
+                    onValueChange = { fridgeTemp = it },
+                    onValueChangeFinished = {
+                        if (!routineMode) actions.onExecuteAction("setTemperature", mapOf("temperature" to fridgeTemp.toInt()), null)
+                    },
+                    valueRange = 2f..8f
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(stringResource(R.string.sheet_fridge_temp_min), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.sheet_fridge_temp_max), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                 }
+            }
+        }
 
-                // Freezer temperature
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            SheetSectionLabel(stringResource(R.string.sheet_freezer_temp))
-                            Text("${freezerTemp.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
-                        }
-                        Slider(
-                            value = freezerTemp,
-                            onValueChange = { freezerTemp = it },
-                            onValueChangeFinished = {
-                                if (!routineMode) actions.onExecuteAction("setFreezerTemperature", mapOf("temperature" to freezerTemp.toInt()), null)
-                            },
-                            valueRange = -20f..-8f,
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.secondary, activeTrackColor = MaterialTheme.colorScheme.secondary)
-                        )
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stringResource(R.string.sheet_freezer_temp_min), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                            Text(stringResource(R.string.sheet_freezer_temp_max), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                        }
-                    }
+        // Freezer temperature
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SheetSectionLabel(stringResource(R.string.sheet_freezer_temp))
+                    Text("${freezerTemp.toInt()}°C", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                 }
+                Slider(
+                    value = freezerTemp,
+                    onValueChange = { freezerTemp = it },
+                    onValueChangeFinished = {
+                        if (!routineMode) actions.onExecuteAction("setFreezerTemperature", mapOf("temperature" to freezerTemp.toInt()), null)
+                    },
+                    valueRange = -20f..-8f,
+                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.secondary, activeTrackColor = MaterialTheme.colorScheme.secondary)
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(stringResource(R.string.sheet_freezer_temp_min), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.sheet_freezer_temp_max), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                }
+            }
+        }
 
-                // Mode
-                SheetSectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        SheetSectionLabel(stringResource(R.string.sheet_operation_mode))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                            modos.forEach { (value, labelRes, descRes) ->
-                                val active = modo == value
-                                Surface(
-                                    onClick = {
-                                        if (modo != value) {
-                                            modo = value
-                                            if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    shape = MaterialTheme.shapes.medium,
-                                    color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                    border = if (active) ButtonDefaults.outlinedButtonBorder(true) else null
-                                ) {
-                                    Column(
-                                        Modifier.padding(10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(stringResource(labelRes), style = MaterialTheme.typography.labelMedium, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
-                                        Text(stringResource(descRes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                                    }
+        // Mode
+        SheetSectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SheetSectionLabel(stringResource(R.string.sheet_operation_mode))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    modos.forEach { (value, labelRes, descRes) ->
+                        val active = modo == value
+                        Surface(
+                            onClick = {
+                                if (modo != value) {
+                                    modo = value
+                                    if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
                                 }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = MaterialTheme.shapes.medium,
+                            color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            border = if (active) ButtonDefaults.outlinedButtonBorder(true) else null
+                        ) {
+                            Column(
+                                Modifier.padding(10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(stringResource(labelRes), style = MaterialTheme.typography.labelMedium, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                                Text(stringResource(descRes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             }
                         }
-                    }
-                }
-
-                if (routineMode) {
-                    SheetRoutineFooter(
-                        onCancel = onDismiss,
-                        onAdd = {
-                            onAddToRoutine?.invoke(listOf(
-                                DeviceAction("setTemperature", mapOf("temperature" to fridgeTemp.toInt())),
-                                DeviceAction("setFreezerTemperature", mapOf("temperature" to freezerTemp.toInt())),
-                                DeviceAction("setMode", mapOf("mode" to modo))
-                            ))
-                            onDismiss()
-                        }
-                    )
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SheetRoomLinkButton(device = device, homes = homes, rooms = rooms, modifier = Modifier.weight(1f), onUnlink = actions.onUnlink, onLink = actions.onLink)
-                        SheetDeleteButton(onDelete = actions.onDelete, onDismiss = onDismiss, modifier = Modifier.weight(1f))
                     }
                 }
             }
