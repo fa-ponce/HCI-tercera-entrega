@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -101,7 +102,8 @@ fun GrifoSheet(
                     enabled = routineMode || !isOpen,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = if (openActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                    )
+                    ),
+                    border = BorderStroke(1.5.dp, if (openActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                 ) { Text(stringResource(R.string.sheet_open_action)) }
 
                 val closeActive = if (routineMode) selectedAction == "close" else !isOpen
@@ -118,7 +120,8 @@ fun GrifoSheet(
                     enabled = routineMode || isOpen,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = if (closeActive) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
-                    )
+                    ),
+                    border = BorderStroke(1.5.dp, if (closeActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                 ) { Text(stringResource(R.string.sheet_close_action)) }
             }
         }
@@ -161,7 +164,8 @@ fun GrifoSheet(
                                 selected = unit == value,
                                 onClick = { unit = value },
                                 label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                border = FilterChipDefaults.filterChipBorder(enabled = true, selected = unit == value, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                             )
                         }
                     }

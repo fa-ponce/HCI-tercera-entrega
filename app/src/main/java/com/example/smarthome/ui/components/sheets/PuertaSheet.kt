@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -157,6 +158,7 @@ private fun DoorActionButton(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
         color = containerColor,
+        border = if (active) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
         enabled = enabled
     ) {
         Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {

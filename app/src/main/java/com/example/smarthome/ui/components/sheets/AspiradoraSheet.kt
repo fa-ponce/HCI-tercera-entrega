@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -104,6 +105,7 @@ fun AspiradoraSheet(
                         modifier = Modifier.weight(1f),
                         shape = MaterialTheme.shapes.medium,
                         color = if (startActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = if (startActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                         enabled = !isSaving
                     ) {
                         Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
@@ -125,6 +127,7 @@ fun AspiradoraSheet(
                             modifier = Modifier.weight(1f),
                             shape = MaterialTheme.shapes.medium,
                             color = if (status == "paused") MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            border = if (status == "paused") BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                             enabled = !isSaving && status == "active"
                         ) {
                             Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
@@ -149,6 +152,7 @@ fun AspiradoraSheet(
                         modifier = Modifier.weight(1f),
                         shape = MaterialTheme.shapes.medium,
                         color = if (dockActive) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = if (dockActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                         enabled = !isSaving
                     ) {
                         Box(Modifier.padding(14.dp), contentAlignment = Alignment.Center) {
@@ -172,7 +176,8 @@ fun AspiradoraSheet(
                                 if (!routineMode) actions.onExecuteAction("setMode", mapOf("mode" to value), null)
                             },
                             label = { Text(stringResource(labelRes)) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = mode == value, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }

@@ -215,7 +215,8 @@ fun ParlanteSheet(
                                 genre = value
                                 if (!routineMode) actions.onExecuteAction("setGenre", mapOf("genre" to value), null)
                             },
-                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = genre == value, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }

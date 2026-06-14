@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -128,7 +129,7 @@ fun HeladeraSheet(
                             modifier = Modifier.weight(1f),
                             shape = MaterialTheme.shapes.medium,
                             color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            border = if (active) ButtonDefaults.outlinedButtonBorder(true) else null
+                            border = if (active) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
                         ) {
                             Column(
                                 Modifier.padding(10.dp),

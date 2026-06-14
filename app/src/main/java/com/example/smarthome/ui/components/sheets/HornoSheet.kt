@@ -130,7 +130,8 @@ fun HornoSheet(
                                 heat = value
                                 if (!routineMode) actions.onExecuteAction("setHeat", mapOf("heat" to value), null)
                             },
-                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = heat == value, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }
@@ -149,7 +150,8 @@ fun HornoSheet(
                                 grill = value
                                 if (!routineMode) actions.onExecuteAction("setGrill", mapOf("grill" to value), null)
                             },
-                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = grill == value, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }
@@ -168,7 +170,8 @@ fun HornoSheet(
                                 convection = value
                                 if (!routineMode) actions.onExecuteAction("setConvection", mapOf("convection" to value), null)
                             },
-                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = convection == value, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }

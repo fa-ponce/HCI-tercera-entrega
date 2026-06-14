@@ -132,7 +132,8 @@ fun AcSheet(
                                     "calor" -> stringResource(R.string.sheet_mode_heat)
                                     else -> m
                                 })
-                            }
+                            },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = mode == m, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }
@@ -151,7 +152,8 @@ fun AcSheet(
                                 verticalSwing = v
                                 if (!routineMode) actions.onExecuteAction("setVerticalSwing", mapOf("verticalSwing" to v), null)
                             },
-                            label = { Text(if (v == "auto") stringResource(R.string.sheet_auto) else "$v°", style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(if (v == "auto") stringResource(R.string.sheet_auto) else "$v°", style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = verticalSwing == v, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }
@@ -170,7 +172,8 @@ fun AcSheet(
                                 horizontalSwing = h
                                 if (!routineMode) actions.onExecuteAction("setHorizontalSwing", mapOf("horizontalSwing" to h), null)
                             },
-                            label = { Text(if (h == "auto") stringResource(R.string.sheet_auto) else "$h°", style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(if (h == "auto") stringResource(R.string.sheet_auto) else "$h°", style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = horizontalSwing == h, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }
@@ -189,7 +192,8 @@ fun AcSheet(
                                 fanSpeed = f
                                 if (!routineMode) actions.onExecuteAction("setFanSpeed", mapOf("fanSpeed" to f), null)
                             },
-                            label = { Text(if (f == "auto") stringResource(R.string.sheet_auto) else "$f%", style = MaterialTheme.typography.labelSmall) }
+                            label = { Text(if (f == "auto") stringResource(R.string.sheet_auto) else "$f%", style = MaterialTheme.typography.labelSmall) },
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = fanSpeed == f, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp)
                         )
                     }
                 }

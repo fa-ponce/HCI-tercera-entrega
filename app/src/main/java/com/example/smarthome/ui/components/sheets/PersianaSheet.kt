@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.components.sheets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -93,6 +94,7 @@ fun PersianaSheet(
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = if (upActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                     ),
+                    border = BorderStroke(1.5.dp, if (upActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
                     enabled = routineMode || level < 100f
                 ) {
                     Icon(Icons.Rounded.KeyboardArrowUp, null, Modifier.size(18.dp))
@@ -113,6 +115,7 @@ fun PersianaSheet(
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = if (downActive) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
                     ),
+                    border = BorderStroke(1.5.dp, if (downActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
                     enabled = routineMode || level > 0f
                 ) {
                     Icon(Icons.Rounded.KeyboardArrowDown, null, Modifier.size(18.dp))
