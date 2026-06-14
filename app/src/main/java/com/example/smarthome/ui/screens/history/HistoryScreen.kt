@@ -36,6 +36,7 @@ import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
+import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.data.api.models.HomeDto
+import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.domain.logActionLabelRes
 import com.example.smarthome.ui.AppViewModel
 import java.text.SimpleDateFormat
@@ -60,10 +64,55 @@ fun HistoryScreen(
     navController: NavHostController
 ) {
     val vm: HistoryViewModel = viewModel(factory = HistoryViewModel.Factory)
-    val filtered by vm.filteredLogs.collectAsState()
+    val logs by vm.logs.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
     val search by vm.search.collectAsState()
     val page by vm.page.collectAsState()
+
+    // El log de la API no trae el nombre del dispositivo (sólo el id). Igual que la
+    // web, resolvemos nombre/habitación/casa cruzando el deviceId contra los
+    // dispositivos cargados en memoria.
+    val devices by appViewModel.devices.collectAsState()
+    val rooms by appViewModel.rooms.collectAsState()
+    val standaloneRooms by appViewModel.standaloneRooms.collectAsState()
+    val homes by appViewModel.homes.collectAsState()
+
+    val deviceInfo = remember(devices, rooms, standaloneRooms, homes) {
+        buildDeviceInfo(homes, rooms, standaloneRooms, devices)
+    }
+
+    val enriched = remember(logs, deviceInfo) {
+        logs.map { log ->
+            val info = log.deviceId?.let { deviceInfo[it] }
+            EnrichedLog(
+                event = log.event,
+                timestamp = log.timestamp,
+                deviceName = info?.name ?: log.deviceName,
+                roomName = info?.roomName ?: log.roomName,
+                homeName = info?.homeName ?: log.homeName
+            )
+        }
+    }
+
+    // Como la web: si ya hay dispositivos cargados, mostramos sólo los logs de
+    // dispositivos que siguen existiendo (el resto no tendría nombre).
+    val known = remember(enriched, deviceInfo) {
+        if (deviceInfo.isEmpty()) enriched
+        else enriched.filter { it.deviceName != null }
+    }
+
+    val filtered = remember(known, search) {
+        if (search.isBlank()) known
+        else {
+            val q = search.lowercase()
+            known.filter { e ->
+                (e.deviceName ?: "").lowercase().contains(q) ||
+                (e.event ?: "").lowercase().contains(q) ||
+                (e.roomName ?: "").lowercase().contains(q) ||
+                (e.homeName ?: "").lowercase().contains(q)
+            }
+        }
+    }
 
     val totalPages = maxOf(1, (filtered.size + PAGE_SIZE - 1) / PAGE_SIZE)
     val currentPageItems = filtered.drop(page * PAGE_SIZE).take(PAGE_SIZE)
@@ -73,6 +122,11 @@ fun HistoryScreen(
             TopAppBar(
                 modifier = Modifier.appBarGradient(),
                 title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Rounded.ArrowBack, stringResource(R.string.common_back))
+                    }
+                },
                 actions = {
                     IconButton(onClick = { vm.fetchLogs() }) {
                         Icon(Icons.Rounded.Refresh, stringResource(R.string.history_refresh))
@@ -238,4 +292,51 @@ private fun parseTimestamp(ts: String?): Pair<String, String> {
     } catch (e: Exception) {
         Pair(ts.take(10), "—")
     }
+}
+
+/** Log enriquecido con el nombre/habitación/casa ya resueltos del dispositivo. */
+private data class EnrichedLog(
+    val event: String?,
+    val timestamp: String?,
+    val deviceName: String?,
+    val roomName: String?,
+    val homeName: String?
+)
+
+private data class DeviceLogInfo(val name: String, val roomName: String?, val homeName: String?)
+
+/**
+ * Construye el mapa deviceId -> (nombre, habitación, casa) a partir de los
+ * dispositivos cargados, igual que el `deviceMap` de la web. `devices` está
+ * indexado por id de habitación (más la clave "free" para los dispositivos
+ * sin casa).
+ */
+private fun buildDeviceInfo(
+    homes: List<HomeDto>,
+    rooms: Map<String, List<RoomDto>>,
+    standaloneRooms: List<RoomDto>,
+    devices: Map<String, List<DeviceDto>>
+): Map<String, DeviceLogInfo> {
+    val map = HashMap<String, DeviceLogInfo>()
+    val homeNameById = homes.associate { it.id to it.name }
+    // Dispositivos en habitaciones que pertenecen a una casa.
+    rooms.forEach { (homeId, roomList) ->
+        val homeName = homeNameById[homeId]
+        roomList.forEach { room ->
+            devices[room.id]?.forEach { dev ->
+                map[dev.id] = DeviceLogInfo(dev.name, room.name, homeName)
+            }
+        }
+    }
+    // Habitaciones "sin casa".
+    standaloneRooms.forEach { room ->
+        devices[room.id]?.forEach { dev ->
+            map[dev.id] = DeviceLogInfo(dev.name, room.name, null)
+        }
+    }
+    // Dispositivos "sin casa" (libres).
+    devices["free"]?.forEach { dev ->
+        map[dev.id] = DeviceLogInfo(dev.name, null, null)
+    }
+    return map
 }
