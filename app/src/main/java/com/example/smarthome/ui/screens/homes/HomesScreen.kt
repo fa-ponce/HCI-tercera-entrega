@@ -390,7 +390,7 @@ private fun HomeSection(
                     homeName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 CountBadge(
                     if (homeRooms.size != 1) stringResource(R.string.common_rooms_count_many, homeRooms.size)

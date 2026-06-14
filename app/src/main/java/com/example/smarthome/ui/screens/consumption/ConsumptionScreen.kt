@@ -28,20 +28,21 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.CenterAlignedTopAppBar
 import com.example.smarthome.ui.components.appBarGradient
 import com.example.smarthome.ui.components.gradientTopBarColors
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
@@ -49,6 +50,12 @@ import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
+import com.example.smarthome.ui.components.AppEmptyPanel
+import com.example.smarthome.ui.components.AppIconShape
+import com.example.smarthome.ui.components.AppPanel
+import com.example.smarthome.ui.components.AppPanelShape
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
+import com.example.smarthome.ui.components.AppSectionHeader
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
@@ -129,7 +136,9 @@ fun ConsumptionScreen(
         LazyColumn(
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
-                start = 16.dp, end = 16.dp, bottom = 24.dp
+                start = AppScreenHorizontalPadding,
+                end = AppScreenHorizontalPadding,
+                bottom = 24.dp
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxSize()
@@ -180,24 +189,31 @@ fun ConsumptionScreen(
             // Por casa
             if (perHome.isNotEmpty()) {
                 item {
-                    Text(
-                        stringResource(R.string.consumption_per_home),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                    AppSectionHeader(
+                        title = stringResource(R.string.consumption_per_home),
+                        icon = Icons.Rounded.Apartment
                     )
                 }
                 items(perHome) { item ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    AppPanel(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Rounded.Apartment,
-                                null,
-                                modifier = Modifier.size(22.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Surface(
+                                shape = AppIconShape,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Rounded.Apartment,
+                                        null,
+                                        modifier = Modifier.size(22.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Row(
@@ -207,7 +223,11 @@ fun ConsumptionScreen(
                                     Text(
                                         item.name,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
                                     )
                                     Text(
                                         if (item.watts >= 1000) "${"%.1f".format(item.watts / 1000f)} kW"
@@ -226,7 +246,7 @@ fun ConsumptionScreen(
                                 Text(
                                     stringResource(R.string.consumption_devices_on, item.activeDevices),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.outline
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -236,12 +256,10 @@ fun ConsumptionScreen(
 
             if (allDevices.isEmpty()) {
                 item {
-                    Box(
-                        Modifier.fillMaxWidth().padding(top = 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(stringResource(R.string.consumption_no_devices), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    AppEmptyPanel(
+                        title = stringResource(R.string.consumption_no_devices),
+                        icon = Icons.Rounded.BarChart
+                    )
                 }
             }
         }
@@ -250,7 +268,7 @@ fun ConsumptionScreen(
 
 @Composable
 private fun ConsumptionStatCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     value: String,
     subtitle: String,
@@ -259,26 +277,40 @@ private fun ConsumptionStatCard(
 ) {
     Card(
         modifier = modifier,
-        colors = if (highlight) CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ) else CardDefaults.cardColors()
+        shape = AppPanelShape,
+        colors = CardDefaults.cardColors(
+            containerColor = if (highlight) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    icon, null,
-                    modifier = Modifier.size(16.dp),
-                    tint = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer
-                           else MaterialTheme.colorScheme.outline
-                )
+                Surface(
+                    shape = AppIconShape,
+                    color = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f)
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            icon, null,
+                            modifier = Modifier.size(18.dp),
+                            tint = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
                 Text(
                     title,
                     style = MaterialTheme.typography.labelSmall,
                     color = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer
-                            else MaterialTheme.colorScheme.outline
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -293,7 +325,9 @@ private fun ConsumptionStatCard(
                 subtitle,
                 style = MaterialTheme.typography.labelSmall,
                 color = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.outline
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

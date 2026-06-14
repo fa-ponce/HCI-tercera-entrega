@@ -746,14 +746,6 @@ private fun ShortcutTileScaffold(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            accent.copy(alpha = 0.16f * f),
-                            accent.copy(alpha = 0.04f * f)
-                        )
-                    )
-                )
                 .padding(14.dp)
         ) {
             Column(

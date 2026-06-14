@@ -32,6 +32,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -53,11 +54,54 @@ import com.example.smarthome.domain.isDeviceOn
 fun truncateName(name: String, max: Int = 18): String =
     if (name.length > max) name.take(max).trimEnd() + "..." else name
 
-/** Color naranja para señalar dispositivos sin habitación (igual que la web). */
-private val FreeAccent = Color(0xFFE67E22)
+private data class DevicePanelColors(
+    val accent: Color,
+    val accentContainer: Color,
+    val subtitle: Color
+)
 
-/** Verde para el indicador de estado "encendido" (igual que la web: #16a34a). */
-private val OnAccent = Color(0xFF16A34A)
+/** Color naranja para señalar dispositivos sin habitación (igual que la web), adapted for dark surfaces. */
+@Composable
+private fun freeAccent(): Color = if (isDarkTheme()) Color(0xFFF59E0B) else Color(0xFFE67E22)
+
+/** Verde para el indicador de estado "encendido", brightened slightly on dark surfaces. */
+@Composable
+private fun onAccent(): Color = if (isDarkTheme()) Color(0xFF22C55E) else Color(0xFF16A34A)
+
+@Composable
+private fun offAccent(): Color = MaterialTheme.colorScheme.onSurfaceVariant
+
+@Composable
+private fun isDarkTheme(): Boolean =
+    MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+@Composable
+private fun devicePanelColors(on: Boolean, free: Boolean): DevicePanelColors {
+    val accent = when {
+        free -> freeAccent()
+        on -> onAccent()
+        else -> offAccent()
+    }
+    return DevicePanelColors(
+        accent = accent,
+        accentContainer = if (on || free) accent.copy(alpha = if (isDarkTheme()) 0.22f else 0.12f)
+            else MaterialTheme.colorScheme.surfaceContainerHigh,
+        subtitle = if (free) freeAccent() else MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun deviceSwitchColors() = SwitchDefaults.colors(
+    checkedTrackColor = MaterialTheme.colorScheme.primary,
+    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+        alpha = if (isDarkTheme()) 0.78f else 0.62f
+    ),
+    uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+        alpha = if (isDarkTheme()) 0.72f else 0.46f
+    )
+)
 
 /** Dibuja un borde punteado (dashed) redondeado, para las tarjetas de dispositivos libres. */
 private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 1.5.dp) =
@@ -85,23 +129,17 @@ fun DeviceCard(
     val on = isDeviceOn(typeId, device.state)
     val toggleable = canToggle(typeId)
 
-    val accent = when {
-        free -> FreeAccent
-        on -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outlineVariant
-    }
+    val panelColors = devicePanelColors(on = on, free = free)
 
     // El contenedor del ícono cambia de color al encender, con una transición
     // suave. Encendido: ícono en color primario sobre fondo apenas tintado,
     // igual que la web (#3a5a90 sobre #eef4ff).
     val iconBg by animateColorAsState(
-        targetValue = if (on) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                      else MaterialTheme.colorScheme.surfaceVariant,
+        targetValue = panelColors.accentContainer,
         label = "iconBg"
     )
     val iconTint by animateColorAsState(
-        targetValue = if (on) MaterialTheme.colorScheme.primary
-                      else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = panelColors.accent,
         label = "iconTint"
     )
     val elevation by animateDpAsState(
@@ -116,7 +154,7 @@ fun DeviceCard(
             .fillMaxWidth()
             .then(
                 if (free) Modifier.dashedBorder(
-                    color = MaterialTheme.colorScheme.outline,
+                    color = panelColors.accent.copy(alpha = if (isDarkTheme()) 0.75f else 0.55f),
                     cornerRadius = 16.dp
                 ) else Modifier
             )
@@ -129,7 +167,7 @@ fun DeviceCard(
             Box(
                 Modifier
                     .size(width = 4.dp, height = 56.dp)
-                    .drawBehind { drawRect(accent) }
+                    .drawBehind { drawRect(panelColors.accent) }
             )
 
             Row(
@@ -166,7 +204,7 @@ fun DeviceCard(
                     Text(
                         text = if (subtitle.isNotEmpty()) subtitle else stringResource(deviceTypeName(typeId)),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (free) FreeAccent else MaterialTheme.colorScheme.outline,
+                        color = panelColors.subtitle,
                         fontStyle = if (free) FontStyle.Italic else FontStyle.Normal,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -179,10 +217,7 @@ fun DeviceCard(
                     Switch(
                         checked = on,
                         onCheckedChange = { onToggle() },
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        colors = deviceSwitchColors()
                     )
                 }
             }
@@ -206,21 +241,14 @@ fun DeviceGridCard(
     val typeId = device.type.id
     val on = isDeviceOn(typeId, device.state)
     val toggleable = canToggle(typeId)
+    val panelColors = devicePanelColors(on = on, free = free)
 
     val iconBg by animateColorAsState(
-        targetValue = when {
-            free -> FreeAccent.copy(alpha = 0.14f)
-            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-            else -> MaterialTheme.colorScheme.surfaceVariant
-        },
+        targetValue = panelColors.accentContainer,
         label = "gridIconBg"
     )
     val iconTint by animateColorAsState(
-        targetValue = when {
-            free -> FreeAccent
-            on -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
-        },
+        targetValue = panelColors.accent,
         label = "gridIconTint"
     )
     val elevation by animateDpAsState(
@@ -236,7 +264,7 @@ fun DeviceGridCard(
             .heightIn(min = 132.dp)
             .then(
                 if (free) Modifier.dashedBorder(
-                    color = FreeAccent.copy(alpha = 0.6f),
+                    color = panelColors.accent.copy(alpha = if (isDarkTheme()) 0.75f else 0.55f),
                     cornerRadius = 16.dp
                 ) else Modifier
             )
@@ -269,10 +297,7 @@ fun DeviceGridCard(
                     Switch(
                         checked = on,
                         onCheckedChange = { onToggle() },
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        colors = deviceSwitchColors()
                     )
                 }
             }
@@ -290,7 +315,7 @@ fun DeviceGridCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (free) FreeAccent else MaterialTheme.colorScheme.outline,
+                    color = panelColors.subtitle,
                     fontStyle = if (free) FontStyle.Italic else FontStyle.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -307,7 +332,7 @@ fun DeviceGridCard(
 @Composable
 private fun StatusRow(on: Boolean, toggleable: Boolean) {
     val dotColor by animateColorAsState(
-        targetValue = if (on) OnAccent else MaterialTheme.colorScheme.outline,
+        targetValue = if (on) onAccent() else offAccent(),
         label = "dot"
     )
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -326,7 +351,7 @@ private fun StatusRow(on: Boolean, toggleable: Boolean) {
             },
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
-            color = if (on) OnAccent else MaterialTheme.colorScheme.outline
+            color = if (on) onAccent() else offAccent()
         )
     }
 }
