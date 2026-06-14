@@ -95,7 +95,8 @@ fun RoomScreen(
     var showEditDialog by remember { mutableStateOf(false) }
 
     val room = (rooms.values.flatten() + standaloneRooms).find { it.id == roomId }
-    val home = room?.home?.id?.let { hid -> homes.find { it.id == hid } }
+    val homeId = rooms.entries.find { (_, list) -> list.any { it.id == roomId } }?.key
+    val home = (homeId ?: room?.home?.id)?.let { hid -> homes.find { it.id == hid } }
     val roomDevices = devices[roomId] ?: emptyList()
 
     val totalOn = roomDevices.count { isDeviceOn(it.type.id, it.state) }
@@ -256,7 +257,7 @@ fun RoomScreen(
         EditRoomDialog(
             room = room,
             homes = homes,
-            currentHomeId = home?.id,
+            currentHomeId = homeId ?: home?.id,
             onDismiss = { showEditDialog = false },
             onSave = { name, type, homeId, onResult ->
                 appViewModel.saveRoom(room, name, type, homeId) { ok, err ->
