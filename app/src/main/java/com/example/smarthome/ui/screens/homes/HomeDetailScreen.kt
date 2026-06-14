@@ -67,6 +67,7 @@ import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
+import com.example.smarthome.domain.roomTypeIcon
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.components.DeviceGridCard
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
@@ -225,6 +226,7 @@ fun HomeDetailContent(
                     val roomOn = roomDevices.count { isDeviceOn(it.type.id, it.state) }
                     RoomGridCard(
                         name = room.name,
+                        roomType = room.metadata?.type,
                         deviceCount = roomDevices.size,
                         onCount = roomOn,
                         onClick = { navController.navigate(Routes.room(room.id)) }
@@ -558,6 +560,7 @@ private fun SectionTitle(icon: ImageVector, title: String, count: Int) {
 @Composable
 private fun RoomGridCard(
     name: String,
+    roomType: String?,
     deviceCount: Int,
     onCount: Int,
     onClick: () -> Unit
@@ -574,7 +577,7 @@ private fun RoomGridCard(
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Rounded.MeetingRoom, null,
+                        roomTypeIcon(roomType), null,
                         Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
