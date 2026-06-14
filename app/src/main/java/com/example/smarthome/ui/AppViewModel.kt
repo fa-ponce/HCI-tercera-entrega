@@ -524,6 +524,10 @@ class AppViewModel(
             onResult(Result.failure(Exception(appContext.getString(R.string.sheet_free_room_error))))
             return@launch
         }
+        // La API rechaza agregar un dispositivo a una habitación si ya pertenece a otra
+        // (devuelve 409). Como los dispositivos "sin casa" viven en una habitación oculta,
+        // hay que quitarlos de su habitación actual antes de vincularlos, igual que la web.
+        deviceRepository.removeDeviceFromRoom(deviceId)
         val result = deviceRepository.addDeviceToRoom(targetRoomId, deviceId)
         result.onSuccess { _ ->
             val current = _devices.value.values.flatten().find { d -> d.id == deviceId }
