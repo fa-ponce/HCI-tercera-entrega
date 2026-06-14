@@ -442,6 +442,7 @@ private fun ChangePasswordDialog(prefsViewModel: UserPreferencesViewModel, onDis
     var confirmPass by remember { mutableStateOf("") }
     var oldVisible by remember { mutableStateOf(false) }
     var newVisible by remember { mutableStateOf(false) }
+    var confirmVisible by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var success by remember { mutableStateOf(false) }
@@ -485,7 +486,12 @@ private fun ChangePasswordDialog(prefsViewModel: UserPreferencesViewModel, onDis
                         onValueChange = { confirmPass = it; errorMsg = null },
                         label = { Text(stringResource(R.string.profile_confirm_password)) },
                         singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (confirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                                Icon(if (confirmVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, null)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                     errorMsg?.let {
