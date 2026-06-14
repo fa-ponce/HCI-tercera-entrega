@@ -417,4 +417,46 @@
     <string name="notif_door_title">Puerta</string>
     <string name="notif_state_on">Activado</string>
     <string name="notif_state_off">Desactivado</string>
+
+    <!-- Mensajes de error (capa de datos / API). Localizados para seguir el idioma de la app. -->
+    <string name="err_unexpected">Ocurrió un error inesperado</string>
+    <string name="err_no_internet">Sin conexión a internet. Verificá tu red.</string>
+    <string name="err_session_expired">Sesión expirada. Ingresá de nuevo.</string>
+    <string name="err_no_permission">No tenés permiso para realizar esta acción.</string>
+    <string name="err_not_found">El elemento no fue encontrado.</string>
+    <string name="err_already_exists">Ya existe un elemento con ese nombre.</string>
+    <string name="err_server">Error del servidor. Intentá más tarde.</string>
+    <string name="err_code">Error %1$d</string>
+    <string name="err_devices_load">Error al cargar los dispositivos</string>
+    <string name="err_device_get">Error al obtener el dispositivo</string>
+    <string name="err_device_types_load">Error al cargar los tipos de dispositivo</string>
+    <string name="err_device_create">Error al crear el dispositivo</string>
+    <string name="err_device_rename">Error al renombrar el dispositivo</string>
+    <string name="err_device_delete">Error al eliminar el dispositivo</string>
+    <string name="err_device_link">Error al vincular el dispositivo</string>
+    <string name="err_device_unlink">Error al desvincular el dispositivo</string>
+    <string name="err_action_execute">Error al ejecutar la acción</string>
+    <string name="err_history_load">Error al cargar el historial</string>
+    <string name="err_data_load">Error al cargar los datos</string>
+    <string name="err_homes_load">Error al cargar las casas</string>
+    <string name="err_home_create">Error al crear la casa</string>
+    <string name="err_home_rename">Error al renombrar la casa</string>
+    <string name="err_home_delete">Error al eliminar la casa</string>
+    <string name="err_rooms_load">Error al cargar las habitaciones</string>
+    <string name="err_room_create">Error al crear la habitación</string>
+    <string name="err_room_rename">Error al renombrar la habitación</string>
+    <string name="err_room_delete">Error al eliminar la habitación</string>
+    <string name="err_routines_load">Error al cargar las rutinas</string>
+    <string name="err_routine_create">Error al crear la rutina</string>
+    <string name="err_routine_save">Error al guardar la rutina</string>
+    <string name="err_routine_delete">Error al eliminar la rutina</string>
+    <string name="err_routine_execute">Error al ejecutar la rutina</string>
+    <string name="err_login">Error al iniciar sesión</string>
+    <string name="err_logout">Error al cerrar sesión</string>
+    <string name="err_register">Error al registrarse</string>
+    <string name="err_send_code">Error al enviar el código</string>
+    <string name="err_change_password">Error al cambiar la contraseña</string>
+    <string name="err_account_not_verified">Tu cuenta no está verificada. Ingresá el código que te enviamos por correo (o tocá \"Reenviar código\").</string>
+    <string name="err_code_invalid">Código inválido</string>
+    <string name="err_invalid_credentials">Email o contraseña incorrectos.</string>
 </resources>

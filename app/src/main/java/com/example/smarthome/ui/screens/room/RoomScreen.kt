@@ -243,9 +243,9 @@ fun RoomScreen(
             appViewModel = appViewModel,
             onDismiss = { showAddDialog = false },
             onCreate = { name, typeId, roomId, marca, onResult ->
-                appViewModel.createDevice(name, typeId, roomId, marca) { success ->
+                appViewModel.createDevice(name, typeId, roomId, marca) { success, error ->
                     if (success) showAddDialog = false
-                    onResult(success)
+                    onResult(success, error)
                 }
             },
             lockedHome = home,

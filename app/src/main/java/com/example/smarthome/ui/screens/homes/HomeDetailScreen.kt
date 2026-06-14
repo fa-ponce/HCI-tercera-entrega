@@ -414,6 +414,7 @@ private fun AddRoomDialog(
     var isSaving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val existingRooms by appViewModel.rooms.collectAsState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -492,12 +493,17 @@ private fun AddRoomDialog(
         confirmButton = {
             val errMin = stringResource(R.string.common_name_min_chars)
             val errMax = stringResource(R.string.common_name_max_chars)
+            val errDup = stringResource(R.string.err_already_exists)
             Button(
                 onClick = {
                     val trimmed = name.trim()
                     when {
                         trimmed.length < 3 -> { nameError = errMin; return@Button }
                         trimmed.length > 100 -> { nameError = errMax; return@Button }
+                    }
+                    // No permitimos otra habitación con el mismo nombre en esta casa.
+                    if ((existingRooms[homeId] ?: emptyList()).any { it.name.equals(trimmed, ignoreCase = true) }) {
+                        nameError = errDup; return@Button
                     }
                     if (!isSaving) {
                         isSaving = true

@@ -428,4 +428,46 @@
     <string name="notif_door_title">Door</string>
     <string name="notif_state_on">On</string>
     <string name="notif_state_off">Off</string>
+
+    <!-- Mensajes de error (capa de datos / API). Localizados para seguir el idioma de la app. -->
+    <string name="err_unexpected">An unexpected error occurred</string>
+    <string name="err_no_internet">No internet connection. Check your network.</string>
+    <string name="err_session_expired">Session expired. Please sign in again.</string>
+    <string name="err_no_permission">You don\'t have permission to perform this action.</string>
+    <string name="err_not_found">The item was not found.</string>
+    <string name="err_already_exists">An item with that name already exists.</string>
+    <string name="err_server">Server error. Please try again later.</string>
+    <string name="err_code">Error %1$d</string>
+    <string name="err_devices_load">Could not load the devices</string>
+    <string name="err_device_get">Could not get the device</string>
+    <string name="err_device_types_load">Could not load the device types</string>
+    <string name="err_device_create">Could not create the device</string>
+    <string name="err_device_rename">Could not rename the device</string>
+    <string name="err_device_delete">Could not delete the device</string>
+    <string name="err_device_link">Could not link the device</string>
+    <string name="err_device_unlink">Could not unlink the device</string>
+    <string name="err_action_execute">Could not run the action</string>
+    <string name="err_history_load">Could not load the history</string>
+    <string name="err_data_load">Could not load the data</string>
+    <string name="err_homes_load">Could not load the homes</string>
+    <string name="err_home_create">Could not create the home</string>
+    <string name="err_home_rename">Could not rename the home</string>
+    <string name="err_home_delete">Could not delete the home</string>
+    <string name="err_rooms_load">Could not load the rooms</string>
+    <string name="err_room_create">Could not create the room</string>
+    <string name="err_room_rename">Could not rename the room</string>
+    <string name="err_room_delete">Could not delete the room</string>
+    <string name="err_routines_load">Could not load the routines</string>
+    <string name="err_routine_create">Could not create the routine</string>
+    <string name="err_routine_save">Could not save the routine</string>
+    <string name="err_routine_delete">Could not delete the routine</string>
+    <string name="err_routine_execute">Could not run the routine</string>
+    <string name="err_login">Could not sign in</string>
+    <string name="err_logout">Could not sign out</string>
+    <string name="err_register">Could not sign up</string>
+    <string name="err_send_code">Could not send the code</string>
+    <string name="err_change_password">Could not change the password</string>
+    <string name="err_account_not_verified">Your account is not verified. Enter the code we emailed you (or tap \"Resend code\").</string>
+    <string name="err_code_invalid">Invalid code</string>
+    <string name="err_invalid_credentials">Incorrect email or password.</string>
 </resources>

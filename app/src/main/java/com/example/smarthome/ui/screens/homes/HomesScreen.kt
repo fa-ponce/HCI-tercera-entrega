@@ -62,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.smarthome.AppStrings
 import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
@@ -130,14 +131,19 @@ fun HomesScreen(
         NewHomeDialog(
             onDismiss = { showDialog = false },
             onCreate = { name, type, address, city, onResult ->
-                scope.launch {
-                    ServiceLocator.homeRepository.createHome(name, type, address, city)
-                        .onSuccess {
-                            appViewModel.addHome(it)
-                            showDialog = false
-                            onResult(true, null)
-                        }
-                        .onFailure { onResult(false, it.message) }
+                // La API permite casas con nombre repetido; lo bloqueamos del lado de la app.
+                if (homes.any { it.name.equals(name, ignoreCase = true) }) {
+                    onResult(false, AppStrings.get(R.string.err_already_exists))
+                } else {
+                    scope.launch {
+                        ServiceLocator.homeRepository.createHome(name, type, address, city)
+                            .onSuccess {
+                                appViewModel.addHome(it)
+                                showDialog = false
+                                onResult(true, null)
+                            }
+                            .onFailure { onResult(false, it.message) }
+                    }
                 }
             }
         )
@@ -148,7 +154,12 @@ fun HomesScreen(
             homes = homes,
             onDismiss = { showRoomDialog = false },
             onCreate = { name, type, floor, homeId, onResult ->
-                if (homeId == null) {
+                // No permitimos habitaciones con nombre repetido dentro de la misma casa
+                // (ni entre las "sin casa"). La API sí las permitiría.
+                val existing = if (homeId == null) standaloneRooms else (rooms[homeId] ?: emptyList())
+                if (existing.any { it.name.equals(name, ignoreCase = true) }) {
+                    onResult(false, AppStrings.get(R.string.err_already_exists))
+                } else if (homeId == null) {
                     appViewModel.createStandaloneRoom(name, type, floor) { ok, err ->
                         if (ok) showRoomDialog = false
                         onResult(ok, err)

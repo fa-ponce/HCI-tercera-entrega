@@ -11,6 +11,7 @@ object ServiceLocator {
 
     fun init(context: Context) {
         appContext = context.applicationContext
+        AppStrings.init(appContext)
     }
 
     val userPreferences: UserPreferences by lazy { UserPreferences(appContext) }

@@ -1,11 +1,14 @@
 package com.example.smarthome.data.repository
 
+import com.example.smarthome.AppStrings
+import com.example.smarthome.R
 import com.example.smarthome.data.api.SmarthomeApi
 import com.example.smarthome.data.api.models.*
 import com.example.smarthome.data.datastore.UserPreferences
 import retrofit2.HttpException
 
-class AccountNotVerifiedException : Exception("Cuenta no verificada")
+// Marcador interno: nunca se muestra al usuario (LoginViewModel lo intercepta por tipo).
+class AccountNotVerifiedException : Exception("Account not verified")
 
 class AuthRepository(
     private val api: SmarthomeApi,
@@ -23,15 +26,15 @@ class AuthRepository(
                 description != null && description.contains("verif", ignoreCase = true) ->
                     Result.failure(AccountNotVerifiedException())
                 e is HttpException && e.code() == 401 ->
-                    Result.failure(Exception("Email o contraseña incorrectos."))
+                    Result.failure(Exception(AppStrings.get(R.string.err_invalid_credentials)))
                 else ->
-                    Result.failure(Exception(e.toFriendlyMessage("Error al iniciar sesión")))
+                    Result.failure(Exception(e.toFriendlyMessage(AppStrings.get(R.string.err_login))))
             }
         }
     }
 
     suspend fun logout() = runCatching {
-        api.logout().requireSuccessful("Error al cerrar sesión")
+        api.logout().requireSuccessful(AppStrings.get(R.string.err_logout))
         userPreferences.clear()
     }
 
@@ -39,27 +42,27 @@ class AuthRepository(
         return try {
             Result.success(api.register(RegisterRequest(name, email, password)))
         } catch (e: Exception) {
-            Result.failure(Exception(e.toFriendlyMessage("Error al registrarse")))
+            Result.failure(Exception(e.toFriendlyMessage(AppStrings.get(R.string.err_register))))
         }
     }
 
     suspend fun sendVerification(email: String): Result<Unit> = runCatching {
-        api.sendVerification(EmailRequest(email)).requireSuccessful("Error al enviar el código")
+        api.sendVerification(EmailRequest(email)).requireSuccessful(AppStrings.get(R.string.err_send_code))
     }
 
     suspend fun verifyAccount(code: String): Result<Unit> = runCatching {
-        api.verifyAccount(VerifyCodeRequest(code)).requireSuccessful("Código inválido")
+        api.verifyAccount(VerifyCodeRequest(code)).requireSuccessful(AppStrings.get(R.string.err_code_invalid))
     }
 
     suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
-        api.forgotPassword(EmailRequest(email)).requireSuccessful("Error al enviar el código")
+        api.forgotPassword(EmailRequest(email)).requireSuccessful(AppStrings.get(R.string.err_send_code))
     }
 
     suspend fun resetPassword(code: String, password: String): Result<Unit> = runCatching {
-        api.resetPassword(ResetPasswordRequest(code, password)).requireSuccessful("Error al cambiar la contraseña")
+        api.resetPassword(ResetPasswordRequest(code, password)).requireSuccessful(AppStrings.get(R.string.err_change_password))
     }
 
     suspend fun changePassword(email: String, old: String, new: String): Result<Unit> = runCatching {
-        api.changePassword(ChangePasswordRequest(email, old, new)).requireSuccessful("Error al cambiar la contraseña")
+        api.changePassword(ChangePasswordRequest(email, old, new)).requireSuccessful(AppStrings.get(R.string.err_change_password))
     }
 }

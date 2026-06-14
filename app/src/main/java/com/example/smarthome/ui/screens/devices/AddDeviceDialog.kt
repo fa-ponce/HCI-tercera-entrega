@@ -44,7 +44,7 @@ import com.example.smarthome.ui.AppViewModel
 fun AddDeviceDialog(
     appViewModel: AppViewModel,
     onDismiss: () -> Unit,
-    onCreate: (name: String, typeId: String, roomId: String?, marca: String, onResult: (Boolean) -> Unit) -> Unit,
+    onCreate: (name: String, typeId: String, roomId: String?, marca: String, onResult: (Boolean, String?) -> Unit) -> Unit,
     // Si se pasan, el diálogo queda FIJADO a esa casa/habitación (no se pueden cambiar).
     lockedHome: HomeDto? = null,
     lockedRoom: RoomDto? = null
@@ -62,6 +62,7 @@ fun AddDeviceDialog(
     var nameError by remember { mutableStateOf<String?>(null) }
     var marca by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
+    var createError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     var typeExpanded by remember { mutableStateOf(false) }
@@ -87,6 +88,16 @@ fun AddDeviceDialog(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
+                // Error de creación (ej. sin conexión): se muestra acá adentro porque
+                // el snackbar global queda tapado por el diálogo y no se ve.
+                if (createError != null) {
+                    Text(
+                        createError.orEmpty(),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
                 // Nombre
                 OutlinedTextField(
                     value = name,
@@ -250,8 +261,9 @@ fun AddDeviceDialog(
                     if (nameError != null || typeError != null) return@TextButton
                     if (!isSaving) {
                         isSaving = true
-                        onCreate(trimmed, selectedType?.id ?: return@TextButton, selectedRoom?.id, marca.trim()) { success ->
-                            if (!success) isSaving = false
+                        createError = null
+                        onCreate(trimmed, selectedType?.id ?: return@TextButton, selectedRoom?.id, marca.trim()) { success, error ->
+                            if (!success) { isSaving = false; createError = error }
                         }
                     }
                 },

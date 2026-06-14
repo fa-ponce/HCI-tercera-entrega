@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.smarthome.AppStrings
 import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.ui.notifications.NotificationHelper
@@ -130,10 +131,14 @@ class AppViewModel(
         _isLoading.value = true
         _error.value = null
         try {
-            val homesJob = async { homeRepository.getHomes().getOrThrow() }
+            // Importante: el async NO debe lanzar la excepción adentro. Si lo hace, el
+            // fallo del hijo escapa el try/catch (concurrencia estructurada) y crashea la
+            // app al entrar sin internet. Devolvemos el Result y recién acá hacemos
+            // getOrThrow(), que sí cae en el catch de abajo.
+            val homesJob = async { homeRepository.getHomes() }
             val routinesJob = async { routineRepository.getRoutines().getOrDefault(emptyList()) }
 
-            val homes = homesJob.await()
+            val homes = homesJob.await().getOrThrow()
             // Aseguramos los contenedores ocultos y excluimos la casa especial
             // de la lista visible de casas.
             val freeRoom = ensureFreeRoomId(homes)
@@ -194,9 +199,9 @@ class AppViewModel(
                 return@launch
             }
             val msg = if (e.isNetworkError())
-                "Sin conexión a internet. Verificá tu red."
+                AppStrings.get(R.string.err_no_internet)
             else
-                e.message ?: "Error al cargar los datos"
+                e.message ?: AppStrings.get(R.string.err_data_load)
             _error.value = msg
             if (_homes.value.isNotEmpty()) _errorEvent.tryEmit(msg)
         } finally {
@@ -269,6 +274,9 @@ class AppViewModel(
                     appContext.getString(R.string.notif_routine_error_title),
                     appContext.getString(R.string.notif_routine_error_body, routineName)
                 )
+                // También avisamos en pantalla: si no hay internet, la rutina NO se
+                // ejecuta y antes parecía que sí (solo había notificación).
+                _errorEvent.tryEmit(it.message ?: AppStrings.get(R.string.notif_routine_error_body, routineName))
             }
     }
 
@@ -283,14 +291,13 @@ class AppViewModel(
         typeId: String,
         roomId: String?,
         marca: String,
-        onResult: ((success: Boolean) -> Unit)? = null
+        onResult: ((success: Boolean, error: String?) -> Unit)? = null
     ) = viewModelScope.launch {
         val fullName = if (marca.isNotBlank()) "$name - $marca" else name
         // Si no tiene casa, lo creamos en la habitación oculta para que persista.
         val targetRoomId = roomId ?: ensureFreeRoomId()
         if (roomId == null && targetRoomId == null) {
-            _errorEvent.tryEmit("No se pudo preparar el espacio para dispositivos sin casa")
-            onResult?.invoke(false)
+            onResult?.invoke(false, AppStrings.get(R.string.sheet_free_room_error))
             return@launch
         }
         deviceRepository.createDevice(fullName, typeId, targetRoomId)
@@ -301,11 +308,12 @@ class AppViewModel(
                 } else {
                     addDevice(roomId, device.copy(room = RoomRef(roomId)))
                 }
-                onResult?.invoke(true)
+                onResult?.invoke(true, null)
             }
             .onFailure {
-                _errorEvent.tryEmit(it.message ?: "Error al crear el dispositivo")
-                onResult?.invoke(false)
+                // El error se muestra dentro del diálogo (el snackbar global quedaba
+                // tapado por el diálogo modal y no se veía).
+                onResult?.invoke(false, it.message ?: AppStrings.get(R.string.err_device_create))
             }
     }
 
@@ -366,7 +374,7 @@ class AppViewModel(
     ) = viewModelScope.launch {
         val targetHomeId = homeId ?: run { ensureFreeRoomId(); freeHomeId }
         if (targetHomeId == null) {
-            onResult?.invoke(false, appContext.getString(R.string.sheet_free_room_error))
+            onResult?.invoke(false, AppStrings.get(R.string.sheet_free_room_error))
             return@launch
         }
         homeRepository.updateRoom(room.id, name, type, targetHomeId, room.metadata?.floor)
@@ -421,7 +429,7 @@ class AppViewModel(
         ensureFreeRoomId() // asegura freeHomeId
         val fhId = freeHomeId
         if (fhId == null) {
-            onResult?.invoke(false, appContext.getString(R.string.sheet_free_room_error))
+            onResult?.invoke(false, AppStrings.get(R.string.sheet_free_room_error))
             return@launch
         }
         homeRepository.createRoom(name, type, floor, fhId)
@@ -491,7 +499,7 @@ class AppViewModel(
         val result = deviceRepository.executeAction(deviceId, action, params)
         result.onFailure {
             if (previous != null) updateDevice(previous)
-            _errorEvent.tryEmit(it.message ?: "Error ejecutando acción")
+            _errorEvent.tryEmit(it.message ?: AppStrings.get(R.string.err_action_execute))
         }
         onResult?.invoke(result)
     }
@@ -521,7 +529,7 @@ class AppViewModel(
         onResult: (Result<Unit>) -> Unit
     ) = viewModelScope.launch {
         val targetRoomId = roomId ?: ensureFreeRoomId() ?: run {
-            onResult(Result.failure(Exception(appContext.getString(R.string.sheet_free_room_error))))
+            onResult(Result.failure(Exception(AppStrings.get(R.string.sheet_free_room_error))))
             return@launch
         }
         // La API rechaza agregar un dispositivo a una habitación si ya pertenece a otra

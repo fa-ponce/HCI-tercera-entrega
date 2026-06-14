@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.smarthome.AppStrings
+import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.repository.AccountNotVerifiedException
 import com.example.smarthome.data.repository.AuthRepository
@@ -60,9 +62,9 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 if (e is AccountNotVerifiedException) {
                     // No reenviamos el código automáticamente: ya cuenta con el que recibió por correo y, si lo necesita, puede pedir otro con "Reenviar código".
                     setMode(LoginMode.Verify)
-                    _uiState.update { st -> st.copy(error = "Tu cuenta no está verificada. Ingresá el código que te enviamos por correo (o tocá \"Reenviar código\").") }
+                    _uiState.update { st -> st.copy(error = AppStrings.get(R.string.err_account_not_verified)) }
                 } else {
-                    _uiState.update { st -> st.copy(error = e.message ?: "Error al iniciar sesión") }
+                    _uiState.update { st -> st.copy(error = e.message ?: AppStrings.get(R.string.err_login)) }
                 }
             }
         _uiState.update { it.copy(isLoading = false) }
@@ -74,7 +76,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         authRepository.register(s.name, s.email, s.password)
            // verif
             .onSuccess { setMode(LoginMode.Verify) }
-            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al registrarse") } }
+            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: AppStrings.get(R.string.err_register)) } }
         _uiState.update { it.copy(isLoading = false) }
     }
 
@@ -82,7 +84,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         authRepository.verifyAccount(uiState.value.code)
             .onSuccess { setMode(LoginMode.Login) }
-            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Código inválido") } }
+            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: AppStrings.get(R.string.err_code_invalid)) } }
         _uiState.update { it.copy(isLoading = false) }
     }
 
@@ -94,7 +96,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         authRepository.forgotPassword(uiState.value.email)
             .onSuccess { setMode(LoginMode.ResetPassword) }
-            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al enviar el código") } }
+            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: AppStrings.get(R.string.err_send_code)) } }
         _uiState.update { it.copy(isLoading = false) }
     }
 
@@ -103,7 +105,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         val s = uiState.value
         authRepository.resetPassword(s.code, s.newPassword)
             .onSuccess { setMode(LoginMode.Login) }
-            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: "Error al cambiar la contraseña") } }
+            .onFailure { _uiState.update { st -> st.copy(error = it.message ?: AppStrings.get(R.string.err_change_password)) } }
         _uiState.update { it.copy(isLoading = false) }
     }
 
