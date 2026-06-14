@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.DevicesOther
@@ -30,7 +29,6 @@ import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.PowerSettingsNew
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -45,12 +43,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,6 +65,10 @@ import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.AppFabListBottomPadding
+import com.example.smarthome.ui.components.AppMetricCard
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
+import com.example.smarthome.ui.components.AppSearchField
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.DeviceGridCard
 import com.example.smarthome.ui.components.FullScreenLoading
@@ -215,7 +214,9 @@ fun DevicesScreen(
             columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
-                start = 16.dp, end = 16.dp, bottom = 96.dp
+                start = AppScreenHorizontalPadding,
+                end = AppScreenHorizontalPadding,
+                bottom = AppFabListBottomPadding
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -228,8 +229,8 @@ fun DevicesScreen(
             item(span = fullSpan) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     StatPill("${allItems.size}", stringResource(R.string.device_total), Icons.Rounded.DevicesOther, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.Bolt, OnGreen, Modifier.weight(1f))
-                    StatPill("$totalOff", stringResource(R.string.common_off_plural), Icons.Rounded.PowerSettingsNew, MaterialTheme.colorScheme.error, Modifier.weight(1f))
+                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.PowerSettingsNew, OnGreen, Modifier.weight(1f))
+                    StatPill("$totalOff", stringResource(R.string.common_off_plural), Icons.Rounded.PowerSettingsNew, MaterialTheme.colorScheme.error, Modifier.weight(1f), slashed = true)
                 }
             }
 
@@ -240,20 +241,10 @@ fun DevicesScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        OutlinedTextField(
+                        AppSearchField(
                             value = search,
                             onValueChange = { search = it },
-                            placeholder = { Text(stringResource(R.string.device_search_placeholder)) },
-                            leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                            trailingIcon = if (search.isNotEmpty()) {
-                                { IconButton(onClick = { search = "" }) { Icon(Icons.Rounded.Clear, stringResource(R.string.common_clear)) } }
-                            } else null,
-                            singleLine = true,
-                            shape = RoundedCornerShape(50),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                focusedContainerColor = MaterialTheme.colorScheme.surface
-                            ),
+                            placeholder = stringResource(R.string.device_search_placeholder),
                             modifier = Modifier.weight(1f)
                         )
                         FilterButton(
@@ -343,47 +334,18 @@ private fun StatPill(
     label: String,
     icon: ImageVector,
     accent: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    slashed: Boolean = false
 ) {
-    // Tarjeta blanca con ícono sobre fondo tintado, como las stat-cards de la web.
-    Surface(
+    AppMetricCard(
+        value = value,
+        label = label,
+        icon = icon,
+        accent = accent,
         modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 1.dp
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(accent.copy(alpha = 0.12f))
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = accent
-                )
-            }
-            Spacer(Modifier.size(6.dp))
-            Text(
-                value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+        slashed = slashed,
+        expanded = true
+    )
 }
 
 /**

@@ -23,11 +23,12 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -45,7 +46,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import com.example.smarthome.ui.components.appBarGradient
 import com.example.smarthome.ui.components.gradientTopBarColors
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,6 +69,12 @@ import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.roomTypeIcon
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.AppClickablePanel
+import com.example.smarthome.ui.components.AppFabListBottomPadding
+import com.example.smarthome.ui.components.AppIconShape
+import com.example.smarthome.ui.components.AppMetricCard
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
+import com.example.smarthome.ui.components.AppSectionHeader
 import com.example.smarthome.ui.components.DeviceGridCard
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
@@ -171,7 +177,9 @@ fun HomeDetailContent(
             columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
-                start = 16.dp, end = 16.dp, bottom = 96.dp
+                start = AppScreenHorizontalPadding,
+                end = AppScreenHorizontalPadding,
+                bottom = AppFabListBottomPadding
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -200,17 +208,22 @@ fun HomeDetailContent(
                     StatBox(
                         value = "${homeRooms.size}",
                         label = stringResource(R.string.common_rooms),
+                        icon = Icons.Rounded.MeetingRoom,
+                        accent = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     StatBox(
                         value = "$totalOn",
                         label = stringResource(R.string.common_on_plural),
-                        highlight = true,
+                        icon = Icons.Rounded.PowerSettingsNew,
+                        accent = Color(0xFF16A34A),
                         modifier = Modifier.weight(1f)
                     )
                     StatBox(
                         value = if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)}kW" else "${totalW}W",
                         label = stringResource(R.string.nav_consumption),
+                        icon = Icons.Rounded.Bolt,
+                        accent = Color(0xFFC9A227),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -229,6 +242,7 @@ fun HomeDetailContent(
                         roomType = room.metadata?.type,
                         deviceCount = roomDevices.size,
                         onCount = roomOn,
+                        offCount = roomDevices.size - roomOn,
                         onClick = { navController.navigate(Routes.room(room.id)) }
                     )
                 }
@@ -537,30 +551,12 @@ private fun AddRoomDialog(
 
 @Composable
 private fun SectionTitle(icon: ImageVector, title: String, count: Int) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(
-            title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Surface(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
-            color = MaterialTheme.colorScheme.surfaceVariant
-        ) {
-            Text(
-                "$count",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
-            )
-        }
-    }
+    AppSectionHeader(
+        title = title,
+        icon = icon,
+        count = "$count",
+        modifier = Modifier.padding(top = 4.dp)
+    )
 }
 
 @Composable
@@ -569,15 +565,16 @@ private fun RoomGridCard(
     roomType: String?,
     deviceCount: Int,
     onCount: Int,
+    offCount: Int,
     onClick: () -> Unit
 ) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    AppClickablePanel(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
-                shape = MaterialTheme.shapes.small,
+                shape = AppIconShape,
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 modifier = Modifier.size(40.dp)
             ) {
@@ -598,15 +595,44 @@ private fun RoomGridCard(
             Spacer(Modifier.height(4.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Icon(Icons.Rounded.Devices, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
-                Text(
-                    stringResource(R.string.homes_room_device_stats, deviceCount, onCount),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                DeviceStatusBadge("$onCount", Color(0xFF16A34A), Icons.Rounded.PowerSettingsNew)
+                DeviceStatusBadge("$offCount", MaterialTheme.colorScheme.error, Icons.Rounded.PowerSettingsNew, slashed = true)
+                DeviceStatusBadge("$deviceCount", MaterialTheme.colorScheme.primary, Icons.Rounded.Devices)
             }
+        }
+    }
+}
+
+@Composable
+private fun DeviceStatusBadge(
+    text: String,
+    accent: Color,
+    icon: ImageVector,
+    slashed: Boolean = false
+) {
+    Surface(shape = com.example.smarthome.ui.components.AppPillShape, color = accent.copy(alpha = 0.14f)) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(14.dp)) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(13.dp))
+                if (slashed) {
+                    androidx.compose.foundation.Canvas(modifier = Modifier.size(15.dp)) {
+                        drawLine(
+                            color = accent,
+                            start = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.82f),
+                            end = androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.18f),
+                            strokeWidth = 1.7.dp.toPx(),
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                    }
+                }
+            }
+            Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = accent)
         }
     }
 }
@@ -615,21 +641,9 @@ private fun RoomGridCard(
 private fun StatBox(
     value: String,
     label: String,
-    highlight: Boolean = false,
+    icon: ImageVector,
+    accent: Color,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (highlight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            )
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-        }
-    }
+    AppMetricCard(value = value, label = label, icon = icon, accent = accent, modifier = modifier)
 }

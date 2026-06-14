@@ -28,25 +28,21 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MeetingRoom
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Storefront
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import com.example.smarthome.ui.components.appBarGradient
 import com.example.smarthome.ui.components.gradientTopBarColors
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -71,15 +67,20 @@ import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.roomTypeIcon
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.AppClickablePanel
+import com.example.smarthome.ui.components.AppFabListBottomPadding
+import com.example.smarthome.ui.components.AppIconShape
+import com.example.smarthome.ui.components.AppPillShape
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
+import com.example.smarthome.ui.components.AppSearchField
+import com.example.smarthome.ui.components.AppSectionHeader
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.ui.text.style.TextAlign
@@ -227,24 +228,23 @@ fun HomesScreen(
         LazyColumn(
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 8.dp,
-                start = 16.dp, end = 16.dp, bottom = 88.dp
+                start = AppScreenHorizontalPadding,
+                end = AppScreenHorizontalPadding,
+                bottom = AppFabListBottomPadding
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = if (isExpanded) Modifier.weight(0.35f).fillMaxHeight() else Modifier.fillMaxSize()
         ) {
             item {
                 Column {
-                    OutlinedTextField(
+                    AppSearchField(
                         value = search,
                         onValueChange = { search = it },
-                        placeholder = { Text(stringResource(R.string.homes_search_placeholder)) },
-                        leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(50),
+                        placeholder = stringResource(R.string.homes_search_placeholder),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
+                    Button(
                         onClick = { showRoomDialog = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -276,31 +276,15 @@ fun HomesScreen(
             if (filteredStandalone.isNotEmpty()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Rounded.MeetingRoom, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(
-                                stringResource(R.string.homes_no_home),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(20.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Text(
-                                    if (filteredStandalone.size != 1) stringResource(R.string.common_rooms_count_many, filteredStandalone.size)
-                                    else stringResource(R.string.common_rooms_count_one, filteredStandalone.size),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                                )
+                        AppSectionHeader(
+                            title = stringResource(R.string.homes_no_home),
+                            icon = Icons.Rounded.MeetingRoom,
+                            count = if (filteredStandalone.size != 1) {
+                                stringResource(R.string.common_rooms_count_many, filteredStandalone.size)
+                            } else {
+                                stringResource(R.string.common_rooms_count_one, filteredStandalone.size)
                             }
-                        }
+                        )
                         RoomsGrid(
                             roomList = filteredStandalone,
                             devices = devices,
@@ -464,17 +448,16 @@ private fun WebRoomCard(
     val on = roomDevices.count { isDeviceOn(it.type.id, it.state) }
     val off = total - on
 
-    Card(
+    AppClickablePanel(
         onClick = onClick,
-        modifier = Modifier.size(160.dp),
-        shape = RoundedCornerShape(18.dp)
+        modifier = Modifier.size(160.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(14.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = AppIconShape,
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 modifier = Modifier.size(40.dp)
             ) {
@@ -497,9 +480,9 @@ private fun WebRoomCard(
 
             if (total > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    DotBadge("$on", OnGreen)
-                    DotBadge("$off", OffRed)
-                    DotBadge("$total", MaterialTheme.colorScheme.primary)
+                    DotBadge("$on", OnGreen, Icons.Rounded.PowerSettingsNew)
+                    DotBadge("$off", OffRed, Icons.Rounded.PowerSettingsNew, slashed = true)
+                    DotBadge("$total", MaterialTheme.colorScheme.primary, Icons.Rounded.Devices)
                 }
             } else {
                 Text(
@@ -515,14 +498,32 @@ private fun WebRoomCard(
 
 /** Badge tipo pill con un punto de color (verde/rojo/azul) + número. */
 @Composable
-private fun DotBadge(text: String, accent: Color) {
-    Surface(shape = RoundedCornerShape(20.dp), color = accent.copy(alpha = 0.14f)) {
+private fun DotBadge(
+    text: String,
+    accent: Color,
+    icon: ImageVector,
+    slashed: Boolean = false
+) {
+    Surface(shape = AppPillShape, color = accent.copy(alpha = 0.14f)) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Box(Modifier.size(7.dp).clip(CircleShape).background(accent))
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(14.dp)) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(13.dp))
+                if (slashed) {
+                    androidx.compose.foundation.Canvas(modifier = Modifier.size(15.dp)) {
+                        drawLine(
+                            color = accent,
+                            start = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.82f),
+                            end = androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.18f),
+                            strokeWidth = 1.7.dp.toPx(),
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                    }
+                }
+            }
             Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = accent)
         }
     }
@@ -531,7 +532,7 @@ private fun DotBadge(text: String, accent: Color) {
 /** Badge tipo pill simple (texto sobre fondo primario suave). */
 @Composable
 private fun CountBadge(text: String) {
-    Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)) {
+    Surface(shape = AppPillShape, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)) {
         Text(
             text,
             style = MaterialTheme.typography.labelSmall,
@@ -541,4 +542,3 @@ private fun CountBadge(text: String) {
         )
     }
 }
-

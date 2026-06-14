@@ -22,8 +22,8 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -61,6 +61,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
 import com.example.smarthome.ui.AppViewModel
+import com.example.smarthome.ui.components.AppClickablePanel
+import com.example.smarthome.ui.components.AppEmptyPanel
+import com.example.smarthome.ui.components.AppFabListBottomPadding
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
@@ -139,17 +143,22 @@ fun RoutinesScreen(
             FullScreenLoading(Modifier.padding(innerPadding))
         } else if (routines.isEmpty()) {
             Box(
-                Modifier.fillMaxSize().padding(innerPadding).padding(top = 48.dp),
+                Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = AppScreenHorizontalPadding),
                 contentAlignment = Alignment.TopCenter
             ) {
-                Text(stringResource(R.string.routine_none), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AppEmptyPanel(
+                    title = stringResource(R.string.routine_none),
+                    icon = Icons.Rounded.SearchOff
+                )
             }
         } else if (twoColumns) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding() + 8.dp,
-                    start = 16.dp, end = 16.dp, bottom = 24.dp
+                    start = AppScreenHorizontalPadding,
+                    end = AppScreenHorizontalPadding,
+                    bottom = AppFabListBottomPadding
                 ),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -163,7 +172,9 @@ fun RoutinesScreen(
             LazyColumn(
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding() + 8.dp,
-                    start = 16.dp, end = 16.dp, bottom = 24.dp
+                    start = AppScreenHorizontalPadding,
+                    end = AppScreenHorizontalPadding,
+                    bottom = AppFabListBottomPadding
                 ),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxSize()
@@ -202,7 +213,7 @@ private fun RoutineCard(
         "evento" -> EventoPink
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    Card(
+    AppClickablePanel(
         onClick = { onOpen(routine) },
         modifier = Modifier.fillMaxWidth()
     ) {

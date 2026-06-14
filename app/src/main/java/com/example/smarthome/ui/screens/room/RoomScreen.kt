@@ -1,14 +1,11 @@
 package com.example.smarthome.ui.screens.room
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
@@ -25,11 +21,8 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AttachMoney
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Devices
-import androidx.compose.material.icons.rounded.DoNotDisturbOn
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -59,6 +52,11 @@ import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
+import com.example.smarthome.ui.components.AppEmptyPanel
+import com.example.smarthome.ui.components.AppFabListBottomPadding
+import com.example.smarthome.ui.components.AppMetricCard
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
+import com.example.smarthome.ui.components.AppSectionHeader
 import com.example.smarthome.ui.components.DeviceGridCard
 import com.example.smarthome.ui.components.appBarGradient
 import com.example.smarthome.ui.components.gradientTopBarColors
@@ -143,7 +141,9 @@ fun RoomScreen(
             columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
-                start = 16.dp, end = 16.dp, bottom = 96.dp
+                start = AppScreenHorizontalPadding,
+                end = AppScreenHorizontalPadding,
+                bottom = AppFabListBottomPadding
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -196,8 +196,8 @@ fun RoomScreen(
             item(span = fullSpan) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RoomStatCardCompact(Icons.Rounded.Lightbulb, StatGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
-                        RoomStatCardCompact(Icons.Rounded.DoNotDisturbOn, StatRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f))
+                        RoomStatCardCompact(Icons.Rounded.PowerSettingsNew, StatGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
+                        RoomStatCardCompact(Icons.Rounded.PowerSettingsNew, StatRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f), slashed = true)
                         RoomStatCardCompact(Icons.Rounded.Devices, StatNeutral, "${roomDevices.size}", stringResource(R.string.nav_devices), Modifier.weight(1f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -214,24 +214,15 @@ fun RoomScreen(
 
             // Sección de dispositivos
             item(span = fullSpan) {
-                Text(
-                    stringResource(R.string.nav_devices),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                AppSectionHeader(
+                    title = stringResource(R.string.nav_devices),
+                    count = "${roomDevices.size}"
                 )
             }
 
             if (roomDevices.isEmpty()) {
                 item(span = fullSpan) {
-                    Box(
-                        Modifier.fillMaxWidth().padding(top = 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            stringResource(R.string.room_no_devices),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    AppEmptyPanel(title = stringResource(R.string.room_no_devices))
                 }
             }
 
@@ -310,36 +301,18 @@ private fun RoomStatCardCompact(
     accent: Color,
     value: String,
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    slashed: Boolean = false
 ) {
-    Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = modifier
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 14.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp)
-                    .background(accent.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-            ) {
-                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
-            }
-            Text(
-                value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-    }
+    AppMetricCard(
+        value = value,
+        label = label,
+        icon = icon,
+        accent = accent,
+        modifier = modifier,
+        slashed = slashed,
+        expanded = true
+    )
 }
 
 /** Stat card al estilo de la web: ícono en cuadrado redondeado tintado + valor grande + etiqueta. */
@@ -351,29 +324,12 @@ private fun RoomStatCard(
     label: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = modifier
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(46.dp)
-                    .background(accent.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-            ) {
-                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(22.dp))
-            }
-            Column {
-                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
+    AppMetricCard(
+        value = value,
+        label = label,
+        icon = icon,
+        accent = accent,
+        modifier = modifier,
+        expanded = true
+    )
 }

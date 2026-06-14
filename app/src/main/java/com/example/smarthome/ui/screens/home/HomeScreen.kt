@@ -39,9 +39,7 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SearchOff
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,7 +49,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -98,6 +95,14 @@ import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.logActionLabelRes
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
+import com.example.smarthome.ui.components.AppFabListBottomPadding
+import com.example.smarthome.ui.components.AppIconShape
+import com.example.smarthome.ui.components.AppPanel
+import com.example.smarthome.ui.components.AppPanelShape
+import com.example.smarthome.ui.components.AppPillShape
+import com.example.smarthome.ui.components.AppScreenHorizontalPadding
+import com.example.smarthome.ui.components.AppSearchField
+import com.example.smarthome.ui.components.AppSectionHeader
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
@@ -235,7 +240,7 @@ fun HomeScreen(
                     homeCount = homes.size,
                     roomCount = rooms.values.sumOf { it.size },
                     totalW = totalW,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = AppScreenHorizontalPadding)
                 )
             }
         }
@@ -243,27 +248,21 @@ fun HomeScreen(
         // Accesos directos personalizables
         val shortcutsItem: LazyListScope.() -> Unit = {
             item {
-                Column(Modifier.padding(horizontal = 16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            stringResource(R.string.home_shortcuts),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        TextButton(onClick = { showCustomize = true }) {
-                            Icon(
-                                Icons.Rounded.Tune,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.home_customize))
+                Column(Modifier.padding(horizontal = AppScreenHorizontalPadding)) {
+                    AppSectionHeader(
+                        title = stringResource(R.string.home_shortcuts),
+                        action = {
+                            TextButton(onClick = { showCustomize = true }) {
+                                Icon(
+                                    Icons.Rounded.Tune,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.home_customize))
+                            }
                         }
-                    }
+                    )
                     Spacer(Modifier.height(12.dp))
                     if (resolvedShortcuts.isEmpty()) {
                         EmptyShortcuts(onAdd = { showCustomize = true })
@@ -295,26 +294,17 @@ fun HomeScreen(
         val recentItem: LazyListScope.() -> Unit = {
             if (recentLogs.isNotEmpty()) {
                 item {
-                    Column(Modifier.padding(horizontal = 16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                stringResource(R.string.home_recent_activity),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            TextButton(onClick = { navController.navigate(Routes.HISTORY) }) {
-                                Text(stringResource(R.string.home_view_history))
+                    Column(Modifier.padding(horizontal = AppScreenHorizontalPadding)) {
+                        AppSectionHeader(
+                            title = stringResource(R.string.home_recent_activity),
+                            action = {
+                                TextButton(onClick = { navController.navigate(Routes.HISTORY) }) {
+                                    Text(stringResource(R.string.home_view_history))
+                                }
                             }
-                        }
+                        )
                         Spacer(Modifier.height(8.dp))
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
+                        AppPanel {
                             Column(Modifier.padding(vertical = 4.dp)) {
                                 recentLogs.take(5).forEach { log ->
                                     val (_, hora) = formatTimestamp(log.timestamp)
@@ -372,7 +362,7 @@ fun HomeScreen(
             // Dos columnas: izquierda con cabecera/estado/stats, derecha con accesos + actividad.
             Row(Modifier.fillMaxSize()) {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 28.dp),
+                    contentPadding = PaddingValues(bottom = AppFabListBottomPadding),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     modifier = Modifier.weight(1f).fillMaxHeight()
                 ) {
@@ -380,7 +370,7 @@ fun HomeScreen(
                     statusItem()
                 }
                 LazyColumn(
-                    contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = AppFabListBottomPadding),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     modifier = Modifier.weight(1f).fillMaxHeight()
                 ) {
@@ -390,7 +380,7 @@ fun HomeScreen(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 28.dp),
+                contentPadding = PaddingValues(bottom = AppFabListBottomPadding),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -442,7 +432,7 @@ private fun HomeHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
+            .clip(RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp))
             .background(
                 Brush.verticalGradient(
                     listOf(
@@ -542,7 +532,7 @@ private fun DeviceStatusCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = AppPanelShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(Modifier.padding(20.dp)) {
@@ -749,7 +739,7 @@ private fun ShortcutTileScaffold(
         onClick = onClick,
         interactionSource = interaction,
         modifier = modifier.height(124.dp),
-        shape = RoundedCornerShape(22.dp),
+        shape = AppPanelShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = (1 + 3 * f).dp)
     ) {
@@ -776,7 +766,7 @@ private fun ShortcutTileScaffold(
                     verticalAlignment = Alignment.Top
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = AppIconShape,
                         color = iconBg,
                         modifier = Modifier.size(44.dp)
                     ) {
@@ -813,7 +803,7 @@ private fun ShortcutTileScaffold(
                     )
                     Spacer(Modifier.height(6.dp))
                     Surface(
-                        shape = RoundedCornerShape(50),
+                        shape = AppPillShape,
                         color = if (active) accent.copy(alpha = 0.16f) else neutralChip
                     ) {
                         Text(
@@ -835,7 +825,7 @@ private fun EmptyShortcuts(onAdd: () -> Unit) {
     Card(
         onClick = onAdd,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = AppPanelShape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
@@ -907,7 +897,7 @@ private fun CustomizeShortcutsSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 620.dp)
-                .padding(horizontal = 20.dp)
+            .padding(horizontal = 20.dp)
                 .padding(bottom = 28.dp)
         ) {
             // --- Cabecera fija con título y contador de seleccionados ---
@@ -947,23 +937,10 @@ private fun CustomizeShortcutsSheet(
             Spacer(Modifier.height(16.dp))
 
             // --- Buscador ---
-            OutlinedTextField(
+            AppSearchField(
                 value = query,
                 onValueChange = { query = it },
-                placeholder = { Text(stringResource(R.string.home_customize_search)) },
-                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = { query = "" }) {
-                            Icon(
-                                Icons.Rounded.Close,
-                                contentDescription = stringResource(R.string.common_clear)
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(50),
+                placeholder = stringResource(R.string.home_customize_search),
                 modifier = Modifier.fillMaxWidth()
             )
 
