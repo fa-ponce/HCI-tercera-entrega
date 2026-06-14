@@ -343,6 +343,15 @@
     <string name="sheet_mode_home">Modo Casa</string>
     <string name="sheet_mode_away">Modo Regular</string>
     <string name="sheet_disarm">Desactivar</string>
+    <string name="sheet_default_code_notice">El código actual es 1234. Cambialo antes de usar la alarma.</string>
+    <string name="sheet_change_code">Cambiar código</string>
+    <string name="sheet_current_code">Código actual</string>
+    <string name="sheet_new_code">Nuevo código</string>
+    <string name="sheet_confirm_new_code">Confirmar nuevo código</string>
+    <string name="sheet_code_four_digits">El código debe tener exactamente 4 dígitos.</string>
+    <string name="sheet_current_code_wrong">El código actual es incorrecto.</string>
+    <string name="sheet_new_code_mismatch">Los códigos nuevos no coinciden.</string>
+    <string name="sheet_code_updated">Código actualizado correctamente.</string>
 
     <!-- Blinds sheet -->
     <string name="sheet_status_fmt">Estado: %1$s</string>

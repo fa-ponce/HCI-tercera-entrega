@@ -348,6 +348,15 @@
     <string name="sheet_mode_home">Home mode</string>
     <string name="sheet_mode_away">Away mode</string>
     <string name="sheet_disarm">Disarm</string>
+    <string name="sheet_default_code_notice">Default code is 1234. Change it before using the alarm.</string>
+    <string name="sheet_change_code">Change code</string>
+    <string name="sheet_current_code">Current code</string>
+    <string name="sheet_new_code">New code</string>
+    <string name="sheet_confirm_new_code">Confirm new code</string>
+    <string name="sheet_code_four_digits">Code must have exactly 4 digits.</string>
+    <string name="sheet_current_code_wrong">Current code is incorrect.</string>
+    <string name="sheet_new_code_mismatch">New codes do not match.</string>
+    <string name="sheet_code_updated">Code updated successfully.</string>
 
     <!-- Blinds sheet -->
     <string name="sheet_status_fmt">Status: %1$s</string>

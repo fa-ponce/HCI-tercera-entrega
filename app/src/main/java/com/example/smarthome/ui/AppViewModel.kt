@@ -324,12 +324,29 @@ class AppViewModel(
     ): Map<String, Any?> = current.toMutableMap().apply {
         when (typeId) {
             DeviceTypes.PERSIANA   -> put("level", if (isOn) 100.0 else 0.0)
-            DeviceTypes.ALARMA     -> put("status", if (isOn) "armed_away" else "disarmed")
+            DeviceTypes.ALARMA     -> put("status", if (isOn) "armedAway" else "disarmed")
             DeviceTypes.PUERTA,
             DeviceTypes.GRIFO      -> put("status", if (isOn) "opened" else "closed")
             DeviceTypes.PARLANTE   -> put("status", if (isOn) "playing" else "stopped")
             DeviceTypes.ASPIRADORA -> put("status", if (isOn) "active" else "docked")
             else                   -> put("status", if (isOn) "on" else "off")
+        }
+    }
+
+    private fun buildActionOptimisticState(
+        previous: DeviceDto,
+        action: String,
+        params: Map<String, Any>
+    ): Map<String, Any?> = previous.state.toMutableMap().apply {
+        params
+            .filterKeys { it !in setOf("securityCode", "currentCode", "newCode") }
+            .forEach { (k, v) -> put(k, if (v is Int) v.toDouble() else v) }
+        when (action) {
+            "armStay" -> put("status", "armedStay")
+            "armAway" -> put("status", "armedAway")
+            "disarm" -> put("status", "disarmed")
+            "up" -> if (previous.type.id == DeviceTypes.PERSIANA) put("level", 100.0)
+            "down" -> if (previous.type.id == DeviceTypes.PERSIANA) put("level", 0.0)
         }
     }
 
@@ -488,13 +505,7 @@ class AppViewModel(
     ) = viewModelScope.launch {
         val previous = _devices.value.values.flatten().find { it.id == deviceId }
         if (previous != null) {
-            val optimistic = previous.state.toMutableMap()
-            params.forEach { (k, v) -> optimistic[k] = if (v is Int) v.toDouble() else v }
-            when (action) {
-                "up"   -> if (previous.type.id == DeviceTypes.PERSIANA) optimistic["level"] = 100.0
-                "down" -> if (previous.type.id == DeviceTypes.PERSIANA) optimistic["level"] = 0.0
-            }
-            updateDevice(previous.copy(state = optimistic))
+            updateDevice(previous.copy(state = buildActionOptimisticState(previous, action, params)))
         }
         val result = deviceRepository.executeAction(deviceId, action, params)
         result.onFailure {
