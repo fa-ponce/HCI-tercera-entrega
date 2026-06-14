@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
@@ -29,15 +28,14 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.DoNotDisturbOn
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -123,13 +121,29 @@ fun RoomScreen(
                 colors = gradientTopBarColors()
             )
         },
+        floatingActionButton = {
+            if (room != null) {
+                ExtendedFloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    icon = { Icon(Icons.Rounded.Add, null, tint = MaterialTheme.colorScheme.onPrimary) },
+                    text = {
+                        Text(
+                            stringResource(R.string.room_add_device),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 164.dp),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding() + 12.dp,
-                start = 16.dp, end = 16.dp, bottom = 24.dp
+                start = 16.dp, end = 16.dp, bottom = 96.dp
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -137,7 +151,7 @@ fun RoomScreen(
         ) {
             val fullSpan: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
 
-            // Header como la web: nombre + subtítulo y botones Agregar/Editar
+            // Header como la web: casa, nombre y subtítulo.
             item(span = fullSpan) {
                 Column {
                     // Como la web: casa chica arriba (breadcrumb), nombre de la
@@ -150,37 +164,31 @@ fun RoomScreen(
                         )
                         Spacer(Modifier.height(2.dp))
                     }
-                    Text(
-                        room?.name ?: stringResource(R.string.common_room),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            room?.name ?: stringResource(R.string.common_room),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        IconButton(onClick = { showEditDialog = true }) {
+                            Icon(
+                                Icons.Rounded.Edit,
+                                contentDescription = stringResource(R.string.common_edit_name),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(2.dp))
                     Text(
                         stringResource(R.string.room_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = { showAddDialog = true },
-                            shape = RoundedCornerShape(11.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.room_add_device), fontWeight = FontWeight.SemiBold, maxLines = 1)
-                        }
-                        OutlinedButton(
-                            onClick = { showEditDialog = true },
-                            shape = RoundedCornerShape(11.dp)
-                        ) {
-                            Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.common_edit), fontWeight = FontWeight.SemiBold)
-                        }
-                    }
                 }
             }
 
@@ -188,19 +196,19 @@ fun RoomScreen(
             item(span = fullSpan) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RoomStatCard(Icons.Rounded.Lightbulb, StatGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
-                        RoomStatCard(Icons.Rounded.DoNotDisturbOn, StatRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f))
+                        RoomStatCardCompact(Icons.Rounded.Lightbulb, StatGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
+                        RoomStatCardCompact(Icons.Rounded.DoNotDisturbOn, StatRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f))
+                        RoomStatCardCompact(Icons.Rounded.Devices, StatNeutral, "${roomDevices.size}", stringResource(R.string.nav_devices), Modifier.weight(1f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RoomStatCard(Icons.Rounded.Devices, StatNeutral, "${roomDevices.size}", stringResource(R.string.nav_devices), Modifier.weight(1f))
                         RoomStatCard(Icons.Rounded.Bolt, StatWarm, "$totalW W", stringResource(R.string.room_consumption_hour), Modifier.weight(1f))
+                        RoomStatCard(
+                            Icons.Rounded.AttachMoney, MaterialTheme.colorScheme.primary,
+                            costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
+                            stringResource(R.string.room_cost_hour),
+                            Modifier.weight(1f)
+                        )
                     }
-                    RoomStatCard(
-                        Icons.Rounded.AttachMoney, MaterialTheme.colorScheme.primary,
-                        costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
-                        stringResource(R.string.room_cost_hour),
-                        Modifier.fillMaxWidth()
-                    )
                 }
             }
 
@@ -292,6 +300,45 @@ fun RoomScreen(
             homes = homes,
             rooms = rooms
         )
+    }
+}
+
+/** Variante compacta vertical para la fila de 3 (Encendidos / Apagados / Dispositivos). */
+@Composable
+private fun RoomStatCardCompact(
+    icon: ImageVector,
+    accent: Color,
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 14.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(40.dp)
+                    .background(accent.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+            ) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+            }
+            Text(
+                value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 

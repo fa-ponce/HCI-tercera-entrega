@@ -139,7 +139,6 @@ fun HomeScreen(
     val loadError by appViewModel.error.collectAsState()
     val userName by prefsViewModel.userName.collectAsState()
     val savedShortcuts by prefsViewModel.shortcuts.collectAsState()
-    val costoKwh by prefsViewModel.costoKwh.collectAsState()
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
 
     val allDevices = remember(devices) { devices.values.flatten() }
@@ -235,17 +234,7 @@ fun HomeScreen(
                     offCount = offDevices.size,
                     homeCount = homes.size,
                     roomCount = rooms.values.sumOf { it.size },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-        }
-
-        // Panel de consumo de energía
-        val energyItem: LazyListScope.() -> Unit = {
-            item {
-                EnergyConsumptionCard(
                     totalW = totalW,
-                    costoKwh = costoKwh,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
@@ -389,7 +378,6 @@ fun HomeScreen(
                 ) {
                     headerItem()
                     statusItem()
-                    energyItem()
                 }
                 LazyColumn(
                     contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
@@ -408,7 +396,6 @@ fun HomeScreen(
             ) {
                 headerItem()
                 statusItem()
-                energyItem()
                 shortcutsItem()
                 recentItem()
             }
@@ -534,6 +521,7 @@ private fun DeviceStatusCard(
     offCount: Int,
     homeCount: Int,
     roomCount: Int,
+    totalW: Int,
     modifier: Modifier = Modifier
 ) {
     val total = onCount + offCount
@@ -569,15 +557,22 @@ private fun DeviceStatusCard(
                     StatusLegend(
                         icon = Icons.Rounded.Home,
                         label = stringResource(R.string.nav_homes),
-                        value = homeCount,
+                        value = "$homeCount",
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(Modifier.height(10.dp))
                     StatusLegend(
                         icon = Icons.Rounded.SpaceDashboard,
                         label = stringResource(R.string.common_rooms),
-                        value = roomCount,
+                        value = "$roomCount",
                         tint = StatCyan
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    StatusLegend(
+                        icon = Icons.Rounded.Bolt,
+                        label = stringResource(R.string.consumption_current),
+                        value = formatPower(totalW),
+                        tint = StatWarm
                     )
                 }
 
@@ -632,101 +627,11 @@ private fun DeviceStatusCard(
     }
 }
 
-/* ------------------- Panel de consumo de energía ------------------- */
-
-@Composable
-private fun EnergyConsumptionCard(
-    totalW: Int,
-    costoKwh: Float?,
-    modifier: Modifier = Modifier
-) {
-    val kwhPerHour = totalW / 1000f
-    val costoHora = costoKwh?.let { it * kwhPerHour }
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(Modifier.padding(20.dp)) {
-            Text(
-                stringResource(R.string.home_energy_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(Modifier.height(14.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                EnergyMetric(
-                    modifier = Modifier.weight(1f),
-                    value = formatPower(totalW),
-                    label = stringResource(R.string.consumption_current)
-                )
-                EnergyMetric(
-                    modifier = Modifier.weight(1f),
-                    value = "${"%.3f".format(kwhPerHour)} kWh/h",
-                    label = stringResource(R.string.consumption_per_hour)
-                )
-                EnergyMetric(
-                    modifier = Modifier.weight(1f),
-                    value = costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
-                    label = stringResource(R.string.consumption_cost_hour)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EnergyMetric(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        color = StatWarm.copy(alpha = 0.10f)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Bolt,
-                contentDescription = null,
-                tint = StatWarm,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                value,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                textAlign = TextAlign.Center,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
 @Composable
 private fun StatusLegend(
     icon: ImageVector,
     label: String,
-    value: Int,
+    value: String,
     tint: androidx.compose.ui.graphics.Color
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -743,7 +648,7 @@ private fun StatusLegend(
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            "$value",
+            value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
