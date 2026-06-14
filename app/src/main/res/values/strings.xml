@@ -73,6 +73,7 @@
     <string name="home_status_title">Home status</string>
     <string name="home_device_singular">device</string>
     <string name="home_device_plural">devices</string>
+    <string name="home_energy_title">Energy consumption</string>
     <string name="home_shortcuts">Shortcuts</string>
     <string name="home_customize">Customize</string>
     <string name="home_recent_activity">Recent activity</string>
@@ -83,6 +84,9 @@
     <string name="home_customize_title">Customize shortcuts</string>
     <string name="home_customize_sub">Choose which routines and devices appear on the home screen.</string>
     <string name="home_no_items">You don\'t have routines or devices to add yet.</string>
+    <string name="home_customize_search">Search routines or devices…</string>
+    <string name="home_customize_no_results">No results for \"%1$s\".</string>
+    <string name="home_customize_selected_count">%1$d selected</string>
 
     <!-- Homes screen -->
     <string name="homes_new_home">New home</string>

@@ -1,6 +1,5 @@
 package com.example.smarthome.ui.screens.home
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -40,6 +39,9 @@ import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +50,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -71,6 +75,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -134,6 +139,7 @@ fun HomeScreen(
     val loadError by appViewModel.error.collectAsState()
     val userName by prefsViewModel.userName.collectAsState()
     val savedShortcuts by prefsViewModel.shortcuts.collectAsState()
+    val costoKwh by prefsViewModel.costoKwh.collectAsState()
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
 
     val allDevices = remember(devices) { devices.values.flatten() }
@@ -227,53 +233,21 @@ fun HomeScreen(
                 DeviceStatusCard(
                     onCount = onDevices.size,
                     offCount = offDevices.size,
+                    homeCount = homes.size,
+                    roomCount = rooms.values.sumOf { it.size },
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
         }
 
-        // Resumen numérico navegable
-        val statsItem: LazyListScope.() -> Unit = {
+        // Panel de consumo de energía
+        val energyItem: LazyListScope.() -> Unit = {
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    StatTile(
-                        modifier = Modifier.weight(1f),
-                        value = "${homes.size}",
-                        label = stringResource(R.string.nav_homes),
-                        icon = Icons.Rounded.Home,
-                        tint = MaterialTheme.colorScheme.primary,
-                        onClick = { navController.navigateTab(Routes.HOMES) }
-                    )
-                    StatTile(
-                        modifier = Modifier.weight(1f),
-                        value = "${rooms.values.sumOf { it.size }}",
-                        label = stringResource(R.string.common_rooms),
-                        icon = Icons.Rounded.SpaceDashboard,
-                        tint = StatCyan,
-                        onClick = { navController.navigateTab(Routes.HOMES) }
-                    )
-                    StatTile(
-                        modifier = Modifier.weight(1f),
-                        value = "${allDevices.size}",
-                        label = stringResource(R.string.nav_devices),
-                        icon = Icons.Rounded.Devices,
-                        tint = StatGreen,
-                        onClick = { navController.navigateTab(Routes.DEVICES) }
-                    )
-                    StatTile(
-                        modifier = Modifier.weight(1f),
-                        value = formatPower(totalW),
-                        label = stringResource(R.string.nav_consumption),
-                        icon = Icons.Rounded.Bolt,
-                        tint = StatWarm,
-                        onClick = { navController.navigateTab(Routes.CONSUMPTION) }
-                    )
-                }
+                EnergyConsumptionCard(
+                    totalW = totalW,
+                    costoKwh = costoKwh,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
         }
 
@@ -415,7 +389,7 @@ fun HomeScreen(
                 ) {
                     headerItem()
                     statusItem()
-                    statsItem()
+                    energyItem()
                 }
                 LazyColumn(
                     contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
@@ -434,7 +408,7 @@ fun HomeScreen(
             ) {
                 headerItem()
                 statusItem()
-                statsItem()
+                energyItem()
                 shortcutsItem()
                 recentItem()
             }
@@ -558,6 +532,8 @@ private fun HomeHeader(
 private fun DeviceStatusCard(
     onCount: Int,
     offCount: Int,
+    homeCount: Int,
+    roomCount: Int,
     modifier: Modifier = Modifier
 ) {
     val total = onCount + offCount
@@ -575,175 +551,202 @@ private fun DeviceStatusCard(
         animationSpec = tween(durationMillis = 900),
         label = "onCount"
     )
-    val animOff by animateIntAsState(
-        targetValue = if (play) offCount else 0,
-        animationSpec = tween(durationMillis = 900),
-        label = "offCount"
-    )
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val ringColor = MaterialTheme.colorScheme.primary
-            val trackColor = MaterialTheme.colorScheme.surfaceVariant
-            Box(
-                modifier = Modifier.size(116.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Canvas(Modifier.fillMaxSize()) {
-                    val stroke = 14.dp.toPx()
-                    val inset = stroke / 2f
-                    val arcSize = Size(size.width - stroke, size.height - stroke)
-                    drawArc(
-                        color = trackColor,
-                        startAngle = 0f,
-                        sweepAngle = 360f,
-                        useCenter = false,
-                        topLeft = Offset(inset, inset),
-                        size = arcSize,
-                        style = Stroke(width = stroke, cap = StrokeCap.Round)
+        Column(Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.home_status_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
-                    if (fraction > 0f) {
+                    Spacer(Modifier.height(14.dp))
+                    StatusLegend(
+                        icon = Icons.Rounded.Home,
+                        label = stringResource(R.string.nav_homes),
+                        value = homeCount,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    StatusLegend(
+                        icon = Icons.Rounded.SpaceDashboard,
+                        label = stringResource(R.string.common_rooms),
+                        value = roomCount,
+                        tint = StatCyan
+                    )
+                }
+
+                Spacer(Modifier.width(20.dp))
+
+                val ringColor = MaterialTheme.colorScheme.primary
+                val trackColor = MaterialTheme.colorScheme.surfaceVariant
+                Box(
+                    modifier = Modifier.size(116.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val stroke = 14.dp.toPx()
+                        val inset = stroke / 2f
+                        val arcSize = Size(size.width - stroke, size.height - stroke)
                         drawArc(
-                            color = ringColor,
-                            startAngle = -90f,
-                            sweepAngle = 360f * fraction,
+                            color = trackColor,
+                            startAngle = 0f,
+                            sweepAngle = 360f,
                             useCenter = false,
                             topLeft = Offset(inset, inset),
                             size = arcSize,
                             style = Stroke(width = stroke, cap = StrokeCap.Round)
                         )
+                        if (fraction > 0f) {
+                            drawArc(
+                                color = ringColor,
+                                startAngle = -90f,
+                                sweepAngle = 360f * fraction,
+                                useCenter = false,
+                                topLeft = Offset(inset, inset),
+                                size = arcSize,
+                                style = Stroke(width = stroke, cap = StrokeCap.Round)
+                            )
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "$animOn/$total",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            if (total == 1) stringResource(R.string.home_device_singular) else stringResource(R.string.home_device_plural),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        "$total",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        if (total == 1) stringResource(R.string.home_device_singular) else stringResource(R.string.home_device_plural),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
+        }
+    }
+}
 
-            Spacer(Modifier.width(20.dp))
+/* ------------------- Panel de consumo de energía ------------------- */
 
-            Column(Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.home_status_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+@Composable
+private fun EnergyConsumptionCard(
+    totalW: Int,
+    costoKwh: Float?,
+    modifier: Modifier = Modifier
+) {
+    val kwhPerHour = totalW / 1000f
+    val costoHora = costoKwh?.let { it * kwhPerHour }
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                stringResource(R.string.home_energy_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(14.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                EnergyMetric(
+                    modifier = Modifier.weight(1f),
+                    value = formatPower(totalW),
+                    label = stringResource(R.string.consumption_current)
                 )
-                Spacer(Modifier.height(14.dp))
-                StatusLegend(
-                    color = MaterialTheme.colorScheme.primary,
-                    label = stringResource(R.string.common_on_plural),
-                    value = animOn
+                EnergyMetric(
+                    modifier = Modifier.weight(1f),
+                    value = "${"%.3f".format(kwhPerHour)} kWh/h",
+                    label = stringResource(R.string.consumption_per_hour)
                 )
-                Spacer(Modifier.height(10.dp))
-                StatusLegend(
-                    color = MaterialTheme.colorScheme.outline,
-                    label = stringResource(R.string.common_off_plural),
-                    value = animOff
+                EnergyMetric(
+                    modifier = Modifier.weight(1f),
+                    value = costoHora?.let { "$${"%.2f".format(it)}" } ?: "—",
+                    label = stringResource(R.string.consumption_cost_hour)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun EnergyMetric(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        color = StatWarm.copy(alpha = 0.10f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Bolt,
+                contentDescription = null,
+                tint = StatWarm,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
 @Composable
 private fun StatusLegend(
-    color: androidx.compose.ui.graphics.Color,
+    icon: ImageVector,
     label: String,
-    value: Int
+    value: Int,
+    tint: androidx.compose.ui.graphics.Color
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(20.dp)
         )
         Spacer(Modifier.width(10.dp))
         Text(
             label,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
+            style = MaterialTheme.typography.bodyMedium
         )
+        Spacer(Modifier.width(8.dp))
         Text(
             "$value",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
-    }
-}
-
-/* -------------------------- Stat tiles --------------------------- */
-
-@Composable
-private fun StatTile(
-    value: String,
-    label: String,
-    icon: ImageVector,
-    tint: androidx.compose.ui.graphics.Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Tarjeta blanca con ícono sobre fondo tintado, como las stat-cards de la web.
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(tint.copy(alpha = 0.12f))
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = tint,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Spacer(Modifier.height(6.dp))
-            Text(
-                value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                textAlign = TextAlign.Center,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
     }
 }
 
@@ -765,55 +768,49 @@ private fun ShortcutTile(
         label = "tileScale"
     )
 
-    // Tarjetas blancas con el ícono sobre fondo tintado, como las acciones
-    // rápidas de la web: solo cambia el tinte según el estado o el trigger.
+    // Tarjetas con ícono lleno sobre acento, leve gradiente cuando están
+    // activas y una píldora de estado, al estilo de las acciones rápidas.
     when (shortcut) {
         is Shortcut.DeviceShortcut -> {
             val device = shortcut.device
+            val toggleable = canToggle(device.type.id)
             val on = isDeviceOn(device.type.id, device.state)
-            val iconBg by animateColorAsState(
-                targetValue = if (on) MaterialTheme.colorScheme.primaryContainer
-                else MaterialTheme.colorScheme.surfaceVariant,
-                animationSpec = tween(300),
-                label = "tileIconBg"
-            )
+            val active = if (toggleable) on else true
+            val accent = if (active) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outline
             ShortcutTileScaffold(
                 modifier = modifier.scale(scale),
                 interaction = interaction,
-                container = MaterialTheme.colorScheme.surface,
                 icon = deviceIcon(device.type.id),
-                iconTint = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                iconBg = iconBg,
-                badge = if (canToggle(device.type.id)) (if (on) stringResource(R.string.common_on) else stringResource(R.string.common_off)) else stringResource(R.string.common_active),
-                badgeColor = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                accent = accent,
+                active = active,
+                badge = when {
+                    !toggleable -> stringResource(R.string.common_active)
+                    on -> stringResource(R.string.common_on)
+                    else -> stringResource(R.string.common_off)
+                },
                 title = device.name,
-                titleColor = MaterialTheme.colorScheme.onSurface,
+                showStatusDot = toggleable,
                 onClick = { onDevice(device) }
             )
         }
         is Shortcut.RoutineShortcut -> {
             val routine = shortcut.routine
             val triggerType = routine.metadata?.tipoTrigger ?: "manual"
-            val iconTint = when (triggerType) {
+            val accent = when (triggerType) {
                 "hora" -> HoraOrange
                 "evento" -> EventoPink
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            }
-            val iconBg = when (triggerType) {
-                "hora", "evento" -> iconTint.copy(alpha = 0.14f)
-                else -> MaterialTheme.colorScheme.surfaceVariant
+                else -> MaterialTheme.colorScheme.primary
             }
             ShortcutTileScaffold(
                 modifier = modifier.scale(scale),
                 interaction = interaction,
-                container = MaterialTheme.colorScheme.surface,
                 icon = if (triggerType == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
-                iconTint = iconTint,
-                iconBg = iconBg,
+                accent = accent,
+                active = true,
                 badge = stringResource(R.string.home_routine_badge),
-                badgeColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = routine.name,
-                titleColor = MaterialTheme.colorScheme.onSurface,
+                showStatusDot = false,
                 onClick = { onRoutine(routine) }
             )
         }
@@ -825,58 +822,104 @@ private fun ShortcutTile(
 private fun ShortcutTileScaffold(
     modifier: Modifier,
     interaction: MutableInteractionSource,
-    container: androidx.compose.ui.graphics.Color,
     icon: ImageVector,
-    iconTint: androidx.compose.ui.graphics.Color,
-    iconBg: androidx.compose.ui.graphics.Color,
+    accent: androidx.compose.ui.graphics.Color,
+    active: Boolean,
     badge: String,
-    badgeColor: androidx.compose.ui.graphics.Color,
     title: String,
-    titleColor: androidx.compose.ui.graphics.Color,
+    showStatusDot: Boolean,
     onClick: () -> Unit
 ) {
+    val f by animateFloatAsState(
+        targetValue = if (active) 1f else 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "tileActive"
+    )
+    val neutralChip = MaterialTheme.colorScheme.surfaceVariant
+    // Chip del ícono: tintado en reposo, lleno (acento sólido) cuando está activo.
+    val iconBg = lerp(neutralChip, accent, f)
+    val iconTint = lerp(MaterialTheme.colorScheme.onSurfaceVariant, Color.White, f)
+
     Card(
         onClick = onClick,
         interactionSource = interaction,
-        modifier = modifier.height(116.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = container),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = modifier.height(124.dp),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = (1 + 3 * f).dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Surface(
-                shape = RoundedCornerShape(13.dp),
-                color = iconBg,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(22.dp)
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            accent.copy(alpha = 0.16f * f),
+                            accent.copy(alpha = 0.04f * f)
+                        )
                     )
+                )
+                .padding(14.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = iconBg,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = iconTint,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    if (showStatusDot) {
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (active) accent
+                                    else MaterialTheme.colorScheme.outlineVariant
+                                )
+                        )
+                    }
                 }
-            }
-            Column {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = titleColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    badge,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = badgeColor
-                )
+                Column {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = if (active) accent.copy(alpha = 0.16f) else neutralChip
+                    ) {
+                        Text(
+                            badge,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = if (active) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -941,64 +984,170 @@ private fun CustomizeShortcutsSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var query by remember { mutableStateOf("") }
+    val q = query.trim()
+
+    val filteredRoutines = remember(routines, q) {
+        if (q.isBlank()) routines
+        else routines.filter { it.name.contains(q, ignoreCase = true) }
+    }
+    val filteredDevices = remember(devices, q) {
+        if (q.isBlank()) devices
+        else devices.filter { it.name.contains(q, ignoreCase = true) }
+    }
+    val selectedCount = remember(selected) { selected.size }
+
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 560.dp)
-                .verticalScroll(rememberScrollState())
+                .heightIn(max = 620.dp)
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 28.dp)
         ) {
-            Text(
-                stringResource(R.string.home_customize_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                stringResource(R.string.home_customize_sub),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // --- Cabecera fija con título y contador de seleccionados ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.home_customize_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        stringResource(R.string.home_customize_sub),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (selectedCount > 0) {
+                    Spacer(Modifier.width(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            stringResource(R.string.home_customize_selected_count, selectedCount),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(16.dp))
 
-            if (routines.isNotEmpty()) {
-                SheetSectionTitle(stringResource(R.string.nav_routines))
-                routines.forEach { routine ->
-                    val token = routineToken(routine.id)
-                    val triggerType = routine.metadata?.tipoTrigger ?: "manual"
-                    PickerRow(
-                        icon = if (triggerType == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
-                        title = routine.name,
-                        checked = token in selected,
-                        onToggle = { onToggle(token) }
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-            }
+            // --- Buscador ---
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                placeholder = { Text(stringResource(R.string.home_customize_search)) },
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                contentDescription = stringResource(R.string.common_clear)
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(50),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            if (devices.isNotEmpty()) {
-                SheetSectionTitle(stringResource(R.string.nav_devices))
-                devices.forEach { device ->
-                    val token = deviceToken(device.id)
-                    PickerRow(
-                        icon = deviceIcon(device.type.id),
-                        title = device.name,
-                        checked = token in selected,
-                        onToggle = { onToggle(token) }
+            Spacer(Modifier.height(12.dp))
+
+            // --- Lista desplazable de resultados ---
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                if (routines.isEmpty() && devices.isEmpty()) {
+                    Text(
+                        stringResource(R.string.home_no_items),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 24.dp)
                     )
+                } else if (filteredRoutines.isEmpty() && filteredDevices.isEmpty()) {
+                    NoResults(query = q)
+                } else {
+                    if (filteredRoutines.isNotEmpty()) {
+                        SheetSectionTitle(stringResource(R.string.nav_routines))
+                        filteredRoutines.forEach { routine ->
+                            val token = routineToken(routine.id)
+                            val triggerType = routine.metadata?.tipoTrigger ?: "manual"
+                            PickerRow(
+                                icon = if (triggerType == "hora") Icons.Rounded.Schedule else Icons.Rounded.PlayArrow,
+                                accent = when (triggerType) {
+                                    "hora" -> HoraOrange
+                                    "evento" -> EventoPink
+                                    else -> MaterialTheme.colorScheme.primary
+                                },
+                                title = routine.name,
+                                checked = token in selected,
+                                onToggle = { onToggle(token) }
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
+                    }
+
+                    if (filteredDevices.isNotEmpty()) {
+                        SheetSectionTitle(stringResource(R.string.nav_devices))
+                        filteredDevices.forEach { device ->
+                            val token = deviceToken(device.id)
+                            PickerRow(
+                                icon = deviceIcon(device.type.id),
+                                accent = MaterialTheme.colorScheme.primary,
+                                title = device.name,
+                                checked = token in selected,
+                                onToggle = { onToggle(token) }
+                            )
+                        }
+                    }
                 }
             }
+        }
+    }
+}
 
-            if (routines.isEmpty() && devices.isEmpty()) {
-                Text(
-                    stringResource(R.string.home_no_items),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 24.dp)
+@Composable
+private fun NoResults(query: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier = Modifier.size(56.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Rounded.SearchOff,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            stringResource(R.string.home_customize_no_results, query),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -1017,52 +1166,55 @@ private fun SheetSectionTitle(text: String) {
 @Composable
 private fun PickerRow(
     icon: ImageVector,
+    accent: androidx.compose.ui.graphics.Color,
     title: String,
     checked: Boolean,
     onToggle: () -> Unit
 ) {
-    Row(
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = if (checked) accent.copy(alpha = 0.10f) else Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onToggle)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(40.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = accent.copy(alpha = 0.14f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = accent
+                    )
+                }
             }
+            Spacer(Modifier.width(14.dp))
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Checkbox(checked = checked, onCheckedChange = { onToggle() })
         }
-        Spacer(Modifier.width(14.dp))
-        Text(
-            title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Checkbox(checked = checked, onCheckedChange = { onToggle() })
     }
 }
 
 /* ---------------------------- Helpers ---------------------------- */
-
-private fun NavHostController.navigateTab(route: String) {
-    navigate(route) {
-        popUpTo(Routes.HOME) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
-    }
-}
 
 private fun defaultShortcutTokens(
     routines: List<RoutineDto>,

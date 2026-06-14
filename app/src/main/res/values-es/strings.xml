@@ -73,6 +73,7 @@
     <string name="home_status_title">Estado del hogar</string>
     <string name="home_device_singular">dispositivo</string>
     <string name="home_device_plural">dispositivos</string>
+    <string name="home_energy_title">Consumo de energía</string>
     <string name="home_shortcuts">Accesos directos</string>
     <string name="home_customize">Personalizar</string>
     <string name="home_recent_activity">Actividad reciente</string>
@@ -83,6 +84,9 @@
     <string name="home_customize_title">Personalizar accesos directos</string>
     <string name="home_customize_sub">Elegí qué rutinas y dispositivos aparecen en el inicio.</string>
     <string name="home_no_items">Todavía no tenés rutinas ni dispositivos para agregar.</string>
+    <string name="home_customize_search">Buscar rutinas o dispositivos…</string>
+    <string name="home_customize_no_results">No hay resultados para «%1$s».</string>
+    <string name="home_customize_selected_count">%1$d seleccionados</string>
 
     <!-- Homes screen -->
     <string name="homes_new_home">Nueva casa</string>
