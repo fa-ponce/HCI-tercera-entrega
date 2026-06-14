@@ -730,10 +730,8 @@ private fun ShortcutTileScaffold(
         animationSpec = tween(durationMillis = 300),
         label = "tileActive"
     )
-    val neutralChip = MaterialTheme.colorScheme.surfaceVariant
-    // Chip del ícono: tintado en reposo, lleno (acento sólido) cuando está activo.
-    val iconBg = lerp(neutralChip, accent, f)
-    val iconTint = lerp(MaterialTheme.colorScheme.onSurfaceVariant, Color.White, f)
+    val iconBg = lerp(MaterialTheme.colorScheme.surfaceVariant, accent.copy(alpha = 0.14f), f)
+    val iconTint = lerp(MaterialTheme.colorScheme.onSurfaceVariant, accent, f)
 
     Card(
         onClick = onClick,
@@ -796,7 +794,7 @@ private fun ShortcutTileScaffold(
                     Spacer(Modifier.height(6.dp))
                     Surface(
                         shape = AppPillShape,
-                        color = if (active) accent.copy(alpha = 0.16f) else neutralChip
+                        color = if (active) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Text(
                             badge,

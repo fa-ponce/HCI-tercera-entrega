@@ -89,15 +89,18 @@ fun AlarmaSheet(
         // Security code input (only in normal mode before verified)
         if (!codeVerified) {
             if (storedCode == DEFAULT_CODE) {
-                AssistChip(
-                    onClick = {},
-                    enabled = false,
-                    label = { Text(stringResource(R.string.sheet_default_code_notice)) },
-                    colors = AssistChipDefaults.assistChipColors(
-                        disabledLabelColor = MaterialTheme.colorScheme.onErrorContainer,
-                        disabledContainerColor = MaterialTheme.colorScheme.errorContainer
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(
+                        stringResource(R.string.sheet_default_code_notice),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
                     )
-                )
+                }
             }
             SheetSectionCard {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
