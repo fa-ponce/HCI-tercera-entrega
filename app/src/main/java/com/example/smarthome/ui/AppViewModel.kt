@@ -478,8 +478,21 @@ class AppViewModel(
         params: Map<String, Any> = emptyMap(),
         onResult: ((Result<Map<String, Any?>>) -> Unit)? = null
     ) = viewModelScope.launch {
+        val previous = _devices.value.values.flatten().find { it.id == deviceId }
+        if (previous != null) {
+            val optimistic = previous.state.toMutableMap()
+            params.forEach { (k, v) -> optimistic[k] = if (v is Int) v.toDouble() else v }
+            when (action) {
+                "up"   -> if (previous.type.id == DeviceTypes.PERSIANA) optimistic["level"] = 100.0
+                "down" -> if (previous.type.id == DeviceTypes.PERSIANA) optimistic["level"] = 0.0
+            }
+            updateDevice(previous.copy(state = optimistic))
+        }
         val result = deviceRepository.executeAction(deviceId, action, params)
-        result.onFailure { _errorEvent.tryEmit(it.message ?: "Error ejecutando acción") }
+        result.onFailure {
+            if (previous != null) updateDevice(previous)
+            _errorEvent.tryEmit(it.message ?: "Error ejecutando acción")
+        }
         onResult?.invoke(result)
     }
 

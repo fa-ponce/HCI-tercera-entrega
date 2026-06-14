@@ -85,7 +85,10 @@ fun EditRoomDialog(
             Column(Modifier.padding(24.dp)) {
 
                 // Header: nombre con lápiz (edición inline) + botón cerrar
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     if (editingName) {
                         OutlinedTextField(
                             value = name,
@@ -100,7 +103,7 @@ fun EditRoomDialog(
                             name.ifBlank { room.name },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f, fill = false)
+                            modifier = Modifier.weight(1f)
                         )
                         IconButton(onClick = { editingName = true }, enabled = !busy) {
                             Icon(
@@ -110,7 +113,6 @@ fun EditRoomDialog(
                                 modifier = Modifier.size(16.dp)
                             )
                         }
-                        Spacer(Modifier.weight(1f))
                     }
                     IconButton(onClick = { if (!busy) onDismiss() }) {
                         Icon(

@@ -79,7 +79,7 @@ fun PersianaSheet(
         // Open / Close buttons
         SheetSectionCard {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                val upActive = if (routineMode) selectedAction == "up" else level >= 100f
+                val upActive = if (routineMode) selectedAction == "up" else level > 0f
                 OutlinedButton(
                     onClick = {
                         if (routineMode) {
