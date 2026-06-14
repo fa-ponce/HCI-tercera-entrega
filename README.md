@@ -11,16 +11,66 @@ App Android nativa para controlar un hogar inteligente (casas, habitaciones, dis
 
 ---
 
-## Requisitos
+## Entorno de pruebas
+
+| Parámetro | Valor |
+|---|---|
+| Tipo de dispositivo | Emulador (dispositivo virtual) |
+| Modelo emulado | Google Pixel 4a |
+| API Level utilizado | 37.0 (Android 16 Developer Preview) |
+| Arquitectura | x86_64 |
+| API Level mínimo soportado | **29 (Android 10)** |
+| API Level objetivo | 36 (Android 16) |
+
+> La app funciona en cualquier dispositivo físico o emulador con **Android 10 (API 29) o superior**.
+
+---
+
+## Instalación desde APK (dispositivo físico)
+
+### Paso 1 — Transferir el APK al dispositivo
+
+**Opción A — Cable USB**
+1. Conectá el teléfono a la computadora con el cable USB.
+2. Deslizá la barra de notificaciones y tocá la notificación de USB.
+3. Seleccioná **"Transferir archivos"** (MTP).
+4. Copiá `Smarthome.apk` a cualquier carpeta del teléfono (por ejemplo, `Descargas`).
+
+**Opción B — Google Drive / descarga directa**
+1. Subí el APK a Google Drive u otro servicio de nube.
+2. Desde el teléfono, abrí el enlace y descargalo.
+
+### Paso 2 — Habilitar instalación desde fuentes desconocidas
+
+1. Abrí **Ajustes → Aplicaciones → Instalar apps desconocidas** (o **Permisos especiales de apps**).
+2. Seleccioná la app desde la que vas a instalar el APK (explorador de archivos o navegador).
+3. Activá **"Permitir desde esta fuente"**.
+
+### Paso 3 — Instalar el APK
+
+1. Abrí el explorador de archivos del teléfono.
+2. Navegá hasta donde guardaste `Smarthome.apk` y tocalo.
+3. Confirmá la instalación → **"Instalar"**.
+4. Tocá **"Abrir"** para lanzar la app o **"Listo"** para abrirla después desde el cajón de apps.
+
+### Primer uso
+
+Al abrir la app por primera vez, Android puede pedir permiso para enviar notificaciones. Aceptarlo es opcional pero recomendado: la app lo usa para alertas de rutinas y eventos de alarma/puerta.
+
+La app se conecta a `https://hci.it.itba.edu.ar` — **requiere internet** para funcionar.
+
+---
+
+## Desarrollo: requisitos
 
 - Android Studio (o JDK + Android SDK por línea de comandos)
-- Un emulador o dispositivo Android (mínimo **Android 7.0 / API 24**)
+- Un emulador o dispositivo Android con **Android 10 (API 29) o superior**
 
 ---
 
 ## Configuración: archivo `.env` (API key)
 
-La API key **no está en el repo** (el `.gitignore` ignora `*.env`). Antes de compilar, creá un archivo `.env` en la raíz del proyecto:
+La API key **no está en el repositorio** (el `.gitignore` ignora `*.env`). Antes de compilar, creá un archivo `.env` en la raíz del proyecto:
 
 ```env
 API_KEY=tu_api_key_aca
@@ -103,4 +153,3 @@ Final/
 
 - **Registro:** `/register` ya envía el correo con el código de verificación, así que la app pasa directo a la pantalla de **Verificar** (no reenvía el código).
 - **Login con cuenta no verificada:** la app encamina al usuario a la pantalla de **Verificar**, donde puede ingresar el código o tocar **"Reenviar código"**.
-- **Recuperar contraseña:** flujo de email → código → nueva contraseña.
