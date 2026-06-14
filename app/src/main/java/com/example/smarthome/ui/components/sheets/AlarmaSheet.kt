@@ -47,7 +47,7 @@ fun AlarmaSheet(
     var codeInput by remember { mutableStateOf("") }
     var codeError by remember { mutableStateOf(false) }
     var codeErrorText by remember { mutableStateOf<String?>(null) }
-    var codeVerified by remember { mutableStateOf(routineMode) }
+    var codeVerified by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
     var actionError by remember { mutableStateOf<String?>(null) }
     var showChangeCode by remember { mutableStateOf(false) }
@@ -86,7 +86,7 @@ fun AlarmaSheet(
         isLoading = isLoading,
         showFooter = false
     ) {
-        // Security code input (only in normal mode before verified)
+        // Security code input before direct actions or adding alarm actions to routines.
         if (!codeVerified) {
             if (storedCode == DEFAULT_CODE) {
                 Surface(
@@ -212,7 +212,7 @@ fun AlarmaSheet(
                     onAdd = {
                         val actionName = actionStatusMap[status] ?: "armAway"
                         onAddToRoutine?.invoke(
-                            listOf(DeviceAction(actionName, mapOf("securityCode" to storedCode)))
+                            listOf(DeviceAction(actionName, mapOf("securityCode" to codeInput)))
                         )
                         onDismiss()
                     }

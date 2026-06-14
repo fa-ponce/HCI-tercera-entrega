@@ -263,11 +263,21 @@ fun RoutineBuilderSheet(
 
     // ── Sheet UI ──────────────────────────────────────────────────────────────
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        contentWindowInsets = { WindowInsets(0.dp) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+        ) {
         LazyColumn(
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
         ) {
             // Header
             item {
@@ -456,67 +466,77 @@ fun RoutineBuilderSheet(
                 }
             }
 
-            // Footer
-            item {
-                val footerError = saveError ?: deleteError
-                if (footerError != null) {
-                    Text(
-                        footerError,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                Row(
+        }
+
+            Surface(
+                tonalElevation = 3.dp,
+                shadowElevation = 4.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(start = 20.dp, top = 12.dp, end = 20.dp, bottom = 18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    if (isEditing) {
-                        OutlinedButton(
-                            onClick = {
-                                if (!isDeleting) {
-                                    isDeleting = true
-                                    deleteError = null
-                                    scope.launch {
-                                        routineRepo.deleteRoutine(routine?.id ?: return@launch)
-                                            .onSuccess { appViewModel.removeRoutine(routine.id); onDismiss() }
-                                            .onFailure { deleteError = it.message }
-                                        isDeleting = false
-                                    }
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            enabled = !isDeleting,
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                            border = ButtonDefaults.outlinedButtonBorder(true).copy(
-                                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
-                            )
-                        ) {
-                            if (isDeleting) {
-                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.error)
-                            } else {
-                                Icon(Icons.Rounded.Delete, null, Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(R.string.common_delete))
-                            }
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.weight(1f)
-                        ) { Text(stringResource(R.string.common_cancel)) }
+                    val footerError = saveError ?: deleteError
+                    if (footerError != null) {
+                        Text(
+                            footerError,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                    Button(
-                        onClick = { submit() },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isSaving && !isDeleting
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        if (isSaving) {
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        if (isEditing) {
+                            OutlinedButton(
+                                onClick = {
+                                    if (!isDeleting) {
+                                        isDeleting = true
+                                        deleteError = null
+                                        scope.launch {
+                                            routineRepo.deleteRoutine(routine?.id ?: return@launch)
+                                                .onSuccess { appViewModel.removeRoutine(routine.id); onDismiss() }
+                                                .onFailure { deleteError = it.message }
+                                            isDeleting = false
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isDeleting,
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                                border = ButtonDefaults.outlinedButtonBorder(true).copy(
+                                    brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.error)
+                                )
+                            ) {
+                                if (isDeleting) {
+                                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.error)
+                                } else {
+                                    Icon(Icons.Rounded.Delete, null, Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(stringResource(R.string.common_delete))
+                                }
+                            }
                         } else {
-                            Text(if (isEditing) stringResource(R.string.routine_save_changes) else stringResource(R.string.routine_create))
+                            OutlinedButton(
+                                onClick = onDismiss,
+                                modifier = Modifier.weight(1f)
+                            ) { Text(stringResource(R.string.common_cancel)) }
+                        }
+                        Button(
+                            onClick = { submit() },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isSaving && !isDeleting
+                        ) {
+                            if (isSaving) {
+                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Text(if (isEditing) stringResource(R.string.routine_save_changes) else stringResource(R.string.routine_create))
+                            }
                         }
                     }
                 }
