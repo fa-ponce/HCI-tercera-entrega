@@ -153,3 +153,16 @@ Final/
 
 - **Registro:** `/register` ya envía el correo con el código de verificación, así que la app pasa directo a la pantalla de **Verificar** (no reenvía el código).
 - **Login con cuenta no verificada:** la app encamina al usuario a la pantalla de **Verificar**, donde puede ingresar el código o tocar **"Reenviar código"**.
+
+## Correo de prueba (verificación de cuenta)
+
+El registro requiere verificación por email. Para ver los códigos de confirmación, ingresar al siguiente buzón de prueba:
+
+- **URL:** https://ethereal.email/messages
+- **Nombre:** Rhoda Bahringer
+- **Usuario:** rhoda14@ethereal.email
+- **Contraseña:** F1rPSZEJKyAcY61v9W
+
+> Esta cuenta es solo de salida (no recibe emails externos). Los mensajes enviados por la app aparecen en el link de arriba.
+
+---
