@@ -73,7 +73,6 @@
     <string name="home_status_title">Home status</string>
     <string name="home_device_singular">device</string>
     <string name="home_device_plural">devices</string>
-    <string name="home_energy_title">Energy consumption</string>
     <string name="home_shortcuts">Shortcuts</string>
     <string name="home_customize">Customize</string>
     <string name="home_recent_activity">Recent activity</string>
@@ -107,7 +106,6 @@
     <string name="homes_city_placeholder">e.g. Buenos Aires</string>
     <string name="homes_rename_home">Rename home</string>
     <string name="homes_delete_home">Delete home</string>
-    <string name="homes_room_device_stats">%1$d dev. · %2$d on</string>
 
     <!-- Devices screen -->
     <string name="device_new">New device</string>
@@ -245,12 +243,9 @@
     <string name="room_type_laundry">Laundry room</string>
 
     <!-- Room screen -->
-    <string name="room_devices_count">%1$d devices</string>
-    <string name="room_status_fmt">%1$d on · %2$s</string>
     <string name="room_no_devices">No devices in this room.</string>
     <string name="room_add_device">Add device</string>
     <string name="room_delete">Delete room</string>
-    <string name="room_rename">Rename room</string>
     <string name="room_subtitle">Devices in this room</string>
     <string name="room_consumption_hour">Consumption/Hour</string>
     <string name="room_cost_hour">Cost/Hour</string>

@@ -105,8 +105,6 @@ class AppViewModel(
         clearLocalState()
     }
 
-    fun clearError() { _error.value = null }
-
     fun retryLoad() = loadAll()
 
     // La API no permite listar dispositivos "sueltos": un dispositivo sin

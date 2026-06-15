@@ -61,7 +61,6 @@ import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.components.AppClickablePanel
 import com.example.smarthome.ui.components.AppEmptyPanel
 import com.example.smarthome.ui.components.AppIconShape
-import com.example.smarthome.ui.components.AppPanel
 import com.example.smarthome.ui.components.AppPanelShape
 import com.example.smarthome.ui.components.AppScreenHorizontalPadding
 import com.example.smarthome.ui.components.AppSectionHeader

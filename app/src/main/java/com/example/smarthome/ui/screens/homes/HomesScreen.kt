@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -62,7 +61,6 @@ import com.example.smarthome.AppStrings
 import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
-import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.roomTypeIcon

@@ -73,7 +73,6 @@
     <string name="home_status_title">Estado del hogar</string>
     <string name="home_device_singular">dispositivo</string>
     <string name="home_device_plural">dispositivos</string>
-    <string name="home_energy_title">Consumo de energía</string>
     <string name="home_shortcuts">Accesos directos</string>
     <string name="home_customize">Personalizar</string>
     <string name="home_recent_activity">Actividad reciente</string>
@@ -107,7 +106,6 @@
     <string name="homes_city_placeholder">Ej: Buenos Aires</string>
     <string name="homes_rename_home">Renombrar casa</string>
     <string name="homes_delete_home">Eliminar casa</string>
-    <string name="homes_room_device_stats">%1$d disp. · %2$d enc.</string>
 
     <!-- Devices screen -->
     <string name="device_new">Nuevo dispositivo</string>
@@ -243,12 +241,9 @@
     <string name="room_type_laundry">Lavadero</string>
 
     <!-- Room screen -->
-    <string name="room_devices_count">%1$d dispositivos</string>
-    <string name="room_status_fmt">%1$d encendidos · %2$s</string>
     <string name="room_no_devices">No hay dispositivos en esta habitación.</string>
     <string name="room_add_device">Agregar dispositivo</string>
     <string name="room_delete">Eliminar habitación</string>
-    <string name="room_rename">Renombrar habitación</string>
     <string name="room_subtitle">Dispositivos en esta habitación</string>
     <string name="room_consumption_hour">Consumo/Hora</string>
     <string name="room_cost_hour">Costo/Hora</string>

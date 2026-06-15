@@ -38,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.CenterAlignedTopAppBar
 import com.example.smarthome.ui.components.appBarGradient
 import com.example.smarthome.ui.components.gradientTopBarColors
-import androidx.compose.material3.TopAppBarDefaults
 import com.example.smarthome.ui.theme.EventoPink
 import com.example.smarthome.ui.theme.HoraOrange
 import androidx.compose.runtime.Composable
