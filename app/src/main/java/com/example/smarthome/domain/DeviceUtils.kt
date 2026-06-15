@@ -25,7 +25,7 @@ private val TYPE_TOGGLE = mapOf(
     DeviceTypes.LAMPARA    to ToggleConfig("turnOn",  "turnOff", { it["status"] == "on" }),
     DeviceTypes.AC         to ToggleConfig("turnOn",  "turnOff", { it["status"] == "on" }),
     DeviceTypes.ALARMA     to ToggleConfig("armAway", "disarm",  { it["status"] != "disarmed" }),
-    DeviceTypes.PERSIANA   to ToggleConfig("up",      "down",    { (it["level"] as? Double ?: 0.0) > 0.0 }),
+    DeviceTypes.PERSIANA   to ToggleConfig("up",      "down",    { ((it["level"] as? Number)?.toDouble() ?: 0.0) > 0.0 }),
     DeviceTypes.PUERTA     to ToggleConfig("open",    "close",   { it["status"] == "opened" }),
     DeviceTypes.GRIFO      to ToggleConfig("open",    "close",   { it["status"] == "opened" }),
     DeviceTypes.HORNO      to ToggleConfig("turnOn",  "turnOff", { it["status"] == "on" }),

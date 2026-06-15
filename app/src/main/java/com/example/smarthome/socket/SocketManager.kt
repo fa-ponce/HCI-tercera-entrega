@@ -32,7 +32,15 @@ object SocketManager {
                 val deviceId = json.optString("id").takeIf { it.isNotEmpty() } ?: return@on
                 val stateJson = json.optJSONObject("state") ?: return@on
                 val state = buildMap<String, Any?> {
-                    stateJson.keys().forEach { key -> put(key, stateJson.get(key)) }
+                    // org.json devuelve Integer/Long para los enteros, pero el resto de
+                    // la app (estado parseado del REST vía Gson) trata los números como
+                    // Double. Normalizamos a Double para que un mismo campo (p. ej.
+                    // "level" de una persiana) tenga el mismo tipo venga del socket o del
+                    // REST; si no, un cast `as? Double` fallaría y el estado se leería mal.
+                    stateJson.keys().forEach { key ->
+                        val value = stateJson.get(key)
+                        put(key, if (value is Number) value.toDouble() else value)
+                    }
                 }
                 _deviceEvents.tryEmit(DeviceEvent(deviceId, state))
             }
