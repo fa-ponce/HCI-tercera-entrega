@@ -287,7 +287,10 @@ fun RoomScreen(
                 onDelete = { cb -> appViewModel.deleteDevice(device.id, cb) },
                 onLink = { roomId, cb -> appViewModel.linkDeviceToRoom(device.id, roomId, cb) },
                 onUnlink = { cb -> appViewModel.linkDeviceToRoom(device.id, null, cb) },
-                onLoad = { id -> appViewModel.loadDevice(id) }
+                onLoad = { id -> appViewModel.loadDevice(id) },
+                onGetVacuumPrefs = { id -> appViewModel.getVacuumRoomPrefs(id) },
+                onSaveVacuumPrefs = { id, locId, dockId -> appViewModel.saveVacuumRoomPrefs(id, locId, dockId) },
+                onLoadVacuumPrefsAsync = { id -> appViewModel.loadVacuumRoomPrefsAsync(id) }
             ),
             homes = homes,
             rooms = rooms

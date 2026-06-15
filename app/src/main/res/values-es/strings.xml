@@ -431,6 +431,9 @@
     <string name="sheet_dock">Volver a base</string>
     <string name="sheet_vacuum">Aspirar</string>
     <string name="sheet_mop">Trapear</string>
+    <string name="sheet_vacuum_location">Ubicación actual</string>
+    <string name="sheet_vacuum_dock_room">Base de carga</string>
+    <string name="sheet_no_room_assigned">Sin habitación asignada</string>
 
     <!-- Fridge sheet -->
     <string name="sheet_fridge_temp">Temperatura Heladera</string>

@@ -12,7 +12,10 @@ data class DeviceSheetActions(
     val onDelete: (onResult: (Result<Unit>) -> Unit) -> Unit = { _ -> },
     val onLink: (roomId: String, onResult: (Result<Unit>) -> Unit) -> Unit = { _, _ -> },
     val onUnlink: (onResult: (Result<Unit>) -> Unit) -> Unit = { _ -> },
-    val onLoad: (suspend (deviceId: String) -> DeviceDto?)? = null
+    val onLoad: (suspend (deviceId: String) -> DeviceDto?)? = null,
+    val onGetVacuumPrefs: ((deviceId: String) -> Pair<String?, String?>)? = null,
+    val onSaveVacuumPrefs: ((deviceId: String, locationId: String?, dockingId: String?) -> Unit)? = null,
+    val onLoadVacuumPrefsAsync: (suspend (deviceId: String) -> Pair<String?, String?>)? = null
 )
 
 @Composable

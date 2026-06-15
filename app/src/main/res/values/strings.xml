@@ -439,6 +439,9 @@
     <string name="sheet_dock">Return to dock</string>
     <string name="sheet_vacuum">Vacuum</string>
     <string name="sheet_mop">Mop</string>
+    <string name="sheet_vacuum_location">Current location</string>
+    <string name="sheet_vacuum_dock_room">Docking station</string>
+    <string name="sheet_no_room_assigned">No room assigned</string>
 
     <!-- Fridge sheet -->
     <string name="sheet_fridge_temp">Fridge temperature</string>

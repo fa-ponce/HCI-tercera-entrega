@@ -567,6 +567,24 @@ class AppViewModel(
     suspend fun loadDevice(deviceId: String): DeviceDto? =
         deviceRepository.getDevice(deviceId).getOrNull()
 
+    private val vacuumPrefsCache = mutableMapOf<String, Pair<String?, String?>>()
+
+    fun getVacuumRoomPrefs(deviceId: String): Pair<String?, String?> =
+        vacuumPrefsCache[deviceId] ?: Pair(null, null)
+
+    fun saveVacuumRoomPrefs(deviceId: String, locationId: String?, dockingId: String?) {
+        vacuumPrefsCache[deviceId] = Pair(locationId, dockingId)
+        viewModelScope.launch { userPreferences.saveVacuumPrefs(deviceId, locationId, dockingId) }
+    }
+
+    suspend fun loadVacuumRoomPrefsAsync(deviceId: String): Pair<String?, String?> {
+        val cached = vacuumPrefsCache[deviceId]
+        if (cached != null) return cached
+        val fromDisk = userPreferences.getVacuumPrefs(deviceId)
+        vacuumPrefsCache[deviceId] = fromDisk
+        return fromDisk
+    }
+
     override fun onCleared() {
         super.onCleared()
         SocketManager.disconnect()

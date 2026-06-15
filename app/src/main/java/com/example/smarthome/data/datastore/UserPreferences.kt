@@ -79,6 +79,22 @@ class UserPreferences(context: Context) {
         }
     }
 
+    suspend fun getVacuumPrefs(deviceId: String): Pair<String?, String?> {
+        val prefs = dataStore.data.first()
+        val loc = prefs[stringPreferencesKey("vacuum_loc_$deviceId")]
+        val dock = prefs[stringPreferencesKey("vacuum_dock_$deviceId")]
+        return Pair(loc, dock)
+    }
+
+    suspend fun saveVacuumPrefs(deviceId: String, locationId: String?, dockingId: String?) {
+        dataStore.edit { prefs ->
+            val locKey = stringPreferencesKey("vacuum_loc_$deviceId")
+            val dockKey = stringPreferencesKey("vacuum_dock_$deviceId")
+            if (locationId != null) prefs[locKey] = locationId else prefs.remove(locKey)
+            if (dockingId != null) prefs[dockKey] = dockingId else prefs.remove(dockKey)
+        }
+    }
+
     suspend fun clear() {
         dataStore.edit { prefs ->
             // El idioma elegido manualmente sobrevive al cierre de sesión.
