@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.Smarthome" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Pantalla de inicio (splash) con el logo de la app, vía androidx core-splashscreen.
+         Al terminar el arranque se pasa al tema normal (postSplashScreenTheme). -->
+    <style name="Theme.Smarthome.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Smarthome</item>
+    </style>
 </resources>

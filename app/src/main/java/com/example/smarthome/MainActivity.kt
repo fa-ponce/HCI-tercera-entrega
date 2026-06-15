@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,8 +55,15 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Pantalla de inicio (splash) con el logo, mientras se decide login/home.
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Mantenemos el splash visible hasta resolver el destino inicial.
+        var keepSplash = true
+        splashScreen.setKeepOnScreenCondition { keepSplash }
+
         setContent {
             val appViewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)
             val prefsViewModel: UserPreferencesViewModel = viewModel(factory = UserPreferencesViewModel.Factory)
@@ -83,6 +91,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         startDestination = Routes.LOGIN
                     }
+                    keepSplash = false
                 }
 
                 startDestination?.let { dest ->
