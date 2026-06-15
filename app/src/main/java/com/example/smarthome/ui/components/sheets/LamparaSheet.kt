@@ -117,7 +117,7 @@ fun LamparaSheet(
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.sheet_hue), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.sheet_hue), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Slider(
                         value = hue,
                         onValueChange = { hue = it },
@@ -129,7 +129,7 @@ fun LamparaSheet(
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.sheet_saturation), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.sheet_saturation), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Slider(
                         value = saturation,
                         onValueChange = { saturation = it },
