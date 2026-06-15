@@ -518,23 +518,3 @@ fun SheetChipSelector(
         }
     }
 }
-
-@Composable
-fun <T> PillGroup(
-    options: List<T>,
-    selected: T,
-    onSelect: (T) -> Unit,
-    label: (T) -> String,
-    modifier: Modifier = Modifier
-) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        options.forEach { option ->
-            val isSelected = option == selected
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSelect(option) },
-                label = { Text(label(option), style = MaterialTheme.typography.labelMedium) }
-            )
-        }
-    }
-}
