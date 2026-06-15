@@ -342,7 +342,9 @@ private fun StatPill(
         accent = accent,
         modifier = modifier,
         slashed = slashed,
-        expanded = true
+        expanded = true,
+        labelMaxLines = 1,
+        labelFullWidth = true
     )
 }
 

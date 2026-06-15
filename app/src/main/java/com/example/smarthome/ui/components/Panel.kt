@@ -161,59 +161,117 @@ fun AppMetricCard(
     accent: Color,
     modifier: Modifier = Modifier,
     slashed: Boolean = false,
-    expanded: Boolean = false
+    expanded: Boolean = false,
+    labelMaxLines: Int = 1,
+    labelFullWidth: Boolean = false
 ) {
     AppPanel(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = if (expanded) 76.dp else 0.dp)
-                .padding(
-                    horizontal = if (expanded) 14.dp else 12.dp,
-                    vertical = if (expanded) 16.dp else 12.dp
-                ),
-            horizontalArrangement = Arrangement.spacedBy(if (expanded) 12.dp else 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = AppIconShape,
-                color = accent.copy(alpha = 0.12f),
-                modifier = Modifier.size(if (expanded) 44.dp else 36.dp)
+        if (labelFullWidth) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = if (expanded) 76.dp else 0.dp)
+                    .padding(
+                        horizontal = if (expanded) 14.dp else 12.dp,
+                        vertical = if (expanded) 14.dp else 12.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(if (expanded) 24.dp else 20.dp))
-                    if (slashed) {
-                        Canvas(modifier = Modifier.size(if (expanded) 28.dp else 24.dp)) {
-                            drawLine(
-                                color = accent,
-                                start = Offset(size.width * 0.18f, size.height * 0.82f),
-                                end = Offset(size.width * 0.82f, size.height * 0.18f),
-                                strokeWidth = 2.4.dp.toPx(),
-                                cap = StrokeCap.Round
-                            )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(if (expanded) 10.dp else 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = AppIconShape,
+                        color = accent.copy(alpha = 0.12f),
+                        modifier = Modifier.size(if (expanded) 40.dp else 36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(if (expanded) 22.dp else 20.dp))
+                            if (slashed) {
+                                Canvas(modifier = Modifier.size(if (expanded) 26.dp else 24.dp)) {
+                                    drawLine(
+                                        color = accent,
+                                        start = Offset(size.width * 0.18f, size.height * 0.82f),
+                                        end = Offset(size.width * 0.82f, size.height * 0.18f),
+                                        strokeWidth = 2.4.dp.toPx(),
+                                        cap = StrokeCap.Round
+                                    )
+                                }
+                            }
                         }
                     }
+                    Text(
+                        value,
+                        style = if (expanded) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    value,
-                    style = if (expanded) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
                 Text(
                     label,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = labelMaxLines,
+                    overflow = TextOverflow.Clip,
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = if (expanded) 76.dp else 0.dp)
+                    .padding(
+                        horizontal = if (expanded) 14.dp else 12.dp,
+                        vertical = if (expanded) 16.dp else 12.dp
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(if (expanded) 12.dp else 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = AppIconShape,
+                    color = accent.copy(alpha = 0.12f),
+                    modifier = Modifier.size(if (expanded) 44.dp else 36.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(if (expanded) 24.dp else 20.dp))
+                        if (slashed) {
+                            Canvas(modifier = Modifier.size(if (expanded) 28.dp else 24.dp)) {
+                                drawLine(
+                                    color = accent,
+                                    start = Offset(size.width * 0.18f, size.height * 0.82f),
+                                    end = Offset(size.width * 0.82f, size.height * 0.18f),
+                                    strokeWidth = 2.4.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                            }
+                        }
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        value,
+                        style = if (expanded) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = labelMaxLines,
+                        overflow = TextOverflow.Clip
+                    )
+                }
             }
         }
     }

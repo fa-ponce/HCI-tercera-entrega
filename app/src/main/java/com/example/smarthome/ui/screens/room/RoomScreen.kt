@@ -312,7 +312,8 @@ private fun RoomStatCardCompact(
         accent = accent,
         modifier = modifier,
         slashed = slashed,
-        expanded = true
+        expanded = true,
+        labelFullWidth = true
     )
 }
 
@@ -331,6 +332,8 @@ private fun RoomStatCard(
         icon = icon,
         accent = accent,
         modifier = modifier,
-        expanded = true
+        expanded = true,
+        labelMaxLines = 2,
+        labelFullWidth = true
     )
 }
