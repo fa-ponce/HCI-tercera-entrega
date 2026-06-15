@@ -79,6 +79,7 @@ import com.example.smarthome.R
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
 import com.example.smarthome.ui.navigation.Routes
+import com.example.smarthome.ui.theme.SuccessGreen
 import androidx.compose.foundation.layout.WindowInsets
 
 
@@ -453,7 +454,7 @@ private fun ChangePasswordDialog(prefsViewModel: UserPreferencesViewModel, onDis
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (success) {
-                    Text(stringResource(R.string.profile_password_updated), color = Color(0xFF16A34A))
+                    Text(stringResource(R.string.profile_password_updated), color = SuccessGreen)
                 } else {
                     OutlinedTextField(
                         value = oldPass,

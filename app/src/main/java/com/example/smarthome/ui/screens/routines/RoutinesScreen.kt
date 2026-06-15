@@ -39,7 +39,8 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import com.example.smarthome.ui.components.appBarGradient
 import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.ui.graphics.Color
+import com.example.smarthome.ui.theme.EventoPink
+import com.example.smarthome.ui.theme.HoraOrange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -195,10 +196,8 @@ fun RoutinesScreen(
     }
 }
 
-// Acentos por tipo de trigger, iguales a los de la web (RutinasView):
-// hora naranja #e07a3c, evento rosa #c0568a, manual gris.
-private val HoraOrange = Color(0xFFE07A3C)
-private val EventoPink = Color(0xFFC0568A)
+// Los acentos por tipo de trigger (HoraOrange, EventoPink) viven en el theme
+// (ui/theme/Color.kt), compartidos con Home.
 
 @Composable
 private fun RoutineCard(

@@ -77,6 +77,8 @@ import com.example.smarthome.ui.components.AppSectionHeader
 import com.example.smarthome.ui.components.ConnectionErrorView
 import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.navigation.Routes
+import com.example.smarthome.ui.theme.DangerRed
+import com.example.smarthome.ui.theme.SuccessGreen
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -345,9 +347,7 @@ fun HomesScreen(
     }
 }
 
-// Colores que matchean la web (verde encendido / rojo apagado).
-private val OnGreen = Color(0xFF16A34A)
-private val OffRed = Color(0xFFC0392B)
+// SuccessGreen (encendido) y DangerRed (apagado) vienen del theme (ui/theme/Color.kt).
 
 private fun homeTypeIcon(type: String?): ImageVector = when (type) {
     "Casa"            -> Icons.Rounded.Home
@@ -480,8 +480,8 @@ private fun WebRoomCard(
 
             if (total > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    DotBadge("$on", OnGreen, Icons.Rounded.PowerSettingsNew)
-                    DotBadge("$off", OffRed, Icons.Rounded.PowerSettingsNew, slashed = true)
+                    DotBadge("$on", SuccessGreen, Icons.Rounded.PowerSettingsNew)
+                    DotBadge("$off", DangerRed, Icons.Rounded.PowerSettingsNew, slashed = true)
                     DotBadge("$total", MaterialTheme.colorScheme.primary, Icons.Rounded.Devices)
                 }
             } else {

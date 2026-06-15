@@ -75,6 +75,7 @@ import com.example.smarthome.ui.components.FullScreenLoading
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
+import com.example.smarthome.ui.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -229,7 +230,7 @@ fun DevicesScreen(
             item(span = fullSpan) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     StatPill("${allItems.size}", stringResource(R.string.device_total), Icons.Rounded.DevicesOther, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.PowerSettingsNew, OnGreen, Modifier.weight(1f))
+                    StatPill("$totalOn", stringResource(R.string.common_on_plural), Icons.Rounded.PowerSettingsNew, SuccessGreen, Modifier.weight(1f))
                     StatPill("$totalOff", stringResource(R.string.common_off_plural), Icons.Rounded.PowerSettingsNew, MaterialTheme.colorScheme.error, Modifier.weight(1f), slashed = true)
                 }
             }
@@ -325,8 +326,7 @@ fun DevicesScreen(
     }
 }
 
-/** Verde "encendido" compartido con la web (#16a34a). */
-private val OnGreen = Color(0xFF16A34A)
+// SuccessGreen ("encendido") viene del theme (ui/theme/Color.kt).
 
 @Composable
 private fun StatPill(

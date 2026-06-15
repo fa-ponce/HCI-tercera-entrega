@@ -107,6 +107,10 @@ import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.components.truncateName
 import com.example.smarthome.ui.navigation.Routes
+import com.example.smarthome.ui.theme.EventoPink
+import com.example.smarthome.ui.theme.HoraOrange
+import com.example.smarthome.ui.theme.StatCyan
+import com.example.smarthome.ui.theme.StatWarm
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -118,12 +122,8 @@ private sealed interface Shortcut {
     data class RoutineShortcut(val routine: RoutineDto) : Shortcut
 }
 
-// Acentos de los íconos, iguales a los de la web (InicioView / RutinasView).
-private val StatCyan = Color(0xFF1FB6C1)   // habitaciones
-private val StatGreen = Color(0xFF16A34A)  // dispositivos
-private val StatWarm = Color(0xFFC9A227)   // consumo
-private val HoraOrange = Color(0xFFE07A3C) // rutinas por hora
-private val EventoPink = Color(0xFFC0568A) // rutinas por evento
+// Los acentos de íconos (StatCyan, StatWarm, HoraOrange, EventoPink) viven en
+// el theme (ui/theme/Color.kt), compartidos con el resto de las pantallas.
 
 private fun deviceToken(id: String) = "d:$id"
 private fun routineToken(id: String) = "r:$id"

@@ -78,6 +78,8 @@ import com.example.smarthome.ui.components.DeviceGridCard
 import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
+import com.example.smarthome.ui.theme.StatWarm
+import com.example.smarthome.ui.theme.SuccessGreen
 import androidx.compose.foundation.layout.WindowInsets
 
 @Composable
@@ -216,14 +218,14 @@ fun HomeDetailContent(
                         value = "$totalOn",
                         label = stringResource(R.string.common_on_plural),
                         icon = Icons.Rounded.PowerSettingsNew,
-                        accent = Color(0xFF16A34A),
+                        accent = SuccessGreen,
                         modifier = Modifier.weight(1f)
                     )
                     StatBox(
                         value = "${totalW} W",
                         label = stringResource(R.string.nav_consumption),
                         icon = Icons.Rounded.Bolt,
-                        accent = Color(0xFFC9A227),
+                        accent = StatWarm,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -595,7 +597,7 @@ private fun RoomGridCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                DeviceStatusBadge("$onCount", Color(0xFF16A34A), Icons.Rounded.PowerSettingsNew)
+                DeviceStatusBadge("$onCount", SuccessGreen, Icons.Rounded.PowerSettingsNew)
                 DeviceStatusBadge("$offCount", MaterialTheme.colorScheme.error, Icons.Rounded.PowerSettingsNew, slashed = true)
                 DeviceStatusBadge("$deviceCount", MaterialTheme.colorScheme.primary, Icons.Rounded.Devices)
             }

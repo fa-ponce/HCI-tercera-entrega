@@ -60,3 +60,9 @@ val DarkInfoBg      = Color(0xFF1A1A1A) // --info-bg
 // ── Compartidos (idénticos en ambos temas de la web) ──
 val SuccessGreen = Color(0xFF16A34A) // verde "encendido" / badges
 val DangerRed    = Color(0xFFC0392B) // rojo "apagado" / acciones peligrosas
+
+// Acentos de estadísticas / categorías (iguales a los íconos de la web).
+val StatCyan   = Color(0xFF1FB6C1) // habitaciones
+val StatWarm   = Color(0xFFC9A227) // consumo / energía
+val HoraOrange = Color(0xFFE07A3C) // rutinas por hora
+val EventoPink = Color(0xFFC0568A) // rutinas por evento

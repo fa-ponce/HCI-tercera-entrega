@@ -63,13 +63,14 @@ import com.example.smarthome.ui.components.sheets.DeviceSheetActions
 import com.example.smarthome.ui.components.sheets.DeviceSheetRouter
 import com.example.smarthome.ui.navigation.Routes
 import com.example.smarthome.ui.screens.devices.AddDeviceDialog
+import com.example.smarthome.ui.theme.DangerRed
+import com.example.smarthome.ui.theme.StatWarm
+import com.example.smarthome.ui.theme.SuccessGreen
 import androidx.compose.foundation.layout.WindowInsets
 
-// Acentos de las stat cards, mismos colores que la web (HabitacionView.vue)
-private val StatGreen = Color(0xFF16A34A)
-private val StatRed = Color(0xFFC0392B)
+// SuccessGreen, DangerRed y StatWarm vienen del theme (ui/theme/Color.kt).
+// StatNeutral es propio de esta pantalla.
 private val StatNeutral = Color(0xFF666666)
-private val StatWarm = Color(0xFFC9A227)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,8 +197,8 @@ fun RoomScreen(
             item(span = fullSpan) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        RoomStatCardCompact(Icons.Rounded.PowerSettingsNew, StatGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
-                        RoomStatCardCompact(Icons.Rounded.PowerSettingsNew, StatRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f), slashed = true)
+                        RoomStatCardCompact(Icons.Rounded.PowerSettingsNew, SuccessGreen, "$totalOn", stringResource(R.string.common_on_plural), Modifier.weight(1f))
+                        RoomStatCardCompact(Icons.Rounded.PowerSettingsNew, DangerRed, "$totalOff", stringResource(R.string.common_off_plural), Modifier.weight(1f), slashed = true)
                         RoomStatCardCompact(Icons.Rounded.Devices, StatNeutral, "${roomDevices.size}", stringResource(R.string.nav_devices), Modifier.weight(1f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
