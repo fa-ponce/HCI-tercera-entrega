@@ -1,5 +1,6 @@
 package com.example.smarthome.ui.screens.consumption
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,15 +15,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.Devices
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -36,7 +42,9 @@ import com.example.smarthome.ui.components.gradientTopBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -46,9 +54,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
+import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
+import com.example.smarthome.ui.components.AppClickablePanel
 import com.example.smarthome.ui.components.AppEmptyPanel
 import com.example.smarthome.ui.components.AppIconShape
 import com.example.smarthome.ui.components.AppPanel
@@ -82,22 +92,55 @@ fun ConsumptionScreen(
     val costoHora = costoKwh?.let { it * kwhPerHour }
     val costoDia = costoHora?.let { it * 24f }
 
-    data class HomeConsumption(val name: String, val watts: Int, val activeDevices: Int)
+    data class DeviceConsumption(val name: String, val watts: Int, val isOn: Boolean)
+    data class HomeConsumption(
+        val id: String,
+        val name: String,
+        val watts: Int,
+        val activeDevices: Int,
+        val devices: List<DeviceConsumption>
+    )
 
-    val perHome = remember(homes, rooms, devices, powerByType) {
-        homes.map { home ->
+    // Id ficticio para agrupar los dispositivos que no pertenecen a ninguna casa real.
+    val noHomeId = "__no_home__"
+    val noHomeLabel = stringResource(R.string.homes_no_home)
+
+    val perHome = remember(homes, rooms, devices, powerByType, noHomeLabel) {
+        // Desglose por dispositivo: un dispositivo apagado consume 0 W.
+        fun breakdown(devs: List<DeviceDto>): List<DeviceConsumption> =
+            devs.map { d ->
+                val on = isDeviceOn(d.type.id, d.state)
+                DeviceConsumption(
+                    name = d.name,
+                    watts = if (on) (powerByType[d.type.id] ?: 0) else 0,
+                    isOn = on
+                )
+            }.sortedWith(compareByDescending<DeviceConsumption> { it.isOn }.thenByDescending { it.watts })
+
+        fun toHome(id: String, name: String, devs: List<DeviceDto>): HomeConsumption {
+            val bd = breakdown(devs)
+            return HomeConsumption(id, name, bd.sumOf { it.watts }, bd.count { it.isOn }, bd)
+        }
+
+        val realHomes = homes.map { home ->
             val homeDevices = (rooms[home.id] ?: emptyList())
                 .flatMap { devices[it.id] ?: emptyList() }
-            val onHomeDevices = homeDevices.filter { isDeviceOn(it.type.id, it.state) }
-            HomeConsumption(
-                name = home.name,
-                watts = onHomeDevices.sumOf { powerByType[it.type.id] ?: 0 },
-                activeDevices = onHomeDevices.size
-            )
+            toHome(home.id, home.name, homeDevices)
         }
+
+        // Dispositivos "sin casa": los que no están en ninguna habitación de una casa real
+        // (incluye los libres y los de habitaciones sin casa).
+        val homeRoomIds = homes.flatMap { rooms[it.id].orEmpty() }.map { it.id }.toSet()
+        val noHomeDevices = devices.filterKeys { it !in homeRoomIds }.values.flatten()
+        val noHomeEntry = if (noHomeDevices.isNotEmpty())
+            toHome(noHomeId, noHomeLabel, noHomeDevices) else null
+
+        realHomes + listOfNotNull(noHomeEntry)
     }
 
-    val maxW = remember(perHome) { perHome.maxOfOrNull { it.watts } ?: 1 }
+    val maxW = remember(perHome) { (perHome.maxOfOrNull { it.watts } ?: 0).coerceAtLeast(1) }
+
+    var expandedId by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -194,58 +237,120 @@ fun ConsumptionScreen(
                     )
                 }
                 items(perHome) { item ->
-                    AppPanel(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = AppIconShape,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Rounded.Apartment,
-                                        null,
-                                        modifier = Modifier.size(22.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                    val expanded = expandedId == item.id
+                    AppClickablePanel(
+                        onClick = { expandedId = if (expanded) null else item.id },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = AppIconShape,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                    modifier = Modifier.size(42.dp)
                                 ) {
-                                    Text(
-                                        item.name,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f)
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            if (item.id == noHomeId) Icons.Rounded.Devices else Icons.Rounded.Apartment,
+                                            null,
+                                            modifier = Modifier.size(22.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            item.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            "${item.watts} W",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Spacer(Modifier.height(6.dp))
+                                    LinearProgressIndicator(
+                                        progress = { if (maxW > 0) item.watts.toFloat() / maxW else 0f },
+                                        modifier = Modifier.fillMaxWidth().height(6.dp),
                                     )
+                                    Spacer(Modifier.height(4.dp))
                                     Text(
-                                        "${item.watts} W",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        stringResource(R.string.consumption_devices_on, item.activeDevices),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                Spacer(Modifier.height(6.dp))
-                                LinearProgressIndicator(
-                                    progress = { if (maxW > 0) item.watts.toFloat() / maxW else 0f },
-                                    modifier = Modifier.fillMaxWidth().height(6.dp),
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    stringResource(R.string.consumption_devices_on, item.activeDevices),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            }
+                            AnimatedVisibility(visible = expanded) {
+                                Column(Modifier.fillMaxWidth()) {
+                                    Spacer(Modifier.height(10.dp))
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    if (item.devices.isEmpty()) {
+                                        Text(
+                                            stringResource(R.string.consumption_home_empty),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    } else {
+                                        item.devices.forEach { dev ->
+                                            Row(
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 5.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.weight(1f),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Surface(
+                                                        shape = CircleShape,
+                                                        color = if (dev.isOn) MaterialTheme.colorScheme.primary
+                                                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                                        modifier = Modifier.size(8.dp)
+                                                    ) {}
+                                                    Text(
+                                                        dev.name,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                                Text(
+                                                    "${dev.watts} W",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = if (dev.isOn) FontWeight.SemiBold else FontWeight.Normal,
+                                                    color = if (dev.isOn) MaterialTheme.colorScheme.primary
+                                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

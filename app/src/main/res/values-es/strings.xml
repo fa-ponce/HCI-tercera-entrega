@@ -305,6 +305,7 @@
     <string name="consumption_if_24h">si continúa 24h así</string>
     <string name="consumption_per_home">Consumo por casa</string>
     <string name="consumption_no_devices">Sin dispositivos cargados.</string>
+    <string name="consumption_home_empty">Esta casa no tiene dispositivos.</string>
 
     <!-- History -->
     <string name="history_title">Historial</string>
