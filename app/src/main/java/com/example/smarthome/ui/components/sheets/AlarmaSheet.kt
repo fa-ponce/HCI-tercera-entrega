@@ -42,7 +42,6 @@ fun AlarmaSheet(
         mutableStateOf(codePrefs.getString(codeKey, DEFAULT_CODE) ?: DEFAULT_CODE)
     }
 
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var status by remember { mutableStateOf(if (routineMode) "armedAway" else "disarmed") }
     var codeInput by remember { mutableStateOf("") }
     var codeError by remember { mutableStateOf(false) }
@@ -58,13 +57,8 @@ fun AlarmaSheet(
     var changeSuccess by remember { mutableStateOf(false) }
     var isChangingCode by remember { mutableStateOf(false) }
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                status = (d.state["status"] as? String) ?: "disarmed"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        status = (d.state["status"] as? String) ?: "disarmed"
     }
 
     val actionStatusMap = mapOf("armedStay" to "armStay", "armedAway" to "armAway", "disarmed" to "disarm")

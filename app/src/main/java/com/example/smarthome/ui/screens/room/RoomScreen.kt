@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.domain.calculateConsumption
 import com.example.smarthome.domain.deviceTypeName
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
@@ -97,9 +98,9 @@ fun RoomScreen(
 
     val totalOn = roomDevices.count { isDeviceOn(it.type.id, it.state) }
     val totalOff = roomDevices.size - totalOn
-    val totalW = roomDevices.filter { isDeviceOn(it.type.id, it.state) }
-        .sumOf { powerByType[it.type.id] ?: 0 }
-    val costoHora = costoKwh?.let { (totalW / 1000f) * it }
+    val consumption = calculateConsumption(roomDevices, powerByType, costoKwh)
+    val totalW = consumption.watts
+    val costoHora = consumption.costPerHour
 
     Scaffold(
         topBar = {

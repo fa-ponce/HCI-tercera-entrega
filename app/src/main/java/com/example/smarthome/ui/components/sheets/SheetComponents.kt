@@ -452,6 +452,73 @@ fun BaseDeviceSheet(
     }
 }
 
+/**
+ * Carga el estado real del dispositivo (vía [DeviceSheetActions.onLoad]) y devuelve
+ * el flag de carga para el sheet. En modo rutina no se consulta el backend: el sheet
+ * arranca con sus valores por defecto y nunca queda "cargando".
+ *
+ * Cada sheet pasa en [onLoaded] su propio parseo del estado —lo único que varía entre
+ * dispositivos—; el envoltorio de carga (el LaunchedEffect y el isLoading) es común y
+ * vive acá una sola vez en lugar de repetirse en cada sheet.
+ */
+@Composable
+fun rememberDeviceLoading(
+    device: DeviceDto,
+    routineMode: Boolean,
+    actions: DeviceSheetActions,
+    onLoaded: (DeviceDto) -> Unit
+): Boolean {
+    var isLoading by remember { mutableStateOf(!routineMode) }
+    LaunchedEffect(device.id) {
+        if (!routineMode) {
+            actions.onLoad?.invoke(device.id)?.let(onLoaded)
+            isLoading = false
+        }
+    }
+    return isLoading
+}
+
+/**
+ * Tarjeta con etiqueta + fila de chips de selección única. Es el patrón que el horno
+ * repetía idéntico tres veces (fuente de calor, grill, convección): mismos espaciados,
+ * mismo borde y mismo tamaño de texto. Cada chip muestra una opción de [options] (valor
+ * a string de recurso), resalta la que coincide con [selected] y, al tocarla, llama a
+ * [onSelect] con su valor.
+ *
+ * Ojo: otros sheets afinan su fila de chips a propósito (ancho con weight, scroll
+ * horizontal, FlowRow que envuelve, etc.), así que esos NO usan este helper; forzarlos
+ * acá obligaría a parametrizar tanto que el helper sería tan complejo como el call site.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SheetChipSelector(
+    label: String,
+    options: List<Pair<String, Int>>,
+    selected: String,
+    onSelect: (String) -> Unit
+) {
+    SheetSectionCard {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SheetSectionLabel(label)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { (value, labelRes) ->
+                    FilterChip(
+                        selected = selected == value,
+                        onClick = { onSelect(value) },
+                        label = { Text(stringResource(labelRes), style = MaterialTheme.typography.labelSmall) },
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = selected == value,
+                            selectedBorderColor = MaterialTheme.colorScheme.primary,
+                            selectedBorderWidth = 1.5.dp
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun <T> PillGroup(
     options: List<T>,

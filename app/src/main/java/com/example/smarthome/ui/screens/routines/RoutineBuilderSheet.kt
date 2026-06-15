@@ -164,7 +164,6 @@ fun RoutineBuilderSheet(
                         ?: emptyMap()
                     byDevice.getOrPut(id) { mutableListOf() }.add(a.actionName to paramsMap)
                 }
-                // Build entries
                 val routineDeviceParams = routine.metadata?.let { m ->
                     @Suppress("UNCHECKED_CAST")
                     (m as? RoutineMetaDto)
@@ -279,7 +278,6 @@ fun RoutineBuilderSheet(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            // Header
             item {
                 Text(
                     if (isEditing) stringResource(R.string.routine_edit) else stringResource(R.string.routine_new),
@@ -288,7 +286,6 @@ fun RoutineBuilderSheet(
                 )
             }
 
-            // Name
             item {
                 OutlinedTextField(
                     value = name,
@@ -302,7 +299,6 @@ fun RoutineBuilderSheet(
                 )
             }
 
-            // Description
             item {
                 OutlinedTextField(
                     value = description,
@@ -314,7 +310,6 @@ fun RoutineBuilderSheet(
                 )
             }
 
-            // Trigger type
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.routine_trigger_type), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -620,7 +615,6 @@ private fun SelectedDeviceCard(
                 }
             }
 
-            // Duration row
             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             Row(
                 modifier = Modifier

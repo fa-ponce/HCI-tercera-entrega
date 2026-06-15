@@ -172,7 +172,6 @@ fun EditRoomDialog(
                 }
                 Spacer(Modifier.height(24.dp))
 
-                // Footer
                 if (confirmingDelete) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

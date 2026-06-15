@@ -25,7 +25,6 @@ fun GrifoSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var isOpen by remember { mutableStateOf(false) }
     var quantity by remember { mutableIntStateOf(1) }
     var unit by remember { mutableStateOf("mililitro") }
@@ -40,14 +39,9 @@ fun GrifoSheet(
         "litro" to R.string.sheet_unit_l
     )
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                isOpen = d.state["status"] == "opened"
-                selectedAction = if (isOpen) "open" else "close"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        isOpen = d.state["status"] == "opened"
+        selectedAction = if (isOpen) "open" else "close"
     }
 
     BaseDeviceSheet(
@@ -69,7 +63,6 @@ fun GrifoSheet(
             }
         } else null
     ) {
-        // Status badge
         if (!routineMode) {
             Surface(
                 color = if (isOpen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
@@ -85,7 +78,6 @@ fun GrifoSheet(
             }
         }
 
-        // Open / Close
         SheetSectionCard {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 val openActive = if (routineMode) selectedAction == "open" else isOpen
@@ -126,12 +118,10 @@ fun GrifoSheet(
             }
         }
 
-        // Dispense section
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_dispense))
 
-                // Quantity
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(stringResource(R.string.sheet_quantity), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -155,7 +145,6 @@ fun GrifoSheet(
                     }
                 }
 
-                // Unit
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(stringResource(R.string.sheet_unit), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
@@ -171,7 +160,6 @@ fun GrifoSheet(
                     }
                 }
 
-                // Dispense button
                 val dispensedFmt = stringResource(R.string.sheet_dispensed_fmt, quantity, unit)
                 Button(
                     onClick = {

@@ -27,20 +27,14 @@ fun PersianaSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var level by remember { mutableFloatStateOf(if (routineMode) 100f else 0f) }
     var selectedAction by remember { mutableStateOf("up") }
     var movementStatus by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                level = ((d.state["level"] as? Double)?.toFloat() ?: 0f)
-                movementStatus = d.state["status"] as? String
-                selectedAction = if (level > 0) "up" else "down"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        level = ((d.state["level"] as? Double)?.toFloat() ?: 0f)
+        movementStatus = d.state["status"] as? String
+        selectedAction = if (level > 0) "up" else "down"
     }
 
     BaseDeviceSheet(
@@ -77,7 +71,6 @@ fun PersianaSheet(
             }
         }
 
-        // Open / Close buttons
         SheetSectionCard {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 val upActive = if (routineMode) selectedAction == "up" else level > 0f
@@ -125,7 +118,6 @@ fun PersianaSheet(
             }
         }
 
-        // Level slider
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

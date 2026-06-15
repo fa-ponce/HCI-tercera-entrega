@@ -25,7 +25,6 @@ fun AspiradoraSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var status by remember { mutableStateOf("docked") }
     var mode by remember { mutableStateOf("vacuum") }
     var selectedAction by remember { mutableStateOf("start") }
@@ -37,15 +36,10 @@ fun AspiradoraSheet(
     )
     val modoOpts = listOf("vacuum" to R.string.sheet_vacuum, "mop" to R.string.sheet_mop)
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                status = (d.state["status"] as? String) ?: "docked"
-                mode = (d.state["mode"] as? String) ?: "vacuum"
-                selectedAction = if (status == "docked" || status == "inactive") "start" else "dock"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        status = (d.state["status"] as? String) ?: "docked"
+        mode = (d.state["mode"] as? String) ?: "vacuum"
+        selectedAction = if (status == "docked" || status == "inactive") "start" else "dock"
     }
 
     BaseDeviceSheet(
@@ -66,7 +60,6 @@ fun AspiradoraSheet(
             }
         } else null
     ) {
-        // Status badge
         if (!routineMode) {
             val statusColor = when (status) {
                 "active" -> MaterialTheme.colorScheme.primaryContainer
@@ -84,12 +77,10 @@ fun AspiradoraSheet(
             }
         }
 
-        // Control buttons
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_controls))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    // Start
                     val startActive = if (routineMode) selectedAction == "start" else status == "active"
                     Surface(
                         onClick = {
@@ -113,7 +104,6 @@ fun AspiradoraSheet(
                         }
                     }
 
-                    // Pause (only in normal mode)
                     if (!routineMode) {
                         Surface(
                             onClick = {
@@ -136,7 +126,6 @@ fun AspiradoraSheet(
                         }
                     }
 
-                    // Dock
                     val dockActive = if (routineMode) selectedAction == "dock" else status == "docked"
                     Surface(
                         onClick = {
@@ -163,7 +152,6 @@ fun AspiradoraSheet(
             }
         }
 
-        // Mode
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_mode))

@@ -25,7 +25,6 @@ fun HeladeraSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var fridgeTemp by remember { mutableFloatStateOf(4f) }
     var freezerTemp by remember { mutableFloatStateOf(-8f) }
     var modo by remember { mutableStateOf("normal") }
@@ -36,16 +35,11 @@ fun HeladeraSheet(
         Triple("vacaciones", R.string.sheet_mode_vacation, R.string.sheet_mode_vacation_desc)
     )
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                val s = d.state
-                fridgeTemp = ((s["temperature"] as? Double)?.toFloat() ?: 4f)
-                freezerTemp = ((s["freezerTemperature"] as? Double)?.toFloat() ?: -8f)
-                modo = (s["mode"] as? String) ?: "normal"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        val s = d.state
+        fridgeTemp = ((s["temperature"] as? Double)?.toFloat() ?: 4f)
+        freezerTemp = ((s["freezerTemperature"] as? Double)?.toFloat() ?: -8f)
+        modo = (s["mode"] as? String) ?: "normal"
     }
 
     BaseDeviceSheet(
@@ -67,7 +61,6 @@ fun HeladeraSheet(
             }
         } else null
     ) {
-        // Fridge temperature
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -89,7 +82,6 @@ fun HeladeraSheet(
             }
         }
 
-        // Freezer temperature
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -112,7 +104,6 @@ fun HeladeraSheet(
             }
         }
 
-        // Mode
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_operation_mode))

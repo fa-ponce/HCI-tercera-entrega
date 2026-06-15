@@ -204,7 +204,6 @@ fun HomeDetailContent(
                 }
             }
 
-            // Stats
             item(span = fullSpan) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     StatBox(

@@ -25,21 +25,15 @@ fun PuertaSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var isOpen by remember { mutableStateOf(false) }
     var isLocked by remember { mutableStateOf(false) }
     var selectedDoor by remember { mutableStateOf("close") }
     var selectedLock by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                isOpen = d.state["status"] == "opened"
-                isLocked = d.state["lock"] == "locked"
-                selectedDoor = if (isOpen) "open" else "close"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        isOpen = d.state["status"] == "opened"
+        isLocked = d.state["lock"] == "locked"
+        selectedDoor = if (isOpen) "open" else "close"
     }
 
     BaseDeviceSheet(
@@ -79,7 +73,6 @@ fun PuertaSheet(
             }
         }
 
-        // Actions
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_actions))

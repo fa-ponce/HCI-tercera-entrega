@@ -30,7 +30,6 @@ fun LamparaSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var isOn by remember { mutableStateOf(false) }
     var brightness by remember { mutableFloatStateOf(100f) }
     var hue by remember { mutableFloatStateOf(0f) }
@@ -40,20 +39,15 @@ fun LamparaSheet(
         Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation / 100f, 1f)))
     }
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                val state = d.state
-                isOn = state["status"] == "on"
-                brightness = ((state["brightness"] as? Double)?.toFloat()
-                    ?: (state["brightness"] as? Number)?.toFloat() ?: 100f)
-                val colorStr = (state["color"] as? String) ?: "#ffffff"
-                parseHexToHsv(colorStr)?.let { hsv ->
-                    hue = hsv[0]
-                    saturation = hsv[1] * 100f
-                }
-            }
-            isLoading = false
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        val state = d.state
+        isOn = state["status"] == "on"
+        brightness = ((state["brightness"] as? Double)?.toFloat()
+            ?: (state["brightness"] as? Number)?.toFloat() ?: 100f)
+        val colorStr = (state["color"] as? String) ?: "#ffffff"
+        parseHexToHsv(colorStr)?.let { hsv ->
+            hue = hsv[0]
+            saturation = hsv[1] * 100f
         }
     }
 
@@ -79,7 +73,6 @@ fun LamparaSheet(
             }
         } else null
     ) {
-        // Power toggle
         SheetSectionCard {
             Row(
                 Modifier.fillMaxWidth(),
@@ -101,7 +94,6 @@ fun LamparaSheet(
             }
         }
 
-        // Color picker
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(stringResource(R.string.sheet_color), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -150,7 +142,6 @@ fun LamparaSheet(
             }
         }
 
-        // Brightness
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

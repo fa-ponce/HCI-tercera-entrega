@@ -26,7 +26,6 @@ fun AcSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var isOn by remember { mutableStateOf(false) }
     var temperature by remember { mutableFloatStateOf(24f) }
     var mode by remember { mutableStateOf("frio") }
@@ -39,19 +38,14 @@ fun AcSheet(
     val horizontalOpts = listOf("auto", "-90", "-45", "0", "45", "90")
     val fanOpts = listOf("auto", "25", "50", "75", "100")
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                val s = d.state
-                isOn = s["status"] == "on"
-                temperature = ((s["temperature"] as? Double)?.toFloat() ?: 24f)
-                mode = (s["mode"] as? String) ?: "frio"
-                verticalSwing = (s["verticalSwing"] as? String) ?: "auto"
-                horizontalSwing = (s["horizontalSwing"] as? String) ?: "auto"
-                fanSpeed = (s["fanSpeed"] as? String) ?: "auto"
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        val s = d.state
+        isOn = s["status"] == "on"
+        temperature = ((s["temperature"] as? Double)?.toFloat() ?: 24f)
+        mode = (s["mode"] as? String) ?: "frio"
+        verticalSwing = (s["verticalSwing"] as? String) ?: "auto"
+        horizontalSwing = (s["horizontalSwing"] as? String) ?: "auto"
+        fanSpeed = (s["fanSpeed"] as? String) ?: "auto"
     }
 
     BaseDeviceSheet(
@@ -76,7 +70,6 @@ fun AcSheet(
             }
         } else null
     ) {
-        // Power
         SheetSectionCard {
             Row(
                 Modifier.fillMaxWidth(),
@@ -91,7 +84,6 @@ fun AcSheet(
             }
         }
 
-        // Temperature
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -113,7 +105,6 @@ fun AcSheet(
             }
         }
 
-        // Mode
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_mode))
@@ -140,7 +131,6 @@ fun AcSheet(
             }
         }
 
-        // Vertical swing
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_vertical_blades))
@@ -160,7 +150,6 @@ fun AcSheet(
             }
         }
 
-        // Horizontal swing
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_horizontal_blades))
@@ -180,7 +169,6 @@ fun AcSheet(
             }
         }
 
-        // Fan speed
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_fan_speed))

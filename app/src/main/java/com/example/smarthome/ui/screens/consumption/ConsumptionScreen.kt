@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
 import com.example.smarthome.data.api.models.DeviceDto
+import com.example.smarthome.domain.calculateConsumption
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
@@ -86,10 +87,13 @@ fun ConsumptionScreen(
 
     val allDevices = remember(devices) { devices.values.flatten() }
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
-    val totalW = remember(onDevices, powerByType) { onDevices.sumOf { powerByType[it.type.id] ?: 0 } }
-    val kwhPerHour = totalW / 1000f
-    val costoHora = costoKwh?.let { it * kwhPerHour }
-    val costoDia = costoHora?.let { it * 24f }
+    val consumption = remember(allDevices, powerByType, costoKwh) {
+        calculateConsumption(allDevices, powerByType, costoKwh)
+    }
+    val totalW = consumption.watts
+    val kwhPerHour = consumption.kwhPerHour
+    val costoHora = consumption.costPerHour
+    val costoDia = consumption.costPerDay
 
     data class DeviceConsumption(val name: String, val watts: Int, val isOn: Boolean)
     data class HomeConsumption(

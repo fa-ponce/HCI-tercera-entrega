@@ -496,4 +496,18 @@
     <string name="err_account_not_verified">Tu cuenta no está verificada. Ingresá el código que te enviamos por correo (o tocá \"Reenviar código\").</string>
     <string name="err_code_invalid">Código inválido</string>
     <string name="err_invalid_credentials">Email o contraseña incorrectos.</string>
+
+    <!-- Valores numéricos / unidades, iguales en ambos idiomas. Se listan en el locale
+         es para que cada string tenga su par y no caigan al inglés por defecto. -->
+    <string name="routine_time_placeholder">08:00</string>
+    <string name="sheet_brightness_min">0%</string>
+    <string name="sheet_brightness_max">100%</string>
+    <string name="sheet_ac_temp_min">18°C</string>
+    <string name="sheet_ac_temp_max">38°C</string>
+    <string name="sheet_oven_temp_min">90°C</string>
+    <string name="sheet_oven_temp_max">230°C</string>
+    <string name="sheet_fridge_temp_min">2°C</string>
+    <string name="sheet_fridge_temp_max">8°C</string>
+    <string name="sheet_freezer_temp_min">-20°C</string>
+    <string name="sheet_freezer_temp_max">-8°C</string>
 </resources>

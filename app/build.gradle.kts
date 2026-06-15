@@ -48,6 +48,20 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Guardrail contra código/recursos muertos. En la entrega anterior penalizaron la
+    // acumulación de código inactivo (funciones, recursos y estilos sin usar), así que
+    // dejamos a lint vigilándolo: los recursos/IDs sin usar pasan a ser ERROR y cortan
+    // el build. El baseline congela los avisos preexistentes que no son código muerto
+    // (correcciones específicas del framework), de modo que `./gradlew lintDebug` sólo
+    // falla cuando se INTRODUCE algo nuevo sin usar. Para regenerarlo: borrar el archivo.
+    lint {
+        baseline = file("lint-baseline.xml")
+        error += setOf("UnusedResources", "UnusedIds")
+        abortOnError = true
+        // Avisos de "hay una versión más nueva de la dependencia": ruido, no calidad.
+        disable += setOf("NewerVersionAvailable", "GradleDependency", "AndroidGradlePluginVersion")
+    }
 }
 
 dependencies {

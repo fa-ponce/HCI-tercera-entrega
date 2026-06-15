@@ -166,7 +166,6 @@ fun HistoryScreen(
                 )
             }
 
-            // Info
             item {
                 Text(
                     stringResource(R.string.history_records, filtered.size) +

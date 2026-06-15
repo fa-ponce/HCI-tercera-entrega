@@ -26,7 +26,6 @@ fun ParlanteSheet(
     homes: List<HomeDto> = emptyList(),
     rooms: Map<String, List<RoomDto>> = emptyMap()
 ) {
-    var isLoading by remember { mutableStateOf(!routineMode) }
     var status by remember { mutableStateOf("stopped") }
     var volume by remember { mutableIntStateOf(5) }
     var genre by remember { mutableStateOf("pop") }
@@ -45,19 +44,14 @@ fun ParlanteSheet(
     val isPaused = status == "paused"
     val isStopped = status == "stopped"
 
-    LaunchedEffect(device.id) {
-        if (!routineMode) {
-            actions.onLoad?.invoke(device.id)?.let { d ->
-                val s = d.state
-                status = (s["status"] as? String) ?: "stopped"
-                volume = ((s["volume"] as? Double)?.toInt() ?: 5).coerceIn(0, 10)
-                genre = (s["genre"] as? String) ?: "pop"
-                val song = s["song"] as? Map<*, *>
-                songTitle = (song?.get("title") as? String) ?: ""
-                songArtist = (song?.get("artist") as? String) ?: ""
-            }
-            isLoading = false
-        }
+    val isLoading = rememberDeviceLoading(device, routineMode, actions) { d ->
+        val s = d.state
+        status = (s["status"] as? String) ?: "stopped"
+        volume = ((s["volume"] as? Double)?.toInt() ?: 5).coerceIn(0, 10)
+        genre = (s["genre"] as? String) ?: "pop"
+        val song = s["song"] as? Map<*, *>
+        songTitle = (song?.get("title") as? String) ?: ""
+        songArtist = (song?.get("artist") as? String) ?: ""
     }
 
     BaseDeviceSheet(
@@ -80,7 +74,6 @@ fun ParlanteSheet(
             }
         } else null
     ) {
-        // Now playing (normal mode only)
         if (!routineMode && songTitle.isNotEmpty()) {
             Surface(
                 color = MaterialTheme.colorScheme.inverseSurface,
@@ -100,7 +93,6 @@ fun ParlanteSheet(
             }
         }
 
-        // Transport controls
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_playback))
@@ -109,7 +101,6 @@ fun ParlanteSheet(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Previous
                     IconButton(
                         onClick = {
                             if (!routineMode) actions.onExecuteAction("previousSong", emptyMap(), null)
@@ -117,7 +108,6 @@ fun ParlanteSheet(
                         enabled = routineMode || isPlaying
                     ) { Icon(Icons.Rounded.SkipPrevious, stringResource(R.string.sheet_previous), Modifier.size(28.dp)) }
 
-                    // Stop
                     IconButton(
                         onClick = {
                             if (routineMode) { status = "stopped" } else {
@@ -128,7 +118,6 @@ fun ParlanteSheet(
                         enabled = routineMode || !isStopped
                     ) { Icon(Icons.Rounded.Stop, stringResource(R.string.sheet_stop), Modifier.size(28.dp), tint = MaterialTheme.colorScheme.error) }
 
-                    // Play / Resume
                     FilledIconButton(
                         onClick = {
                             val action = if (isPaused) "resume" else "play"
@@ -141,7 +130,6 @@ fun ParlanteSheet(
                         enabled = routineMode || !isPlaying
                     ) { Icon(Icons.Rounded.PlayArrow, stringResource(R.string.sheet_play), Modifier.size(32.dp)) }
 
-                    // Pause
                     IconButton(
                         onClick = {
                             if (routineMode) { status = "paused" } else {
@@ -152,7 +140,6 @@ fun ParlanteSheet(
                         enabled = routineMode || isPlaying
                     ) { Icon(Icons.Rounded.Pause, stringResource(R.string.sheet_pause), Modifier.size(28.dp), tint = MaterialTheme.colorScheme.tertiary) }
 
-                    // Next
                     IconButton(
                         onClick = {
                             if (!routineMode) actions.onExecuteAction("nextSong", emptyMap(), null)
@@ -163,7 +150,6 @@ fun ParlanteSheet(
             }
         }
 
-        // Volume
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -203,7 +189,6 @@ fun ParlanteSheet(
             }
         }
 
-        // Genre
         SheetSectionCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SheetSectionLabel(stringResource(R.string.sheet_genre))
