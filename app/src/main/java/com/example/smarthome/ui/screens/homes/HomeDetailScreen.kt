@@ -409,9 +409,7 @@ fun HomeDetailContent(
     }
 }
 
-private val roomTypes = listOf(
-    "Living", "Dormitorio", "Cocina", "Baño", "Garaje", "Estudio", "Comedor", "Lavadero"
-)
+// Los tipos de habitación viven en ROOM_TYPES (NewRoomDialog.kt), mismo paquete.
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -422,7 +420,7 @@ private fun AddRoomDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
-    var selectedType by remember { mutableStateOf(roomTypes[0]) }
+    var selectedType by remember { mutableStateOf(ROOM_TYPES[0]) }
     var typeExpanded by remember { mutableStateOf(false) }
     var floor by remember { mutableStateOf(1) }
     var isSaving by remember { mutableStateOf(false) }
@@ -454,7 +452,7 @@ private fun AddRoomDialog(
                     onExpandedChange = { typeExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedType,
+                        value = roomTypeLabel(selectedType),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.common_type)) },
@@ -465,9 +463,9 @@ private fun AddRoomDialog(
                         expanded = typeExpanded,
                         onDismissRequest = { typeExpanded = false }
                     ) {
-                        roomTypes.forEach { type ->
+                        ROOM_TYPES.forEach { type ->
                             DropdownMenuItem(
-                                text = { Text(type) },
+                                text = { Text(roomTypeLabel(type)) },
                                 onClick = { selectedType = type; typeExpanded = false }
                             )
                         }

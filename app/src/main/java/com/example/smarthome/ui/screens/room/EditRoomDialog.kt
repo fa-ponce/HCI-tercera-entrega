@@ -45,6 +45,7 @@ import com.example.smarthome.R
 import com.example.smarthome.data.api.models.HomeDto
 import com.example.smarthome.data.api.models.RoomDto
 import com.example.smarthome.ui.screens.homes.ROOM_TYPES
+import com.example.smarthome.ui.screens.homes.roomTypeLabel
 
 // Mismos colores del botón/confirmación de eliminar de la web (.btn-delete)
 private val DeleteRed = Color(0xFF8B1A1A)
@@ -127,7 +128,7 @@ fun EditRoomDialog(
                 // Tipo de habitación
                 ExposedDropdownMenuBox(expanded = typeExpanded, onExpandedChange = { typeExpanded = it }) {
                     OutlinedTextField(
-                        value = selectedType,
+                        value = roomTypeLabel(selectedType),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.room_type_label)) },
@@ -137,7 +138,7 @@ fun EditRoomDialog(
                     )
                     ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
                         ROOM_TYPES.forEach { type ->
-                            DropdownMenuItem(text = { Text(type) }, onClick = { selectedType = type; typeExpanded = false })
+                            DropdownMenuItem(text = { Text(roomTypeLabel(type)) }, onClick = { selectedType = type; typeExpanded = false })
                         }
                     }
                 }

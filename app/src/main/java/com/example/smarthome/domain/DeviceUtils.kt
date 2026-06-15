@@ -74,6 +74,25 @@ fun roomTypeIcon(type: String?): ImageVector = when (type) {
     else        -> Icons.Rounded.MeetingRoom
 }
 
+/**
+ * Etiqueta localizada para un tipo de habitación. El valor guardado en la API
+ * sigue siendo el español canónico ("Living", "Dormitorio", ...); esto solo
+ * traduce lo que se muestra. Devuelve null si el tipo no es uno conocido (se
+ * muestra el valor crudo como fallback).
+ */
+@StringRes
+fun roomTypeLabelRes(type: String?): Int? = when (type) {
+    "Living"     -> R.string.room_type_living
+    "Dormitorio" -> R.string.room_type_bedroom
+    "Cocina"     -> R.string.room_type_kitchen
+    "Baño"       -> R.string.room_type_bathroom
+    "Garaje"     -> R.string.room_type_garage
+    "Estudio"    -> R.string.room_type_study
+    "Comedor"    -> R.string.room_type_dining
+    "Lavadero"   -> R.string.room_type_laundry
+    else         -> null
+}
+
 /** Recurso de string del nombre amigable del tipo de dispositivo, para subtítulos y etiquetas. */
 @StringRes
 fun deviceTypeName(typeId: String): Int = when (typeId) {

@@ -29,10 +29,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
 import com.example.smarthome.data.api.models.HomeDto
+import com.example.smarthome.domain.roomTypeLabelRes
 
 internal val ROOM_TYPES = listOf(
     "Living", "Dormitorio", "Cocina", "Baño", "Garaje", "Estudio", "Comedor", "Lavadero"
 )
+
+/** Etiqueta visible (traducida) de un tipo de habitación; si no es conocido, el valor crudo. */
+@Composable
+internal fun roomTypeLabel(type: String?): String =
+    roomTypeLabelRes(type)?.let { stringResource(it) } ?: (type ?: "")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +76,7 @@ internal fun NewRoomDialog(
 
                 ExposedDropdownMenuBox(expanded = typeExpanded, onExpandedChange = { typeExpanded = it }) {
                     OutlinedTextField(
-                        value = selectedType,
+                        value = roomTypeLabel(selectedType),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.common_type)) },
@@ -80,7 +86,7 @@ internal fun NewRoomDialog(
                     )
                     ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
                         ROOM_TYPES.forEach { type ->
-                            DropdownMenuItem(text = { Text(type) }, onClick = { selectedType = type; typeExpanded = false })
+                            DropdownMenuItem(text = { Text(roomTypeLabel(type)) }, onClick = { selectedType = type; typeExpanded = false })
                         }
                     }
                 }

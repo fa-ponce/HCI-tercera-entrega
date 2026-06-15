@@ -232,6 +232,16 @@
     <string name="action_playlist_viewed">Playlist consultada</string>
     <string name="action_location_set">Ubicación ajustada</string>
 
+    <!-- Tipos de habitación (etiqueta visible; el valor guardado en la API es el español canónico). -->
+    <string name="room_type_living">Living</string>
+    <string name="room_type_bedroom">Dormitorio</string>
+    <string name="room_type_kitchen">Cocina</string>
+    <string name="room_type_bathroom">Baño</string>
+    <string name="room_type_garage">Garaje</string>
+    <string name="room_type_study">Estudio</string>
+    <string name="room_type_dining">Comedor</string>
+    <string name="room_type_laundry">Lavadero</string>
+
     <!-- Room screen -->
     <string name="room_devices_count">%1$d dispositivos</string>
     <string name="room_status_fmt">%1$d encendidos · %2$s</string>
