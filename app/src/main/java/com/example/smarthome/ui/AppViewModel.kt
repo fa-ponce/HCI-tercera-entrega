@@ -36,6 +36,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -66,6 +69,12 @@ class AppViewModel(
 
     private val _deviceTypes = MutableStateFlow<List<DeviceTypeDto>>(emptyList())
     val deviceTypes: StateFlow<List<DeviceTypeDto>> = _deviceTypes.asStateFlow()
+
+    // Consumo (watts) por tipo de dispositivo, tomado de la API (campo powerUsage).
+    // Antes estaba hardcodeado en una tabla; ahora son los valores reales del backend.
+    val powerByType: StateFlow<Map<String, Int>> = _deviceTypes
+        .map { types -> types.associate { it.id to it.powerUsage } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -130,6 +139,8 @@ class AppViewModel(
     fun loadAll() = viewModelScope.launch {
         _isLoading.value = true
         _error.value = null
+        // Tipos de dispositivo (incluye el consumo real en watts por tipo).
+        loadDeviceTypes()
         try {
             // Importante: el async NO debe lanzar la excepción adentro. Si lo hace, el
             // fallo del hijo escapa el try/catch (concurrencia estructurada) y crashea la

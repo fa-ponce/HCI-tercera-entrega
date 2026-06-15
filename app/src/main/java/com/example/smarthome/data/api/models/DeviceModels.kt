@@ -17,7 +17,9 @@ data class DeviceTypeRef(
 
 data class DeviceTypeDto(
     val id: String,
-    val name: String
+    val name: String,
+    // Consumo real en watts que reporta la API por cada tipo de dispositivo.
+    val powerUsage: Int = 0
 )
 
 data class DeviceRequest(

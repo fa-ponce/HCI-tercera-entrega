@@ -89,7 +89,6 @@ import com.example.smarthome.data.api.models.DeviceDto
 import com.example.smarthome.data.api.models.LogEntryDto
 import com.example.smarthome.data.api.models.RoutineDto
 import com.example.smarthome.domain.canToggle
-import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.deviceIcon
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.logActionLabelRes
@@ -139,6 +138,7 @@ fun HomeScreen(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val powerByType by appViewModel.powerByType.collectAsState()
     val routines by appViewModel.routines.collectAsState()
     val isLoading by appViewModel.isLoading.collectAsState()
     val loadError by appViewModel.error.collectAsState()
@@ -149,7 +149,7 @@ fun HomeScreen(
     val allDevices = remember(devices) { devices.values.flatten() }
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
     val offDevices = remember(allDevices) { allDevices.filter { !isDeviceOn(it.type.id, it.state) } }
-    val totalW = remember(onDevices) { onDevices.sumOf { deviceConsumptionW(it.type.id) } }
+    val totalW = remember(onDevices, powerByType) { onDevices.sumOf { powerByType[it.type.id] ?: 0 } }
     val deviceById = remember(allDevices) { allDevices.associateBy { it.id } }
     val routineById = remember(routines) { routines.associateBy { it.id } }
 
@@ -1097,8 +1097,9 @@ private fun defaultShortcutTokens(
     return r + d
 }
 
-private fun formatPower(w: Int): String =
-    if (w >= 1000) "${"%.1f".format(w / 1000f)} kW" else "$w W"
+// Mostramos los watts exactos, sin convertir a kW: así 1590 se ve "1590 W"
+// y no "1.6 kW" (que redondeaba y parecía 1600).
+private fun formatPower(w: Int): String = "$w W"
 
 private fun formatTimestamp(ts: String?): Pair<String, String> {
     if (ts == null) return Pair("—", "—")

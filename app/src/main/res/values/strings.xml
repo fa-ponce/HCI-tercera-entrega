@@ -214,6 +214,24 @@
     <string name="action_temperature_set">Temp. set</string>
     <string name="action_color_set">Color set</string>
     <string name="action_volume_set">Volume set</string>
+    <string name="action_mode_set">Mode set</string>
+    <string name="action_vertical_swing_set">Vertical swing set</string>
+    <string name="action_horizontal_swing_set">Horizontal swing set</string>
+    <string name="action_fan_speed_set">Fan speed set</string>
+    <string name="action_security_code_changed">Security code changed</string>
+    <string name="action_armed_stay">Armed (stay)</string>
+    <string name="action_level_set">Level set</string>
+    <string name="action_dispensed">Dispensed</string>
+    <string name="action_heat_set">Heat mode set</string>
+    <string name="action_grill_set">Grill set</string>
+    <string name="action_convection_set">Convection set</string>
+    <string name="action_freezer_temp_set">Freezer temp. set</string>
+    <string name="action_resumed">Resumed</string>
+    <string name="action_next_song">Next song</string>
+    <string name="action_previous_song">Previous song</string>
+    <string name="action_genre_set">Genre set</string>
+    <string name="action_playlist_viewed">Playlist viewed</string>
+    <string name="action_location_set">Location set</string>
 
     <!-- Room screen -->
     <string name="room_devices_count">%1$d devices</string>

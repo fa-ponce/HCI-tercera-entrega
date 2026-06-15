@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.smarthome.R
-import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.ui.AppViewModel
 import com.example.smarthome.ui.UserPreferencesViewModel
@@ -71,27 +70,28 @@ fun ConsumptionScreen(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val powerByType by appViewModel.powerByType.collectAsState()
     val costoKwh by prefsViewModel.costoKwh.collectAsState()
     val isLoading by appViewModel.isLoading.collectAsState()
     val error by appViewModel.error.collectAsState()
 
     val allDevices = remember(devices) { devices.values.flatten() }
     val onDevices = remember(allDevices) { allDevices.filter { isDeviceOn(it.type.id, it.state) } }
-    val totalW = remember(onDevices) { onDevices.sumOf { deviceConsumptionW(it.type.id) } }
+    val totalW = remember(onDevices, powerByType) { onDevices.sumOf { powerByType[it.type.id] ?: 0 } }
     val kwhPerHour = totalW / 1000f
     val costoHora = costoKwh?.let { it * kwhPerHour }
     val costoDia = costoHora?.let { it * 24f }
 
     data class HomeConsumption(val name: String, val watts: Int, val activeDevices: Int)
 
-    val perHome = remember(homes, rooms, devices) {
+    val perHome = remember(homes, rooms, devices, powerByType) {
         homes.map { home ->
             val homeDevices = (rooms[home.id] ?: emptyList())
                 .flatMap { devices[it.id] ?: emptyList() }
             val onHomeDevices = homeDevices.filter { isDeviceOn(it.type.id, it.state) }
             HomeConsumption(
                 name = home.name,
-                watts = onHomeDevices.sumOf { deviceConsumptionW(it.type.id) },
+                watts = onHomeDevices.sumOf { powerByType[it.type.id] ?: 0 },
                 activeDevices = onHomeDevices.size
             )
         }
@@ -149,8 +149,7 @@ fun ConsumptionScreen(
                     ConsumptionStatCard(
                         icon = Icons.Rounded.BarChart,
                         title = stringResource(R.string.consumption_current),
-                        value = if (totalW >= 1000) "${"%.2f".format(totalW / 1000f)} kW"
-                                else "$totalW W",
+                        value = "$totalW W",
                         subtitle = stringResource(R.string.consumption_devices_on, onDevices.size),
                         modifier = Modifier.weight(1f)
                     )
@@ -230,8 +229,7 @@ fun ConsumptionScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(
-                                        if (item.watts >= 1000) "${"%.1f".format(item.watts / 1000f)} kW"
-                                        else "${item.watts} W",
+                                        "${item.watts} W",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary

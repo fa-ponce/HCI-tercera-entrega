@@ -65,7 +65,6 @@ import androidx.navigation.NavHostController
 import com.example.smarthome.R
 import com.example.smarthome.ServiceLocator
 import com.example.smarthome.data.api.models.DeviceDto
-import com.example.smarthome.domain.deviceConsumptionW
 import com.example.smarthome.domain.isDeviceOn
 import com.example.smarthome.domain.roomTypeIcon
 import com.example.smarthome.ui.AppViewModel
@@ -107,6 +106,7 @@ fun HomeDetailContent(
     val homes by appViewModel.homes.collectAsState()
     val rooms by appViewModel.rooms.collectAsState()
     val devices by appViewModel.devices.collectAsState()
+    val powerByType by appViewModel.powerByType.collectAsState()
 
     val home = homes.find { it.id == homeId }
     val homeRooms = rooms[homeId] ?: emptyList()
@@ -118,7 +118,7 @@ fun HomeDetailContent(
     val allHomeDevices = homeDeviceItems.map { it.first }
     val totalOn = allHomeDevices.count { isDeviceOn(it.type.id, it.state) }
     val totalW = allHomeDevices.filter { isDeviceOn(it.type.id, it.state) }
-        .sumOf { deviceConsumptionW(it.type.id) }
+        .sumOf { powerByType[it.type.id] ?: 0 }
 
     var selectedDevice by remember { mutableStateOf<DeviceDto?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -220,7 +220,7 @@ fun HomeDetailContent(
                         modifier = Modifier.weight(1f)
                     )
                     StatBox(
-                        value = if (totalW >= 1000) "${"%.1f".format(totalW / 1000f)}kW" else "${totalW}W",
+                        value = "${totalW} W",
                         label = stringResource(R.string.nav_consumption),
                         icon = Icons.Rounded.Bolt,
                         accent = Color(0xFFC9A227),

@@ -114,19 +114,26 @@ fun logActionLabelRes(event: String?): Int? = when (event) {
     "setTemperature" -> R.string.action_temperature_set
     "setColor"      -> R.string.action_color_set
     "setVolume"     -> R.string.action_volume_set
+    "setMode"       -> R.string.action_mode_set
+    "setVerticalSwing"   -> R.string.action_vertical_swing_set
+    "setHorizontalSwing" -> R.string.action_horizontal_swing_set
+    "setFanSpeed"   -> R.string.action_fan_speed_set
+    "changeSecurityCode" -> R.string.action_security_code_changed
+    "armStay"       -> R.string.action_armed_stay
+    "setLevel"      -> R.string.action_level_set
+    "dispense"      -> R.string.action_dispensed
+    "setHeat"       -> R.string.action_heat_set
+    "setGrill"      -> R.string.action_grill_set
+    "setConvection" -> R.string.action_convection_set
+    "setFreezerTemperature" -> R.string.action_freezer_temp_set
+    "resume"        -> R.string.action_resumed
+    "nextSong"      -> R.string.action_next_song
+    "previousSong"  -> R.string.action_previous_song
+    "setGenre"      -> R.string.action_genre_set
+    "getPlaylist"   -> R.string.action_playlist_viewed
+    "setLocation"   -> R.string.action_location_set
     else            -> null
 }
 
-fun deviceConsumptionW(typeId: String): Int = when (typeId) {
-    DeviceTypes.LAMPARA    -> 10
-    DeviceTypes.AC         -> 1500
-    DeviceTypes.ALARMA     -> 5
-    DeviceTypes.PERSIANA   -> 50
-    DeviceTypes.PUERTA     -> 20
-    DeviceTypes.GRIFO      -> 10
-    DeviceTypes.HORNO      -> 2000
-    DeviceTypes.PARLANTE   -> 30
-    DeviceTypes.ASPIRADORA -> 1200
-    DeviceTypes.HELADERA   -> 150
-    else                   -> 0
-}
+// El consumo (watts) por tipo de dispositivo ya NO está hardcodeado: se toma del
+// campo `powerUsage` que devuelve la API (ver AppViewModel.powerByType).

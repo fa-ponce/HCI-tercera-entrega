@@ -213,6 +213,24 @@
     <string name="action_temperature_set">Temp. ajustada</string>
     <string name="action_color_set">Color ajustado</string>
     <string name="action_volume_set">Volumen ajustado</string>
+    <string name="action_mode_set">Modo ajustado</string>
+    <string name="action_vertical_swing_set">Oscilación vertical ajustada</string>
+    <string name="action_horizontal_swing_set">Oscilación horizontal ajustada</string>
+    <string name="action_fan_speed_set">Velocidad de ventilador ajustada</string>
+    <string name="action_security_code_changed">Código de seguridad cambiado</string>
+    <string name="action_armed_stay">Armado (en casa)</string>
+    <string name="action_level_set">Nivel ajustado</string>
+    <string name="action_dispensed">Dispensado</string>
+    <string name="action_heat_set">Modo de calor ajustado</string>
+    <string name="action_grill_set">Grill ajustado</string>
+    <string name="action_convection_set">Convección ajustada</string>
+    <string name="action_freezer_temp_set">Temp. del freezer ajustada</string>
+    <string name="action_resumed">Reanudado</string>
+    <string name="action_next_song">Canción siguiente</string>
+    <string name="action_previous_song">Canción anterior</string>
+    <string name="action_genre_set">Género ajustado</string>
+    <string name="action_playlist_viewed">Playlist consultada</string>
+    <string name="action_location_set">Ubicación ajustada</string>
 
     <!-- Room screen -->
     <string name="room_devices_count">%1$d dispositivos</string>
