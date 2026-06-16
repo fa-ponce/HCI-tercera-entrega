@@ -28,6 +28,14 @@ App Android nativa para controlar un hogar inteligente (casas, habitaciones, dis
 
 ## Instalación desde APK (dispositivo físico)
 
+### Ubicación del APK
+
+El archivo APK se encuentra dentro del ZIP entregado en la siguiente ruta:
+
+```
+HCI-tercera-entrega/app/build/outputs/apk/debug/app-debug.apk
+```
+
 ### Paso 1 — Transferir el APK al dispositivo
 
 **Opción A — Cable USB**
