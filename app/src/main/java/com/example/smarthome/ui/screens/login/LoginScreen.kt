@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -62,8 +63,17 @@ fun LoginScreen(
     // Validación local de campos obligatorios: se activa al intentar enviar.
     var showErrors by remember { mutableStateOf(false) }
     val requiredMsg = stringResource(R.string.common_required_field)
+    val invalidEmailMsg = stringResource(R.string.login_email_invalid)
     val requiredError: (String) -> (@Composable () -> Unit)? = { value ->
         if (showErrors && value.isBlank()) { { Text(requiredMsg) } } else null
+    }
+    // Error del campo email en el registro: vacío o con formato inválido.
+    val emailFormatInvalid = state.email.isNotBlank() && !isValidEmail(state.email)
+    val registerEmailError: (@Composable () -> Unit)? = when {
+        !showErrors -> null
+        state.email.isBlank() -> { { Text(requiredMsg) } }
+        emailFormatInvalid -> { { Text(invalidEmailMsg) } }
+        else -> null
     }
 
     LaunchedEffect(Unit) {
@@ -148,8 +158,8 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            isError = showErrors && state.email.isBlank(),
-                            supportingText = requiredError(state.email)
+                            isError = showErrors && (state.email.isBlank() || emailFormatInvalid),
+                            supportingText = registerEmailError
                         )
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
@@ -303,15 +313,16 @@ fun LoginScreen(
                 // ── Botón principal ───────────────────────────────────────────
                 Button(
                     onClick = {
-                        val missingRequired = when (state.mode) {
+                        val invalid = when (state.mode) {
                             LoginMode.Login -> state.email.isBlank() || state.password.isBlank()
-                            LoginMode.Register -> state.name.isBlank() || state.email.isBlank() || state.password.isBlank()
+                            LoginMode.Register -> state.name.isBlank() || state.email.isBlank() ||
+                                state.password.isBlank() || !isValidEmail(state.email)
                             LoginMode.Verify -> state.code.isBlank()
                             LoginMode.ForgotPassword -> state.email.isBlank()
                             LoginMode.ResetPassword -> state.code.isBlank() || state.newPassword.isBlank()
                         }
-                        showErrors = missingRequired
-                        if (!missingRequired) {
+                        showErrors = invalid
+                        if (!invalid) {
                             when (state.mode) {
                                 LoginMode.Login -> viewModel.login()
                                 LoginMode.Register -> viewModel.register()
@@ -371,6 +382,7 @@ fun LoginScreen(
                     onClick = { showErrors = false; viewModel.setMode(backTarget) },
                     modifier = Modifier
                         .align(Alignment.TopStart)
+                        .statusBarsPadding()
                         .padding(8.dp)
                 ) {
                     Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.common_back))
@@ -379,3 +391,7 @@ fun LoginScreen(
         }
     }
 }
+
+/** Valida que el texto tenga formato de email (nombre@dominio.tld). */
+private fun isValidEmail(email: String): Boolean =
+    android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()

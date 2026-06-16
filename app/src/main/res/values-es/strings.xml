@@ -51,6 +51,7 @@
     <string name="login_title_forgot">Recuperar contraseña</string>
     <string name="login_title_reset">Nueva contraseña</string>
     <string name="login_email">Email</string>
+    <string name="login_email_invalid">Ingresá un email válido</string>
     <string name="login_password">Contraseña</string>
     <string name="login_new_password">Nueva contraseña</string>
     <string name="login_code">Código</string>
