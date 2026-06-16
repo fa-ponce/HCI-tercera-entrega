@@ -42,7 +42,7 @@ HCI-tercera-entrega/app/build/outputs/apk/debug/app-debug.apk
 1. Conectá el teléfono a la computadora con el cable USB.
 2. Deslizá la barra de notificaciones y tocá la notificación de USB.
 3. Seleccioná **"Transferir archivos"** (MTP).
-4. Copiá `Smarthome.apk` a cualquier carpeta del teléfono (por ejemplo, `Descargas`).
+4. Copiá `app-debug.apk` a cualquier carpeta del teléfono (por ejemplo, `Descargas`).
 
 **Opción B — Google Drive / descarga directa**
 1. Subí el APK a Google Drive u otro servicio de nube.
@@ -57,7 +57,7 @@ HCI-tercera-entrega/app/build/outputs/apk/debug/app-debug.apk
 ### Paso 3 — Instalar el APK
 
 1. Abrí el explorador de archivos del teléfono.
-2. Navegá hasta donde guardaste `Smarthome.apk` y tocalo.
+2. Navegá hasta donde guardaste `app-debug.apk` y tocalo.
 3. Confirmá la instalación → **"Instalar"**.
 4. Tocá **"Abrir"** para lanzar la app o **"Listo"** para abrirla después desde el cajón de apps.
 
